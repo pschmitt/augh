@@ -1,0 +1,86 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - v*
+      - '*.*.*'
+  workflow_dispatch:
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21.0.11'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      - name: Determine release channel
+        id: channel
+        run: |
+          if [[ "${{ github.ref_type }}" == "tag" ]]; then
+            {
+              echo "tag=${{ github.ref_name }}"
+              echo "name=${{ github.ref_name }}"
+              echo "prerelease=false"
+              echo "move_tag=false"
+            } >> "$GITHUB_OUTPUT"
+          else
+            {
+              echo "tag=latest"
+              echo "name=Latest build"
+              echo "prerelease=true"
+              echo "move_tag=true"
+            } >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Compute revision
+        id: revision
+        run: echo "value=$(git describe --always --abbrev=12 --dirty)" >> "$GITHUB_OUTPUT"
+
+      - name: Run tests and build APKs
+        run: ./gradlew testDebugUnitTest assembleDebug assembleRelease --stacktrace --build-cache
+        env:
+          GIT_REVISION: ${{ steps.revision.outputs.value }}
+
+      - name: Collect APKs and checksums
+        run: |
+          mkdir -p release-artifacts
+          cp app/build/outputs/apk/debug/app-debug.apk "release-artifacts/aughhhh-${{ steps.channel.outputs.tag }}-debug.apk"
+          cp app/build/outputs/apk/release/app-release.apk "release-artifacts/aughhhh-${{ steps.channel.outputs.tag }}-release.apk"
+          sha256sum release-artifacts/*.apk > release-artifacts/SHA256SUMS
+
+      - name: Move rolling latest tag
+        if: steps.channel.outputs.move_tag == 'true'
+        run: |
+          git tag -f latest
+          git push origin latest --force
+
+      - name: Publish GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.channel.outputs.tag }}
+          name: ${{ steps.channel.outputs.name }}
+          prerelease: ${{ steps.channel.outputs.prerelease }}
+          make_latest: ${{ steps.channel.outputs.prerelease == 'false' }}
+          generate_release_notes: true
+          files: release-artifacts/*

@@ -39,6 +39,21 @@ android {
         buildConfig = true
     }
 
+    signingConfigs {
+        named("debug") {
+            System.getenv("CI_KEYSTORE_PATH")?.let { path ->
+                storeFile = file(path)
+                storePassword = System.getenv("CI_KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("CI_KEY_ALIAS")
+                keyPassword = System.getenv("CI_KEY_PASSWORD")
+            }
+        }
+    }
+
+    buildTypes.named("release") {
+        signingConfig = signingConfigs.getByName("debug")
+    }
+
     packaging.resources.excludes += "/META-INF/{AL2.0,LGPL2.1}"
 }
 
