@@ -75,6 +75,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.OutlinedTextField
@@ -109,6 +110,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -254,12 +256,14 @@ private data class SignState(
     val background: Palette = Palette.RED,
     val animation: AnimationStyle = AnimationStyle.STATIC,
     val speed: Float = 1f,
+    val blinkRateHz: Float = 2f,
     val blinkIntensity: Float = 0.92f,
     val transition: TransitionStyle = TransitionStyle.NONE,
     val tapAction: TapAction = TapAction.OFF,
     val keepScreenAwake: Boolean = true,
     val maxBrightnessWhenPresenting: Boolean = false,
     val loopPages: Boolean = false,
+    val highIntensityMode: Boolean = false,
     val recentTexts: List<String> = emptyList(),
 ) {
     val text: String
@@ -273,10 +277,7 @@ private class SignStore(context: Context) {
 
     fun update(reducer: (SignState) -> SignState) {
         val next = reducer(state)
-        state = next.copy(
-            pages = next.pages.ifEmpty { listOf("aughhhh") },
-            selectedPage = next.selectedPage.coerceIn(next.pages.ifEmpty { listOf("") }.indices),
-        )
+        state = normalize(next)
         persist()
     }
 
@@ -299,12 +300,14 @@ private class SignStore(context: Context) {
             .putString("background", state.background.name)
             .putString("animation", state.animation.name)
             .putFloat("speed", state.speed)
+            .putFloat("blinkRateHz", state.blinkRateHz)
             .putFloat("blinkIntensity", state.blinkIntensity)
             .putString("transition", state.transition.name)
             .putString("tapAction", state.tapAction.name)
             .putBoolean("keepScreenAwake", state.keepScreenAwake)
             .putBoolean("maxBrightnessWhenPresenting", state.maxBrightnessWhenPresenting)
             .putBoolean("loopPages", state.loopPages)
+            .putBoolean("highIntensityMode", state.highIntensityMode)
             .putString("recentTexts", JSONArray(state.recentTexts).toString())
             .apply()
     }
@@ -318,6 +321,7 @@ private class SignStore(context: Context) {
             background = enumOrDefault("background", Palette.RED),
             animation = enumOrDefault("animation", AnimationStyle.STATIC),
             speed = preferences.getFloat("speed", SignState().speed),
+            blinkRateHz = preferences.getFloat("blinkRateHz", SignState().blinkRateHz),
             blinkIntensity = preferences.getFloat("blinkIntensity", SignState().blinkIntensity),
             transition = enumOrDefault("transition", TransitionStyle.NONE),
             tapAction = enumOrDefault("tapAction", TapAction.OFF),
@@ -327,8 +331,25 @@ private class SignStore(context: Context) {
                 SignState().maxBrightnessWhenPresenting,
             ),
             loopPages = preferences.getBoolean("loopPages", SignState().loopPages),
+            highIntensityMode = preferences.getBoolean("highIntensityMode", SignState().highIntensityMode),
             recentTexts = loadRecentTexts(),
-        ).let { state -> state.copy(selectedPage = state.selectedPage.coerceIn(state.pages.indices)) }
+        ).let { state -> normalize(state.copy(selectedPage = state.selectedPage.coerceIn(state.pages.indices))) }
+
+    private fun normalize(state: SignState): SignState {
+        val maxSpeed = if (state.highIntensityMode) 2f else 1f
+        val maxBlinkRate = if (state.highIntensityMode) 10f else 4f
+        return state.copy(
+            pages = state.pages.ifEmpty { listOf("aughhhh") },
+            selectedPage = state.selectedPage.coerceIn(state.pages.ifEmpty { listOf("") }.indices),
+            speed = state.speed.coerceIn(0.15f, maxSpeed),
+            blinkRateHz = state.blinkRateHz.coerceIn(0.5f, maxBlinkRate),
+            animation = if (!state.highIntensityMode && state.animation == AnimationStyle.STROBE) {
+                AnimationStyle.BLINK
+            } else {
+                state.animation
+            },
+        )
+    }
 
     private fun loadPages(): List<String> {
         val savedPages = preferences.getString("pages", null) ?: return listOf("aughhhh")
@@ -366,6 +387,18 @@ private fun pageIndexAfterMove(index: Int, delta: Int, pageCount: Int, loop: Boo
     if (pageCount <= 0) return 0
     val target = index + delta
     return if (loop) Math.floorMod(target, pageCount) else target.coerceIn(0, pageCount - 1)
+}
+
+private fun pulseDurationMillis(animation: AnimationStyle, speed: Float, blinkRateHz: Float, refreshRateHz: Float): Int {
+    val durationMillis =
+        when (animation) {
+            AnimationStyle.BLINK, AnimationStyle.BLINK_BACKGROUND, AnimationStyle.STROBE -> {
+                val effectiveRate = blinkRateHz.coerceAtMost(refreshRateHz / 2f).coerceAtLeast(0.5f)
+                500f / effectiveRate
+            }
+            else -> 220f / speed
+        }
+    return durationMillis.roundToInt().coerceAtLeast(50)
 }
 
 private fun applyPresentationIntent(intent: Intent, store: SignStore) {
@@ -842,6 +875,8 @@ private fun SettingsScreen(
     onBack: () -> Unit,
     onAbout: () -> Unit,
 ) {
+    var showHighIntensityWarning by rememberSaveable { mutableStateOf(false) }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -883,6 +918,18 @@ private fun SettingsScreen(
                     checked = state.loopPages,
                     onCheckedChange = { enabled -> onStateChange { it.copy(loopPages = enabled) } },
                 )
+                SettingSwitchRow(
+                    title = "High-intensity mode",
+                    subtitle = "Unlock faster motion and strobe",
+                    checked = state.highIntensityMode,
+                    onCheckedChange = { enabled ->
+                        if (enabled) {
+                            showHighIntensityWarning = true
+                        } else {
+                            onStateChange { it.copy(highIntensityMode = false) }
+                        }
+                    },
+                )
             }
             Spacer(Modifier.height(20.dp))
             Text("Application", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
@@ -919,6 +966,34 @@ private fun SettingsScreen(
                 }
             }
         }
+    }
+    if (showHighIntensityWarning) {
+        AlertDialog(
+            onDismissRequest = { showHighIntensityWarning = false },
+            title = { Text("High-intensity mode") },
+            text = {
+                Text(
+                    "This unlocks animation speeds above 100% and the Strobe effect. Rapid flashing " +
+                        "or high-contrast imagery can cause discomfort or trigger seizures, especially " +
+                        "for people with photosensitive epilepsy. Use only if you understand the risk.",
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showHighIntensityWarning = false
+                        onStateChange { it.copy(highIntensityMode = true) }
+                    }
+                ) {
+                    Text("Enable anyway")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showHighIntensityWarning = false }) {
+                    Text("Cancel")
+                }
+            },
+        )
     }
 }
 
@@ -1151,6 +1226,7 @@ private fun AnimatedSignText(
     val context = LocalContext.current
     val reducedMotion = rememberReducedMotion(context)
     val animation = if (reducedMotion) AnimationStyle.STATIC else state.animation
+    val refreshRateHz = LocalView.current.display?.refreshRate?.takeIf { it > 0f } ?: 60f
     val pulse =
         if (pulseOverride != null) {
             pulseOverride
@@ -1161,7 +1237,7 @@ private fun AnimatedSignText(
                 targetValue = 1f,
                 animationSpec = infiniteRepeatable(
                     animation = tween(
-                        durationMillis = (220 / state.speed).toInt().coerceAtLeast(50),
+                        durationMillis = pulseDurationMillis(animation, state.speed, state.blinkRateHz, refreshRateHz),
                     ),
                     repeatMode = RepeatMode.Reverse,
                 ),
@@ -1341,6 +1417,7 @@ private fun MotionCard(
             AnimationStyle.entries.forEach { animation ->
                 FilterChip(
                     selected = state.animation == animation,
+                    enabled = state.highIntensityMode || animation != AnimationStyle.STROBE,
                     onClick = { onStateChange { it.copy(animation = animation) } },
                     leadingIcon = { OptionIcon(animation.icon) },
                     label = { Text(animation.label) },
@@ -1360,13 +1437,31 @@ private fun MotionCard(
                 fontWeight = FontWeight.Bold,
             )
         }
+        if (!state.highIntensityMode) {
+            Text(
+                "High-intensity mode unlocks speeds above 100% and Strobe.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
         if (state.animation != AnimationStyle.STATIC) {
             Spacer(Modifier.height(12.dp))
             Text("Speed · ${(state.speed * 100).toInt()}%", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
             Slider(
                 value = state.speed,
                 onValueChange = { onStateChange { current -> current.copy(speed = it) } },
-                valueRange = 0.15f..2f,
+                valueRange = 0.15f..if (state.highIntensityMode) 2f else 1f,
+            )
+        }
+        if (state.animation == AnimationStyle.BLINK ||
+            state.animation == AnimationStyle.BLINK_BACKGROUND ||
+            state.animation == AnimationStyle.STROBE
+        ) {
+            Text("Blink rate · ${"%.1f".format(state.blinkRateHz)} Hz", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+            Slider(
+                value = state.blinkRateHz,
+                onValueChange = { onStateChange { current -> current.copy(blinkRateHz = it) } },
+                valueRange = 0.5f..if (state.highIntensityMode) 10f else 4f,
             )
         }
         if (state.animation == AnimationStyle.BLINK || state.animation == AnimationStyle.STROBE) {
@@ -1550,13 +1645,14 @@ private fun PresentScreen(
     val background = if (inverted) state.foreground.color else state.background.color
     val presentPage = initialPage.coerceIn(state.pages.indices)
     val animation = if (reducedMotion) AnimationStyle.STATIC else state.animation
+    val refreshRateHz = LocalView.current.display?.refreshRate?.takeIf { it > 0f } ?: 60f
     val pulseTransition = rememberInfiniteTransition(label = "present-background-motion")
     val pulse by pulseTransition.animateFloat(
         initialValue = 0f,
         targetValue = 1f,
         animationSpec = infiniteRepeatable(
             animation = tween(
-                durationMillis = (220 / state.speed).toInt().coerceAtLeast(50),
+                durationMillis = pulseDurationMillis(animation, state.speed, state.blinkRateHz, refreshRateHz),
             ),
             repeatMode = RepeatMode.Reverse,
         ),

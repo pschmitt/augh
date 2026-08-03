@@ -579,3 +579,31 @@ landscape safe-area insets, and ensure an intent-launched presentation does not 
 
 State: **done**, 2026-08-03. PX5 presentation margins now follow the animated sign background,
 and X exits intent-launched Present mode cleanly after the orientation reset.
+
+## AUG-62: Gate high-intensity motion behind a warning
+
+Protect viewers by requiring an explicit acknowledgement before unlocking faster-than-normal motion
+and the Strobe animation.
+
+- [x] Add a persisted High-intensity mode setting under Settings → Presentation screen
+- [x] Show a photosensitive-epilepsy warning before enabling it
+- [x] Limit normal mode to 100% speed and disable Strobe
+- [x] Rebuild and deploy the safety guard
+
+State: **done**, 2026-08-03. High-intensity mode is persisted behind an explicit epilepsy warning;
+normal mode caps animation speed at 100% and disables Strobe. The safety guard was checked remotely
+and deployed to the ZF10 and PX5.
+
+## AUG-63: Make blink timing refresh-aware
+
+Represent true blink timing as a frequency in Hz, cap it to the display’s effective refresh rate,
+and expose it as a motion setting.
+
+- [x] Add a persisted Blink rate setting for Blink, BG blink, and Strobe
+- [x] Use the display refresh rate when calculating blink timing
+- [x] Let High-intensity mode unlock the higher blink-rate range
+- [x] Rebuild and deploy the refresh-aware motion controls
+
+State: **done**, 2026-08-03. Blink timing is configured in Hz and capped at half the detected display
+refresh rate so on/off phases remain representable. The refresh-aware controls were checked remotely
+and deployed to the ZF10 and PX5.
