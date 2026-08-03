@@ -39,6 +39,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.focusable
+import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -72,6 +73,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.InputChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.AlertDialog
@@ -93,9 +95,11 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -689,8 +693,6 @@ private fun EditorScreen(
                     },
                     )
                     Spacer(Modifier.height(14.dp))
-                    PresetsCard(state = state, onStateChange = onStateChange, onRememberRecent = onRememberRecent)
-                    Spacer(Modifier.height(14.dp))
                     RecentMessages(state = state, onStateChange = onStateChange)
                     OutlinedTextField(
                     value = state.text,
@@ -744,6 +746,10 @@ private fun PageStrip(
     onMove: (Int, Int) -> Unit,
     onDelete: (Int) -> Unit,
 ) {
+    var draggedPageIndex by remember { mutableIntStateOf(-1) }
+    var draggedPageDistance by remember { mutableFloatStateOf(0f) }
+    val dragThreshold = with(LocalDensity.current) { 56.dp.toPx() }
+
     Column {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(
@@ -758,13 +764,60 @@ private fun PageStrip(
             Text("$pageCount total", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         Spacer(Modifier.height(8.dp))
+        if (pageCount > 1) {
+            Text(
+                "Long-press and drag to reorder",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Spacer(Modifier.height(8.dp))
+        }
         Row(
             modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             repeat(pageCount) { index ->
+                val currentIndex by rememberUpdatedState(index)
                 Surface(
+                    modifier = Modifier
+                        .graphicsLayer {
+                            translationX = if (draggedPageIndex == index) draggedPageDistance else 0f
+                        }
+                        .pointerInput(Unit) {
+                            detectDragGesturesAfterLongPress(
+                                onDragStart = {
+                                    draggedPageIndex = currentIndex
+                                    draggedPageDistance = 0f
+                                },
+                                onDragCancel = {
+                                    draggedPageIndex = -1
+                                    draggedPageDistance = 0f
+                                },
+                                onDragEnd = {
+                                    draggedPageIndex = -1
+                                    draggedPageDistance = 0f
+                                },
+                                onDrag = { change, dragAmount ->
+                                    change.consume()
+                                    if (draggedPageIndex == currentIndex) {
+                                        draggedPageDistance += dragAmount.x
+                                        when {
+                                            draggedPageDistance > dragThreshold && currentIndex < pageCount - 1 -> {
+                                                onMove(currentIndex, currentIndex + 1)
+                                                draggedPageIndex = currentIndex + 1
+                                                draggedPageDistance -= dragThreshold
+                                            }
+                                            draggedPageDistance < -dragThreshold && currentIndex > 0 -> {
+                                                onMove(currentIndex, currentIndex - 1)
+                                                draggedPageIndex = currentIndex - 1
+                                                draggedPageDistance += dragThreshold
+                                            }
+                                        }
+                                    }
+                                },
+                            )
+                        },
                     color = if (index == selectedPage) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerHigh,
                     shape = RoundedCornerShape(14.dp),
                     onClick = { onSelect(index) },
@@ -1171,47 +1224,12 @@ private fun SignPreview(
 }
 
 @Composable
-private fun PresetsCard(
-    state: SignState,
-    onStateChange: (((SignState) -> SignState)) -> Unit,
-    onRememberRecent: (String) -> Unit,
-) {
-    SettingCard(title = "Quick vibes", subtitle = "Because choosing is hard", icon = R.drawable.ic_vibes) {
-        ChipRow {
-            Preset.entries.forEach { preset ->
-                FilterChip(
-                    selected = false,
-                    onClick = {
-                        onRememberRecent(state.text)
-                        onStateChange { current ->
-                            current.copy(
-                                pages = current.pages.mapIndexed { index, page ->
-                                    if (index == current.selectedPage) preset.text else page
-                                },
-                                font = preset.font,
-                                foreground = preset.foreground,
-                                background = preset.background,
-                                animation = preset.animation,
-                            )
-                        }
-                    },
-                    leadingIcon = { OptionIcon(preset.icon) },
-                    label = { Text(preset.label) },
-                )
-            }
-        }
-    }
-}
-
-@Composable
 private fun RecentMessages(state: SignState, onStateChange: (((SignState) -> SignState)) -> Unit) {
     if (state.recentTexts.isEmpty()) return
-    Column {
-        Text("Recent messages", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
-        Spacer(Modifier.height(8.dp))
+    SettingCard(title = "Recent messages", subtitle = "Saved signs for quick reuse", icon = R.drawable.ic_vibes) {
         ChipRow {
             state.recentTexts.forEach { recent ->
-                FilterChip(
+                InputChip(
                     selected = recent == state.text,
                     onClick = {
                         onStateChange { current ->
@@ -1223,10 +1241,25 @@ private fun RecentMessages(state: SignState, onStateChange: (((SignState) -> Sig
                         }
                     },
                     label = { Text(recent.take(18)) },
+                    trailingIcon = {
+                        IconButton(
+                            onClick = {
+                                onStateChange { current ->
+                                    current.copy(recentTexts = current.recentTexts.filterNot { it == recent })
+                                }
+                            },
+                            modifier = Modifier.size(32.dp),
+                        ) {
+                            Icon(
+                                painter = painterResource(R.drawable.ic_delete),
+                                contentDescription = "Delete $recent",
+                                modifier = Modifier.size(18.dp),
+                            )
+                        }
+                    },
                 )
             }
         }
-        Spacer(Modifier.height(12.dp))
     }
 }
 
