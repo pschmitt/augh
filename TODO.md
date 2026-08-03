@@ -555,3 +555,15 @@ and put presentation display preferences in Settings.
 
 State: **done**, 2026-08-03. Display preferences now live in Settings, presentation text is always
 centered, and the editor’s unused introductory heading and vertical-position control are gone.
+
+## AUG-60: Loop presentation pages
+
+Add a presentation-screen preference that wraps page navigation around at both ends of the deck.
+
+- [x] Add a persisted Loop pages switch under Settings → Presentation screen
+- [x] Wrap swipes and tap-action next-page navigation in Present mode
+- [x] Wrap external next/previous page intents in Present mode
+- [x] Rebuild and deploy the updated presentation controls
+
+State: **done**, 2026-08-03. Present mode now optionally wraps page navigation in both directions,
+including swipes, tap actions, and external intents.

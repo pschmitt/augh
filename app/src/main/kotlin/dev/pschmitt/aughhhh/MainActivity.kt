@@ -259,6 +259,7 @@ private data class SignState(
     val tapAction: TapAction = TapAction.OFF,
     val keepScreenAwake: Boolean = true,
     val maxBrightnessWhenPresenting: Boolean = false,
+    val loopPages: Boolean = false,
     val recentTexts: List<String> = emptyList(),
 ) {
     val text: String
@@ -303,6 +304,7 @@ private class SignStore(context: Context) {
             .putString("tapAction", state.tapAction.name)
             .putBoolean("keepScreenAwake", state.keepScreenAwake)
             .putBoolean("maxBrightnessWhenPresenting", state.maxBrightnessWhenPresenting)
+            .putBoolean("loopPages", state.loopPages)
             .putString("recentTexts", JSONArray(state.recentTexts).toString())
             .apply()
     }
@@ -324,6 +326,7 @@ private class SignStore(context: Context) {
                 "maxBrightnessWhenPresenting",
                 SignState().maxBrightnessWhenPresenting,
             ),
+            loopPages = preferences.getBoolean("loopPages", SignState().loopPages),
             recentTexts = loadRecentTexts(),
         ).let { state -> state.copy(selectedPage = state.selectedPage.coerceIn(state.pages.indices)) }
 
@@ -358,6 +361,12 @@ private class SignStore(context: Context) {
 
 private inline fun <reified T : Enum<T>> Intent.enumExtra(key: String): T? =
     getStringExtra(key)?.let { value -> enumValues<T>().firstOrNull { it.name.equals(value, ignoreCase = true) } }
+
+private fun pageIndexAfterMove(index: Int, delta: Int, pageCount: Int, loop: Boolean): Int {
+    if (pageCount <= 0) return 0
+    val target = index + delta
+    return if (loop) Math.floorMod(target, pageCount) else target.coerceIn(0, pageCount - 1)
+}
 
 private fun applyPresentationIntent(intent: Intent, store: SignStore) {
     val suppliedPages =
@@ -416,7 +425,7 @@ private fun AughhhhApp(
             AughhhhIntents.ACTION_NEXT_PAGE, AughhhhIntents.ACTION_PREVIOUS_PAGE -> {
                 val direction = if (command.action == AughhhhIntents.ACTION_NEXT_PAGE) 1 else -1
                 val basePage = if (mode == AppMode.PRESENT) presentPage else store.state.selectedPage
-                presentPage = (basePage + direction).coerceIn(store.state.pages.indices)
+                presentPage = pageIndexAfterMove(basePage, direction, store.state.pages.size, store.state.loopPages)
                 if (mode != AppMode.PRESENT) presentationSession++
                 modeName = AppMode.PRESENT.name
             }
@@ -864,6 +873,15 @@ private fun SettingsScreen(
                     subtitle = "Use full brightness while presenting",
                     checked = state.maxBrightnessWhenPresenting,
                     onCheckedChange = { enabled -> onStateChange { it.copy(maxBrightnessWhenPresenting = enabled) } },
+                )
+            }
+            Spacer(Modifier.height(16.dp))
+            SettingCard(title = "Presentation screen", subtitle = "Page navigation", icon = R.drawable.ic_present) {
+                SettingSwitchRow(
+                    title = "Loop pages",
+                    subtitle = "Wrap from the last page to the first, and back again",
+                    checked = state.loopPages,
+                    onCheckedChange = { enabled -> onStateChange { it.copy(loopPages = enabled) } },
                 )
             }
             Spacer(Modifier.height(20.dp))
@@ -1555,7 +1573,7 @@ private fun PresentScreen(
     }
 
     fun movePage(delta: Int) {
-        val next = (presentPage + delta).coerceIn(state.pages.indices)
+        val next = pageIndexAfterMove(presentPage, delta, state.pages.size, state.loopPages)
         if (next != presentPage) onPageChanged(next)
     }
 
