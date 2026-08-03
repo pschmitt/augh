@@ -56,6 +56,18 @@ orientation-aware layout, and a clean handoff into presentation mode.
 
 State: **planned**.
 
+## AUG-7: README polish and Obtainium install path
+
+Turn the README into a friendly project landing page with screenshots, feature highlights, the
+rolling-release install story, and an Obtainium redirect badge linked to this public repository.
+
+- [ ] Add an Obtainium badge and preconfigured redirect for `dev.pschmitt.aughhhh`
+- [ ] Document the `latest` release APK and debug-install options
+- [ ] Add a small screenshot/gallery section after device verification
+- [ ] Link the GPL-3.0 license and contribution/build instructions from the landing page
+
+State: **planned**.
+
 ## AUG-5: Multi-page signs with swipe navigation
 
 Allow a sign deck to contain multiple editable pages. Present mode should move between pages with
