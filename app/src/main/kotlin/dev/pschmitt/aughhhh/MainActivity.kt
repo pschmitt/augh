@@ -917,7 +917,7 @@ private fun SettingsScreen(
         Column(
             modifier = Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(20.dp),
         ) {
-            SettingCard(title = "Display", subtitle = "Presentation behavior", icon = R.drawable.ic_display) {
+            SettingCard(title = "Display & presentation", subtitle = "Screen and page behavior", icon = R.drawable.ic_display) {
                 SettingSwitchRow(
                     title = "Keep screen awake",
                     subtitle = "While presenting",
@@ -930,9 +930,6 @@ private fun SettingsScreen(
                     checked = state.maxBrightnessWhenPresenting,
                     onCheckedChange = { enabled -> onStateChange { it.copy(maxBrightnessWhenPresenting = enabled) } },
                 )
-            }
-            Spacer(Modifier.height(16.dp))
-            SettingCard(title = "Presentation screen", subtitle = "Page navigation", icon = R.drawable.ic_present) {
                 SettingSwitchRow(
                     title = "Loop pages",
                     subtitle = "Wrap from the last page to the first, and back again",
@@ -945,7 +942,7 @@ private fun SettingsScreen(
                 title = "Danger zone",
                 subtitle = "High-intensity motion and strobe",
                 icon = R.drawable.ic_strobe,
-                containerColor = MaterialTheme.colorScheme.errorContainer,
+                containerColor = MaterialTheme.colorScheme.surfaceContainer,
                 accentColor = MaterialTheme.colorScheme.error,
             ) {
                 SettingSwitchRow(
@@ -962,33 +959,31 @@ private fun SettingsScreen(
                 )
             }
             Spacer(Modifier.height(20.dp))
-            SettingCard(title = "Application", subtitle = "App-wide options and project information.", icon = R.drawable.ic_application) {
-                Card(
-                    modifier = Modifier.fillMaxWidth().clickable(onClick = onAbout),
-                    shape = RoundedCornerShape(20.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
+            Card(
+                modifier = Modifier.fillMaxWidth().clickable(onClick = onAbout),
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Icon(
-                            painter = painterResource(R.drawable.ic_info),
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(24.dp),
+                    Icon(
+                        painter = painterResource(R.drawable.ic_info),
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(24.dp),
+                    )
+                    Spacer(Modifier.width(14.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text("About", fontWeight = FontWeight.Bold)
+                        Text(
+                            "Version and project links",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
-                        Spacer(Modifier.width(14.dp))
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text("About", fontWeight = FontWeight.Bold)
-                            Text(
-                                "Version and project links",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                        }
-                        Text("›", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.primary)
                     }
+                    Text("›", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.primary)
                 }
             }
         }
