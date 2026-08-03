@@ -53,7 +53,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
@@ -1652,6 +1651,7 @@ private fun PresentScreen(
     var inverted by rememberSaveable(presentationSession) { mutableStateOf(false) }
     var flashTick by rememberSaveable(presentationSession) { mutableIntStateOf(0) }
     var flashActive by remember { mutableStateOf(false) }
+    val powerOnProgress = remember(presentationSession) { Animatable(0f) }
     val powerOffProgress = remember(presentationSession) { Animatable(0f) }
     val foreground = if (inverted) state.background.color else state.foreground.color
     val background = if (inverted) state.foreground.color else state.background.color
@@ -1725,6 +1725,15 @@ private fun PresentScreen(
         if (externalActionTick > 0) performTapAction()
     }
 
+    LaunchedEffect(presentationSession, reducedMotion) {
+        if (reducedMotion) {
+            powerOnProgress.snapTo(1f)
+        } else {
+            powerOnProgress.snapTo(0f)
+            powerOnProgress.animateTo(1f, tween(220))
+        }
+    }
+
     LaunchedEffect(exitRequest, reducedMotion) {
         if (exitRequest == 0) return@LaunchedEffect
         if (reducedMotion) {
@@ -1732,7 +1741,7 @@ private fun PresentScreen(
             return@LaunchedEffect
         }
         powerOffProgress.snapTo(0f)
-        powerOffProgress.animateTo(1f, tween(320))
+        powerOffProgress.animateTo(1f, tween(220))
         onExit()
     }
 
@@ -1745,14 +1754,14 @@ private fun PresentScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .graphicsLayer {
+                    val powerOnScaleY = 0.03f + powerOnProgress.value.coerceIn(0f, 1f) * 0.97f
                     val verticalCollapse = powerOffProgress.value.coerceIn(0f, 1f)
                     val horizontalCollapse = ((powerOffProgress.value - 0.62f) / 0.38f).coerceIn(0f, 1f)
-                    scaleY = 1f - verticalCollapse * 0.97f
+                    scaleY = powerOnScaleY * (1f - verticalCollapse * 0.97f)
                     scaleX = 1f - horizontalCollapse * 0.97f
                     alpha = 1f - powerOffProgress.value * 0.16f
                 }
                 .background(animatedPresentationBackground)
-                .safeDrawingPadding()
                 .pointerInput(state.pages.size, presentPage, exitRequest) {
                     var dragDistance = 0f
                     detectHorizontalDragGestures(
@@ -1764,7 +1773,10 @@ private fun PresentScreen(
                         },
                     )
                 }
-                .clickable(enabled = exitRequest == 0, onClick = ::performTapAction),
+                .clickable(
+                    enabled = exitRequest == 0 && powerOnProgress.value >= 1f,
+                    onClick = ::performTapAction,
+                ),
         ) {
             AnimatedContent(
                 targetState = presentPage,
@@ -1821,7 +1833,7 @@ private fun PresentScreen(
         }
         TextButton(
             onClick = onExitRequested,
-            enabled = exitRequest == 0,
+            enabled = exitRequest == 0 && powerOnProgress.value >= 1f,
             modifier = Modifier
                 .align(Alignment.TopEnd)
                 .padding(10.dp)
