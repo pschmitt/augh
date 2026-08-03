@@ -59,14 +59,37 @@ adb shell am start -n dev.pschmitt.aughhhh/.MainActivity \
 
 ## Install
 
-Not published on Google Play or F-Droid. Install and auto-update via Obtainium, or download an
-APK directly from the [releases page](https://github.com/pschmitt/aughhhh/releases).
+Not published on Google Play or F-Droid yet. Install and auto-update via Obtainium, or download
+an APK directly from the [releases page](https://github.com/pschmitt/aughhhh/releases).
 
 [<img src="https://raw.githubusercontent.com/ImranR98/Obtainium/main/assets/graphics/badge_obtainium.png" alt="Get it on Obtainium" height="60">][obtainium-link]
 
 The badge follows the rolling `latest` prerelease and selects the non-debug release APK.
 
 [obtainium-link]: https://apps.obtainium.imranr.dev/redirect?r=obtainium://app/%7B%22id%22%3A%22dev.pschmitt.aughhhh%22%2C%22url%22%3A%22https%3A%2F%2Fgithub.com%2Fpschmitt%2Faughhhh%22%2C%22author%22%3A%22pschmitt%22%2C%22name%22%3A%22aughhhh%22%2C%22preferredApkIndex%22%3A0%2C%22additionalSettings%22%3A%22%7B%5C%22includePrereleases%5C%22%3Atrue%2C%5C%22fallbackToOlderReleases%5C%22%3Atrue%2C%5C%22apkFilterRegEx%5C%22%3A%5C%22aughhhh-.%2A-release%5C%5C%5C%5C.apk%24%5C%22%2C%5C%22invertAPKFilter%5C%22%3Afalse%2C%5C%22autoApkFilterByArch%5C%22%3Atrue%2C%5C%22trackOnly%5C%22%3Afalse%7D%22%7D
+
+### Google Play publishing
+
+The `Play Store` workflow publishes signed Android App Bundles to the internal-testing track when
+a semantic-version tag such as `1.0.0` is pushed. Version codes are derived from the tag, so each
+new semantic version produces a higher Play version code.
+
+Before the first tag, complete the one-time setup:
+
+1. In Google Cloud, create a project, enable the Google Play Developer API, and create a service
+   account.
+2. In Play Console, grant that service account access to aughhhh with permission to release to
+   testing tracks, then download its JSON key.
+3. Create a persistent upload keystore, enroll in Play App Signing during the first release, and
+   keep the keystore safe. The same upload key must be used for every CI bundle.
+4. Add these GitHub repository secrets: `PLAY_SERVICE_ACCOUNT_JSON`, `CI_KEYSTORE_BASE64`,
+   `CI_KEYSTORE_PASSWORD`, `CI_KEY_ALIAS`, and `CI_KEY_PASSWORD`.
+5. Finish the Play Console app content, store listing, declarations, and internal-testers setup.
+
+The workflow currently targets internal testing; promote it to production only after the first
+internal release has been tested and Play Console requirements are complete.
+
+Privacy policy: [PRIVACY.md](https://github.com/pschmitt/aughhhh/blob/main/PRIVACY.md).
 
 ## Development
 

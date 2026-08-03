@@ -422,3 +422,46 @@ Add the canonical pronunciation recording to the README.
 
 State: **done**, 2026-08-03. The opening README sentence now includes the IPA-style pronunciation
 and links it directly to the recording.
+
+## AUG-48: Add an About page
+
+Provide a small app information screen with project links and licensing details.
+
+- [x] Add an About entry to the editor header
+- [x] Show the app identity, version, and GPL-3 license
+- [x] Link the GitHub repository and GitHub Sponsors page
+
+State: **done**, 2026-08-03. The editor header opens a dedicated About page with both project links.
+
+## AUG-49: Ship the 1.0.0 release
+
+Align the app version with the first stable release after the About page lands.
+
+- [x] Set the Android version name to `1.0.0`
+- [x] Verify the release-ready build and deployment
+- [x] Create and push the `1.0.0` Git tag
+
+State: **ready pending external setup**, 2026-08-03. Version `1.0.0` is configured; the tag will
+be pushed after the Play publishing credentials are available.
+
+## AUG-50: Automate Google Play publishing
+
+Publish signed Android App Bundles to Google Play from CI after the app is configured in Play Console.
+
+- [x] Add semantic-tag-triggered Play internal-testing workflow
+- [x] Add deterministic Play version-code handling and CI signing support
+- [x] Document the required Play Console, service-account, and GitHub secret setup
+- [ ] Create the Play service account, upload keystore, and GitHub secrets
+
+State: **waiting on external Play Console setup**, 2026-08-03. CI is wired and ready; the first
+automatic upload must wait for the credentials and Play Console permissions to be configured.
+
+## AUG-51: Add a privacy policy
+
+Publish a concise privacy policy for Play Console and link it from the app and README.
+
+- [x] Describe local-only storage and the absence of analytics, ads, and accounts
+- [x] Document external links and incoming presentation intents
+- [x] Link the public policy from the About page and README
+
+State: **done**, 2026-08-03. The policy is available at `PRIVACY.md` and linked from the app.

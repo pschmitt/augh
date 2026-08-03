@@ -3,6 +3,20 @@ plugins {
     alias(libs.plugins.kotlin.compose.compiler)
 }
 
+val configuredVersionCode =
+    providers
+        .gradleProperty("versionCode")
+        .orElse("1")
+        .map { value ->
+            value.toIntOrNull()?.takeIf { it > 0 }
+                ?: error("versionCode must be a positive integer")
+        }
+        .get()
+val configuredVersionName =
+    providers.gradleProperty("versionName").orElse("1.0.0").get().also { name ->
+        require(name.isNotBlank()) { "versionName must not be blank" }
+    }
+
 android {
     namespace = "dev.pschmitt.aughhhh"
     compileSdk = 36
@@ -12,8 +26,8 @@ android {
         applicationId = "dev.pschmitt.aughhhh"
         minSdk = 26
         targetSdk = 36
-        versionCode = 1
-        versionName = "0.1.0"
+        versionCode = configuredVersionCode
+        versionName = configuredVersionName
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 

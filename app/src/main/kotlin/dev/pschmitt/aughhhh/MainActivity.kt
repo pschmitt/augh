@@ -5,6 +5,7 @@ import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.media.AudioManager
 import android.media.ToneGenerator
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
@@ -401,6 +402,7 @@ private fun AughhhhApp(
     var presentPage by rememberSaveable { mutableIntStateOf(0) }
     var presentationSession by rememberSaveable { mutableIntStateOf(0) }
     var externalActionTick by rememberSaveable { mutableIntStateOf(0) }
+    var showAbout by rememberSaveable { mutableStateOf(false) }
     val mode = AppMode.valueOf(modeName)
 
     LaunchedEffect(incomingIntent) {
@@ -451,7 +453,9 @@ private fun AughhhhApp(
         }
     }
 
-    BackHandler(enabled = mode == AppMode.PRESENT) { modeName = AppMode.EDIT.name }
+    BackHandler(enabled = mode == AppMode.PRESENT || showAbout) {
+        if (mode == AppMode.PRESENT) modeName = AppMode.EDIT.name else showAbout = false
+    }
     if (mode == AppMode.PRESENT) {
         PresentScreen(
             state = store.state,
@@ -462,6 +466,8 @@ private fun AughhhhApp(
             onPageChanged = { presentPage = it },
             onExit = { modeName = AppMode.EDIT.name },
         )
+    } else if (showAbout) {
+        AboutScreen(onBack = { showAbout = false })
     } else {
         EditorScreen(
             state = store.state,
@@ -472,6 +478,7 @@ private fun AughhhhApp(
                 presentationSession++
                 modeName = AppMode.PRESENT.name
             },
+            onAbout = { showAbout = true },
         )
     }
 }
@@ -483,6 +490,7 @@ private fun EditorScreen(
     onStateChange: (((SignState) -> SignState)) -> Unit,
     onRememberRecent: (String) -> Unit,
     onPresent: () -> Unit,
+    onAbout: () -> Unit,
 ) {
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
@@ -514,7 +522,7 @@ private fun EditorScreen(
             state = listState,
             contentPadding = PaddingValues(horizontal = 20.dp),
         ) {
-            item { Header() }
+            item { Header(onAbout = onAbout) }
             item {
                 Column {
                     Spacer(Modifier.height(14.dp))
@@ -703,7 +711,7 @@ private fun PageStrip(
 }
 
 @Composable
-private fun Header() {
+private fun Header(onAbout: () -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
@@ -724,10 +732,107 @@ private fun Header() {
                 )
             }
             Spacer(Modifier.width(12.dp))
-            Column {
+            Column(modifier = Modifier.weight(1f)) {
                 Text("aughhhh", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
                 Text("tiny app · big feelings", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
+            TextButton(onClick = onAbout) { Text("About") }
+        }
+    }
+}
+
+@Composable
+private fun AboutScreen(onBack: () -> Unit) {
+    val context = LocalContext.current
+    Scaffold(
+        topBar = {
+            Surface(color = MaterialTheme.colorScheme.surface) {
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    TextButton(onClick = onBack) { Text("Back") }
+                    Text("About", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                }
+            }
+        },
+        containerColor = MaterialTheme.colorScheme.background,
+    ) { padding ->
+        Column(
+            modifier = Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(20.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Image(
+                painter = painterResource(R.drawable.aughhhh_icon),
+                contentDescription = "aughhhh app logo",
+                modifier = Modifier.size(112.dp).clip(RoundedCornerShape(28.dp)),
+            )
+            Spacer(Modifier.height(16.dp))
+            Text("aughhhh", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black)
+            Text("tiny app · big feelings", color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Spacer(Modifier.height(8.dp))
+            Text(
+                "A colorful full-screen sign maker for messages that refuse to be subtle.",
+                style = MaterialTheme.typography.bodyLarge,
+                textAlign = TextAlign.Center,
+            )
+            Spacer(Modifier.height(8.dp))
+            Text(
+                "Version ${BuildConfig.VERSION_NAME} · GPL-3.0-or-later",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Spacer(Modifier.height(24.dp))
+            ExternalLinkCard(
+                context = context,
+                icon = R.drawable.ic_pages,
+                title = "GitHub repository",
+                subtitle = "View the source code and report issues",
+                url = "https://github.com/pschmitt/aughhhh",
+            )
+            Spacer(Modifier.height(10.dp))
+            ExternalLinkCard(
+                context = context,
+                icon = R.drawable.ic_vibes,
+                title = "Sponsor the project",
+                subtitle = "Support development on GitHub Sponsors",
+                url = "https://github.com/sponsors/pschmitt",
+            )
+            Spacer(Modifier.height(10.dp))
+            ExternalLinkCard(
+                context = context,
+                icon = R.drawable.ic_static,
+                title = "Privacy policy",
+                subtitle = "How aughhhh handles your information",
+                url = "https://github.com/pschmitt/aughhhh/blob/main/PRIVACY.md",
+            )
+        }
+    }
+}
+
+@Composable
+private fun ExternalLinkCard(context: Context, icon: Int, title: String, subtitle: String, url: String) {
+    Card(
+        modifier = Modifier.fillMaxWidth().clickable { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url))) },
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(
+                painter = painterResource(icon),
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(24.dp),
+            )
+            Spacer(Modifier.width(14.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(title, fontWeight = FontWeight.Bold)
+                Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            Text("↗", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.primary)
         }
     }
 }
