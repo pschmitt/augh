@@ -80,6 +80,7 @@ import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Tab
@@ -270,6 +271,9 @@ private data class SignState(
         get() = pages.getOrNull(selectedPage)?.ifBlank { "" }.orEmpty()
 }
 
+private const val NORMAL_MAX_SPEED = 1f
+private const val HIGH_INTENSITY_MAX_SPEED = 4f
+
 private class SignStore(context: Context) {
     private val preferences = context.getSharedPreferences("aughhhh", Context.MODE_PRIVATE)
     var state by mutableStateOf(load())
@@ -336,7 +340,7 @@ private class SignStore(context: Context) {
         ).let { state -> normalize(state.copy(selectedPage = state.selectedPage.coerceIn(state.pages.indices))) }
 
     private fun normalize(state: SignState): SignState {
-        val maxSpeed = if (state.highIntensityMode) 2f else 1f
+        val maxSpeed = if (state.highIntensityMode) HIGH_INTENSITY_MAX_SPEED else NORMAL_MAX_SPEED
         val maxBlinkRate = if (state.highIntensityMode) 10f else 4f
         return state.copy(
             pages = state.pages.ifEmpty { listOf("aughhhh") },
@@ -415,7 +419,9 @@ private fun applyPresentationIntent(intent: Intent, store: SignStore) {
             background = intent.enumExtra(AughhhhIntents.EXTRA_BACKGROUND) ?: current.background,
             animation = intent.enumExtra(AughhhhIntents.EXTRA_ANIMATION) ?: current.animation,
             speed = if (intent.hasExtra(AughhhhIntents.EXTRA_SPEED)) {
-                intent.getFloatExtra(AughhhhIntents.EXTRA_SPEED, current.speed).coerceIn(0.15f, 2f)
+                intent
+                    .getFloatExtra(AughhhhIntents.EXTRA_SPEED, current.speed)
+                    .coerceIn(0.15f, if (current.highIntensityMode) HIGH_INTENSITY_MAX_SPEED else NORMAL_MAX_SPEED)
             } else current.speed,
             blinkIntensity = if (intent.hasExtra(AughhhhIntents.EXTRA_BLINK_INTENSITY)) {
                 intent.getFloatExtra(AughhhhIntents.EXTRA_BLINK_INTENSITY, current.blinkIntensity).coerceIn(0.2f, 1f)
@@ -576,7 +582,7 @@ private fun EditorScreen(
                         Column {
                             Text("aughhhh", fontWeight = FontWeight.Black)
                             Text(
-                                "tiny app · big feelings",
+                                "make it bold!",
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
@@ -933,6 +939,15 @@ private fun SettingsScreen(
                     checked = state.loopPages,
                     onCheckedChange = { enabled -> onStateChange { it.copy(loopPages = enabled) } },
                 )
+            }
+            Spacer(Modifier.height(16.dp))
+            SettingCard(
+                title = "Danger zone",
+                subtitle = "High-intensity motion and strobe",
+                icon = R.drawable.ic_strobe,
+                containerColor = MaterialTheme.colorScheme.errorContainer,
+                accentColor = MaterialTheme.colorScheme.error,
+            ) {
                 SettingSwitchRow(
                     title = "High-intensity mode",
                     subtitle = "Unlock faster motion and strobe",
@@ -947,7 +962,7 @@ private fun SettingsScreen(
                 )
             }
             Spacer(Modifier.height(20.dp))
-            SettingCard(title = "Application", subtitle = "App-wide options and project information.", icon = R.drawable.ic_info) {
+            SettingCard(title = "Application", subtitle = "App-wide options and project information.", icon = R.drawable.ic_application) {
                 Card(
                     modifier = Modifier.fillMaxWidth().clickable(onClick = onAbout),
                     shape = RoundedCornerShape(20.dp),
@@ -984,7 +999,7 @@ private fun SettingsScreen(
             title = { Text("High-intensity mode") },
             text = {
                 Text(
-                    "This unlocks animation speeds above 100% and the Strobe effect. Rapid flashing " +
+                    "This unlocks animation speeds up to 400% and the Strobe effect. Rapid flashing " +
                         "or high-contrast imagery can cause discomfort or trigger seizures, especially " +
                         "for people with photosensitive epilepsy. Use only if you understand the risk.",
                 )
@@ -1456,18 +1471,32 @@ private fun MotionCard(
         }
         if (!state.highIntensityMode) {
             Text(
-                "High-intensity mode unlocks speeds above 100% and Strobe.",
+                "High-intensity mode unlocks speeds up to 400% and Strobe.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
         if (state.animation != AnimationStyle.STATIC) {
             Spacer(Modifier.height(12.dp))
-            Text("Speed · ${(state.speed * 100).toInt()}%", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+            val speedIsDangerous = state.speed > NORMAL_MAX_SPEED
+            val speedColor = if (speedIsDangerous) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
+            Text(
+                "Speed · ${(state.speed * 100).toInt()}%",
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.Bold,
+                color = if (speedIsDangerous) speedColor else LocalContentColor.current,
+            )
             Slider(
                 value = state.speed,
                 onValueChange = { onStateChange { current -> current.copy(speed = it) } },
-                valueRange = 0.15f..if (state.highIntensityMode) 2f else 1f,
+                valueRange = 0.15f..if (state.highIntensityMode) HIGH_INTENSITY_MAX_SPEED else NORMAL_MAX_SPEED,
+                colors = SliderDefaults.colors(
+                    thumbColor = speedColor,
+                    activeTrackColor = speedColor,
+                    inactiveTrackColor = speedColor.copy(alpha = 0.24f),
+                    activeTickColor = speedColor,
+                    inactiveTickColor = speedColor.copy(alpha = 0.54f),
+                ),
             )
         }
         if (state.animation == AnimationStyle.BLINK ||
@@ -1559,18 +1588,27 @@ private fun SettingSwitchRow(
 }
 
 @Composable
-private fun SettingCard(title: String, subtitle: String, icon: Int, content: @Composable () -> Unit) {
+private fun SettingCard(
+    title: String,
+    subtitle: String,
+    icon: Int,
+    containerColor: Color? = null,
+    accentColor: Color? = null,
+    content: @Composable () -> Unit,
+) {
+    val resolvedContainerColor = containerColor ?: MaterialTheme.colorScheme.surfaceContainer
+    val resolvedAccentColor = accentColor ?: MaterialTheme.colorScheme.primary
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
+        colors = CardDefaults.cardColors(containerColor = resolvedContainerColor),
     ) {
         Column(modifier = Modifier.padding(18.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
                     painter = painterResource(icon),
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
+                    tint = resolvedAccentColor,
                     modifier = Modifier.size(22.dp),
                 )
                 Spacer(Modifier.width(8.dp))
