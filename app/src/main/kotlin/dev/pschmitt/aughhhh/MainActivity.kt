@@ -499,6 +499,8 @@ private fun EditorScreen(
     val coroutineScope = rememberCoroutineScope()
     val messageFocusRequester = remember { FocusRequester() }
     var transitionReplayKey by remember { mutableIntStateOf(0) }
+    var tapActionPreview by remember { mutableStateOf<TapAction?>(null) }
+    var tapActionPreviewKey by remember { mutableIntStateOf(0) }
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -574,6 +576,8 @@ private fun EditorScreen(
                         state,
                         modifier = Modifier.padding(vertical = 12.dp),
                         replayKey = transitionReplayKey,
+                        tapActionPreview = tapActionPreview,
+                        tapActionPreviewKey = tapActionPreviewKey,
                         onPageChange = { delta ->
                             onStateChange { current ->
                                 current.copy(selectedPage = (current.selectedPage + delta).coerceIn(current.pages.indices))
@@ -665,6 +669,10 @@ private fun EditorScreen(
                         state = state,
                         onStateChange = onStateChange,
                         onTransitionReplay = { transitionReplayKey++ },
+                        onTapActionPreview = { action ->
+                            tapActionPreview = action
+                            tapActionPreviewKey++
+                        },
                     )
                     Spacer(Modifier.height(92.dp))
                 }
@@ -847,6 +855,8 @@ private fun SignPreview(
     state: SignState,
     modifier: Modifier = Modifier,
     replayKey: Int = 0,
+    tapActionPreview: TapAction? = null,
+    tapActionPreviewKey: Int = 0,
     onPageChange: ((Int) -> Unit)? = null,
     onLongPress: (() -> Unit)? = null,
 ) {
@@ -869,8 +879,8 @@ private fun SignPreview(
 
     LaunchedEffect(state.transition, replayKey) { transitionPreviewKey++ }
 
-    fun performTapAction() {
-        when (state.tapAction) {
+    fun performTapAction(action: TapAction) {
+        when (action) {
             TapAction.OFF -> Unit
             TapAction.INVERT -> inverted = !inverted
             TapAction.FLASH -> flashTick++
@@ -879,12 +889,20 @@ private fun SignPreview(
         }
     }
 
+    LaunchedEffect(tapActionPreviewKey) {
+        tapActionPreview?.let(::performTapAction)
+    }
+
     Card(
         modifier = modifier
             .fillMaxWidth()
             .combinedClickable(
                 enabled = state.tapAction != TapAction.OFF || onLongPress != null,
-                onClick = if (state.tapAction != TapAction.OFF) ::performTapAction else ({}),
+                onClick = if (state.tapAction != TapAction.OFF) {
+                    { performTapAction(state.tapAction) }
+                } else {
+                    {}
+                },
                 onLongClick = onLongPress,
             )
             .then(
@@ -1221,6 +1239,7 @@ private fun MotionCard(
     state: SignState,
     onStateChange: (((SignState) -> SignState)) -> Unit,
     onTransitionReplay: () -> Unit,
+    onTapActionPreview: (TapAction) -> Unit,
 ) {
     SettingCard(title = "Motion", subtitle = "Optional chaos, responsibly applied", icon = R.drawable.ic_motion) {
         ChipRow {
@@ -1289,7 +1308,10 @@ private fun MotionCard(
             TapAction.entries.forEach { action ->
                 FilterChip(
                     selected = state.tapAction == action,
-                    onClick = { onStateChange { it.copy(tapAction = action) } },
+                    onClick = {
+                        onTapActionPreview(action)
+                        onStateChange { it.copy(tapAction = action) }
+                    },
                     leadingIcon = { OptionIcon(action.icon) },
                     label = { Text(action.label) },
                 )

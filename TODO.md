@@ -517,3 +517,15 @@ Keep the standard editor top app bar compact by representing the About link with
 - [x] Rebuild and deploy the updated header
 
 State: **done**, 2026-08-03. The editor header now uses a conventional info action for About.
+
+## AUG-57: Preview tap actions independently
+
+Show each tap action in the live preview when its option is tapped, regardless of the currently
+selected action.
+
+- [x] Replay the tapped action through the live preview
+- [x] Preview the already-selected action when tapped again
+- [x] Keep the stored tap-action selection and full-screen behavior intact
+
+State: **done**, 2026-08-03. Tap-action chips now preview their own effect immediately, including
+when the chip was already selected.
