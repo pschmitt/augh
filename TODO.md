@@ -286,3 +286,70 @@ Make the editor preview behave like a small interactive rehearsal surface for th
 - [x] Keep preview swipes working for page navigation
 
 State: **done**, 2026-08-03. Preview taps now run the configured action while horizontal swipes retain page navigation.
+
+## AUG-34: Remove the black sticky-preview strip
+
+Investigate the opaque sticky-preview wrapper that made the mobile inset look like a redundant header.
+
+- [x] Try a transparent sticky-preview wrapper
+- [x] Preserve sticky preview behavior and system-bar inset handling
+
+State: **done**, 2026-08-03. The duplicate inset was removed; the transparent-wrapper experiment was superseded by AUG-36.
+
+## AUG-35: Remove duplicate editor top inset
+
+Avoid a second safe-drawing inset in the editor after Scaffold has already applied system-bar insets.
+
+- [x] Remove the duplicate list-level safe-drawing padding
+- [x] Keep the first header card below the actual system inset
+
+State: **done**, 2026-08-03. The editor no longer creates a redundant black strip above its content.
+
+## AUG-36: Keep the sticky preview backdrop opaque
+
+Give the sticky live-preview container a solid surface backdrop so scrolled editor cards do not show through it.
+
+- [x] Use the app surface color around the sticky preview
+- [x] Keep the duplicate top inset removed
+
+State: **done**, 2026-08-03. The preview now has an opaque surface-colored sticky backdrop.
+
+## AUG-37: Add external presentation intents
+
+Expose documented Android intents for launching a styled presentation and remotely controlling its pages and actions.
+
+- [x] Add a full-screen presentation action with text, pages, and styling extras
+- [x] Add next-page and previous-page actions
+- [x] Add an action-trigger command that behaves like a presentation tap
+- [x] Document the action and extra names with shell examples
+
+State: **done**, 2026-08-03. External apps can launch styled presentations and control page navigation or the configured tap action.
+
+## AUG-38: Accept standard external page-array extras
+
+Accept both Android `StringArrayList` and `String[]` representations for pages supplied by external callers.
+
+- [x] Read `StringArrayList` page extras
+- [x] Read standard `String[]` page extras
+
+State: **done**, 2026-08-03. `EXTRA_PAGES` now works with both common Android intent-extra encodings.
+
+## AUG-39: Make motion controls properly fast
+
+Increase animation responsiveness so the fastest setting feels intentionally frantic rather than merely acceptable.
+
+- [x] Expand the speed control to 15%–200%
+- [x] Apply the multiplier to pulse, scrolling, page transitions, and overlays
+- [x] Reduce the base timings and preserve reduced-motion behavior
+
+State: **done**, 2026-08-03. Motion now reaches a genuinely fast 2x mode across the presentation effects.
+
+## AUG-40: Honor landscape presentation on large screens
+
+Opt out of Android 16's large-screen compatibility behavior that ignores runtime orientation requests.
+
+- [x] Diagnose the Mi Pad's `LANDSCAPE` request versus portrait effective configuration
+- [x] Opt the activity out of restricted-resizability compatibility behavior
+- [x] Verify and refresh the landscape presentation capture
+
+State: **done**, 2026-08-03. Present mode now explicitly opts out of the large-screen orientation override; the Mi Pad previously ignored the request because it is `sw600dp`.

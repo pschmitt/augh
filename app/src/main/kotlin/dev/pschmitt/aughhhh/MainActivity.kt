@@ -1,6 +1,7 @@
 package dev.pschmitt.aughhhh
 
 import android.content.Context
+import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.media.AudioManager
 import android.media.ToneGenerator
@@ -127,12 +128,52 @@ import kotlinx.coroutines.launch
 import org.json.JSONArray
 
 class MainActivity : ComponentActivity() {
+    private var incomingIntent by mutableStateOf<Intent?>(null)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        setContent { AughhhhTheme { AughhhhApp(activity = this, window = window) } }
+        incomingIntent = intent
+        setContent {
+            AughhhhTheme {
+                AughhhhApp(
+                    activity = this,
+                    window = window,
+                    incomingIntent = incomingIntent,
+                    onIntentHandled = { incomingIntent = null },
+                )
+            }
+        }
     }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        incomingIntent = intent
+    }
+}
+
+/** Public action and extra names for controlling aughhhh from another Android app. */
+object AughhhhIntents {
+    const val ACTION_PRESENT = "dev.pschmitt.aughhhh.action.PRESENT"
+    const val ACTION_NEXT_PAGE = "dev.pschmitt.aughhhh.action.NEXT_PAGE"
+    const val ACTION_PREVIOUS_PAGE = "dev.pschmitt.aughhhh.action.PREVIOUS_PAGE"
+    const val ACTION_TRIGGER_ACTION = "dev.pschmitt.aughhhh.action.TRIGGER_ACTION"
+
+    const val EXTRA_TEXT = "dev.pschmitt.aughhhh.extra.TEXT"
+    const val EXTRA_PAGES = "dev.pschmitt.aughhhh.extra.PAGES"
+    const val EXTRA_FONT = "dev.pschmitt.aughhhh.extra.FONT"
+    const val EXTRA_FOREGROUND = "dev.pschmitt.aughhhh.extra.FOREGROUND"
+    const val EXTRA_BACKGROUND = "dev.pschmitt.aughhhh.extra.BACKGROUND"
+    const val EXTRA_ANIMATION = "dev.pschmitt.aughhhh.extra.ANIMATION"
+    const val EXTRA_SPEED = "dev.pschmitt.aughhhh.extra.SPEED"
+    const val EXTRA_BLINK_INTENSITY = "dev.pschmitt.aughhhh.extra.BLINK_INTENSITY"
+    const val EXTRA_TRANSITION = "dev.pschmitt.aughhhh.extra.TRANSITION"
+    const val EXTRA_TAP_ACTION = "dev.pschmitt.aughhhh.extra.TAP_ACTION"
+    const val EXTRA_TEXT_ALIGNMENT = "dev.pschmitt.aughhhh.extra.TEXT_ALIGNMENT"
+    const val EXTRA_VERTICAL_POSITION = "dev.pschmitt.aughhhh.extra.VERTICAL_POSITION"
+    const val EXTRA_KEEP_SCREEN_AWAKE = "dev.pschmitt.aughhhh.extra.KEEP_SCREEN_AWAKE"
 }
 
 private enum class AppMode { EDIT, PRESENT }
@@ -217,7 +258,7 @@ private data class SignState(
     val foreground: Palette = Palette.CREAM,
     val background: Palette = Palette.RED,
     val animation: AnimationStyle = AnimationStyle.STATIC,
-    val speed: Float = 0.68f,
+    val speed: Float = 1f,
     val blinkIntensity: Float = 0.92f,
     val transition: TransitionStyle = TransitionStyle.NONE,
     val tapAction: TapAction = TapAction.OFF,
@@ -320,13 +361,81 @@ private class SignStore(context: Context) {
         } ?: fallback
 }
 
+private inline fun <reified T : Enum<T>> Intent.enumExtra(key: String): T? =
+    getStringExtra(key)?.let { value -> enumValues<T>().firstOrNull { it.name.equals(value, ignoreCase = true) } }
+
+private fun applyPresentationIntent(intent: Intent, store: SignStore) {
+    val suppliedPages =
+        intent.getStringArrayListExtra(AughhhhIntents.EXTRA_PAGES)?.toList()
+            ?: intent.getStringArrayExtra(AughhhhIntents.EXTRA_PAGES)?.toList()
+    val suppliedText = intent.getStringExtra(AughhhhIntents.EXTRA_TEXT) ?: intent.getStringExtra(Intent.EXTRA_TEXT)
+    store.update { current ->
+        current.copy(
+            pages = suppliedPages ?: suppliedText?.let(::listOf) ?: current.pages,
+            selectedPage = 0,
+            font = intent.enumExtra(AughhhhIntents.EXTRA_FONT) ?: current.font,
+            foreground = intent.enumExtra(AughhhhIntents.EXTRA_FOREGROUND) ?: current.foreground,
+            background = intent.enumExtra(AughhhhIntents.EXTRA_BACKGROUND) ?: current.background,
+            animation = intent.enumExtra(AughhhhIntents.EXTRA_ANIMATION) ?: current.animation,
+            speed = if (intent.hasExtra(AughhhhIntents.EXTRA_SPEED)) {
+                intent.getFloatExtra(AughhhhIntents.EXTRA_SPEED, current.speed).coerceIn(0.15f, 2f)
+            } else current.speed,
+            blinkIntensity = if (intent.hasExtra(AughhhhIntents.EXTRA_BLINK_INTENSITY)) {
+                intent.getFloatExtra(AughhhhIntents.EXTRA_BLINK_INTENSITY, current.blinkIntensity).coerceIn(0.2f, 1f)
+            } else current.blinkIntensity,
+            transition = intent.enumExtra(AughhhhIntents.EXTRA_TRANSITION) ?: current.transition,
+            tapAction = intent.enumExtra(AughhhhIntents.EXTRA_TAP_ACTION) ?: current.tapAction,
+            textAlignment = intent.enumExtra(AughhhhIntents.EXTRA_TEXT_ALIGNMENT) ?: current.textAlignment,
+            verticalPosition = intent.enumExtra(AughhhhIntents.EXTRA_VERTICAL_POSITION) ?: current.verticalPosition,
+            keepScreenAwake = if (intent.hasExtra(AughhhhIntents.EXTRA_KEEP_SCREEN_AWAKE)) {
+                intent.getBooleanExtra(AughhhhIntents.EXTRA_KEEP_SCREEN_AWAKE, current.keepScreenAwake)
+            } else current.keepScreenAwake,
+        )
+    }
+}
+
 @Composable
-private fun AughhhhApp(activity: MainActivity, window: android.view.Window) {
+private fun AughhhhApp(
+    activity: MainActivity,
+    window: android.view.Window,
+    incomingIntent: Intent?,
+    onIntentHandled: () -> Unit,
+) {
     val context = LocalContext.current
     val store = remember { SignStore(context.applicationContext) }
     var modeName by rememberSaveable { mutableStateOf(AppMode.EDIT.name) }
     var presentPage by rememberSaveable { mutableIntStateOf(0) }
+    var presentationSession by rememberSaveable { mutableIntStateOf(0) }
+    var externalActionTick by rememberSaveable { mutableIntStateOf(0) }
     val mode = AppMode.valueOf(modeName)
+
+    LaunchedEffect(incomingIntent) {
+        val command = incomingIntent ?: return@LaunchedEffect
+        when (command.action) {
+            AughhhhIntents.ACTION_PRESENT -> {
+                applyPresentationIntent(command, store)
+                presentPage = 0
+                presentationSession++
+                modeName = AppMode.PRESENT.name
+            }
+            AughhhhIntents.ACTION_NEXT_PAGE, AughhhhIntents.ACTION_PREVIOUS_PAGE -> {
+                val direction = if (command.action == AughhhhIntents.ACTION_NEXT_PAGE) 1 else -1
+                val basePage = if (mode == AppMode.PRESENT) presentPage else store.state.selectedPage
+                presentPage = (basePage + direction).coerceIn(store.state.pages.indices)
+                if (mode != AppMode.PRESENT) presentationSession++
+                modeName = AppMode.PRESENT.name
+            }
+            AughhhhIntents.ACTION_TRIGGER_ACTION -> {
+                if (mode != AppMode.PRESENT) {
+                    presentPage = store.state.selectedPage
+                    presentationSession++
+                }
+                modeName = AppMode.PRESENT.name
+                externalActionTick++
+            }
+        }
+        onIntentHandled()
+    }
 
     DisposableEffect(mode) {
         val controller = WindowCompat.getInsetsController(window, window.decorView)
@@ -354,6 +463,8 @@ private fun AughhhhApp(activity: MainActivity, window: android.view.Window) {
             state = store.state,
             window = window,
             initialPage = presentPage.coerceIn(store.state.pages.indices),
+            presentationSession = presentationSession,
+            externalActionTick = externalActionTick,
             onPageChanged = { presentPage = it },
             onExit = { modeName = AppMode.EDIT.name },
         )
@@ -364,6 +475,7 @@ private fun AughhhhApp(activity: MainActivity, window: android.view.Window) {
             onRememberRecent = store::rememberRecent,
             onPresent = {
                 presentPage = 0
+                presentationSession++
                 modeName = AppMode.PRESENT.name
             },
         )
@@ -399,7 +511,7 @@ private fun EditorScreen(
         },
     ) { padding ->
         LazyColumn(
-            modifier = Modifier.fillMaxSize().padding(padding).safeDrawingPadding(),
+            modifier = Modifier.fillMaxSize().padding(padding),
             contentPadding = PaddingValues(horizontal = 20.dp),
         ) {
             item { Header() }
@@ -417,7 +529,7 @@ private fun EditorScreen(
                 }
             }
             stickyHeader {
-                Surface(color = MaterialTheme.colorScheme.background) {
+                Surface(color = MaterialTheme.colorScheme.surface) {
                     SignPreview(
                         state,
                         modifier = Modifier.padding(vertical = 12.dp),
@@ -763,9 +875,9 @@ private fun AnimatedSignText(
         animationSpec = infiniteRepeatable(
             animation = tween(
                 durationMillis = if (preview) {
-                    (900 / state.speed).toInt().coerceAtLeast(180)
+                    (300 / state.speed).toInt().coerceAtLeast(70)
                 } else {
-                    (650 / state.speed).toInt().coerceAtLeast(100)
+                    (220 / state.speed).toInt().coerceAtLeast(50)
                 },
             ),
             repeatMode = RepeatMode.Reverse,
@@ -796,7 +908,10 @@ private fun AnimatedSignText(
                     .alpha(blinkAlpha)
                     .then(
                         if (animation == AnimationStyle.SCROLL) {
-                            Modifier.basicMarquee(iterations = Int.MAX_VALUE)
+                            Modifier.basicMarquee(
+                                iterations = Int.MAX_VALUE,
+                                velocity = (110f * state.speed).dp,
+                            )
                         } else Modifier
                     ),
                 maxLines = if (animation == AnimationStyle.SCROLL) 1 else maxLines,
@@ -995,7 +1110,7 @@ private fun MotionCard(state: SignState, onStateChange: (((SignState) -> SignSta
             Slider(
                 value = state.speed,
                 onValueChange = { onStateChange { current -> current.copy(speed = it) } },
-                valueRange = 0.15f..1f,
+                valueRange = 0.15f..2f,
             )
         }
         if (state.animation == AnimationStyle.BLINK || state.animation == AnimationStyle.STROBE) {
@@ -1147,6 +1262,8 @@ private fun PresentScreen(
     state: SignState,
     window: android.view.Window,
     initialPage: Int,
+    presentationSession: Int,
+    externalActionTick: Int,
     onPageChanged: (Int) -> Unit,
     onExit: () -> Unit,
 ) {
@@ -1155,8 +1272,8 @@ private fun PresentScreen(
     val reducedMotion = rememberReducedMotion(context)
     val transitionStyle = if (reducedMotion) TransitionStyle.NONE else state.transition
     val spinRotation = remember { Animatable(0f) }
-    var inverted by rememberSaveable { mutableStateOf(false) }
-    var flashTick by rememberSaveable { mutableIntStateOf(0) }
+    var inverted by rememberSaveable(presentationSession) { mutableStateOf(false) }
+    var flashTick by rememberSaveable(presentationSession) { mutableIntStateOf(0) }
     var flashActive by remember { mutableStateOf(false) }
     val foreground = if (inverted) state.background.color else state.foreground.color
     val background = if (inverted) state.foreground.color else state.background.color
@@ -1173,10 +1290,10 @@ private fun PresentScreen(
             flashActive = false
         }
     }
-    LaunchedEffect(presentPage, transitionStyle) {
+    LaunchedEffect(presentPage, transitionStyle, state.speed) {
         if (transitionStyle == TransitionStyle.SPIN) {
             spinRotation.snapTo(360f)
-            spinRotation.animateTo(0f, tween(800))
+            spinRotation.animateTo(0f, tween((360 / state.speed).toInt().coerceAtLeast(70)))
         } else {
             spinRotation.snapTo(0f)
         }
@@ -1195,6 +1312,10 @@ private fun PresentScreen(
             TapAction.SOUND -> coroutineScope.launch { playTapSound(context) }
             TapAction.NEXT_PAGE -> movePage(1)
         }
+    }
+
+    LaunchedEffect(externalActionTick) {
+        if (externalActionTick > 0) performTapAction()
     }
 
     Box(
@@ -1220,23 +1341,24 @@ private fun PresentScreen(
             modifier = Modifier.fillMaxSize().padding(horizontal = 24.dp).graphicsLayer(rotationZ = spinRotation.value),
             transitionSpec = {
                 val direction = if (targetState >= initialState) 1 else -1
+                fun duration(base: Int) = (base / state.speed).toInt().coerceAtLeast(60)
                 val enter =
                     when (transitionStyle) {
                         TransitionStyle.NONE -> fadeIn(tween(0))
-                        TransitionStyle.FADE -> fadeIn(tween(500))
-                        TransitionStyle.WIPE -> slideInHorizontally(tween(650)) { it * direction } + fadeIn(tween(650))
-                        TransitionStyle.BLINDS -> scaleIn(tween(700), initialScale = 0.82f) + fadeIn(tween(700))
-                        TransitionStyle.CHECKERBOARD -> scaleIn(tween(800), initialScale = 1.18f) + fadeIn(tween(800))
-                        TransitionStyle.SPIN -> scaleIn(tween(800), initialScale = 0.45f) + fadeIn(tween(800))
+                        TransitionStyle.FADE -> fadeIn(tween(duration(260)))
+                        TransitionStyle.WIPE -> slideInHorizontally(tween(duration(300))) { it * direction } + fadeIn(tween(duration(300)))
+                        TransitionStyle.BLINDS -> scaleIn(tween(duration(320)), initialScale = 0.82f) + fadeIn(tween(duration(320)))
+                        TransitionStyle.CHECKERBOARD -> scaleIn(tween(duration(360)), initialScale = 1.18f) + fadeIn(tween(duration(360)))
+                        TransitionStyle.SPIN -> scaleIn(tween(duration(360)), initialScale = 0.45f) + fadeIn(tween(duration(360)))
                     }
                 val exit =
                     when (transitionStyle) {
                         TransitionStyle.NONE -> fadeOut(tween(0))
-                        TransitionStyle.FADE -> fadeOut(tween(500))
-                        TransitionStyle.WIPE -> slideOutHorizontally(tween(650)) { -it * direction } + fadeOut(tween(650))
-                        TransitionStyle.BLINDS -> fadeOut(tween(700))
-                        TransitionStyle.CHECKERBOARD -> scaleOut(tween(800), targetScale = 1.18f) + fadeOut(tween(800))
-                        TransitionStyle.SPIN -> scaleOut(tween(800), targetScale = 0.45f) + fadeOut(tween(800))
+                        TransitionStyle.FADE -> fadeOut(tween(duration(260)))
+                        TransitionStyle.WIPE -> slideOutHorizontally(tween(duration(300))) { -it * direction } + fadeOut(tween(duration(300)))
+                        TransitionStyle.BLINDS -> fadeOut(tween(duration(320)))
+                        TransitionStyle.CHECKERBOARD -> scaleOut(tween(duration(360)), targetScale = 1.18f) + fadeOut(tween(duration(360)))
+                        TransitionStyle.SPIN -> scaleOut(tween(duration(360)), targetScale = 0.45f) + fadeOut(tween(duration(360)))
                     }
                 (enter togetherWith exit).using(SizeTransform(clip = false))
             },
@@ -1251,7 +1373,7 @@ private fun PresentScreen(
                 background = background,
             )
         }
-        PageTransitionOverlay(style = transitionStyle, page = presentPage, color = foreground)
+        PageTransitionOverlay(style = transitionStyle, page = presentPage, color = foreground, speed = state.speed)
         if (flashActive) {
             Box(modifier = Modifier.fillMaxSize().background(foreground.copy(alpha = 0.82f)))
         }
@@ -1269,12 +1391,13 @@ private fun PresentScreen(
 }
 
 @Composable
-private fun PageTransitionOverlay(style: TransitionStyle, page: Int, color: Color) {
+private fun PageTransitionOverlay(style: TransitionStyle, page: Int, color: Color, speed: Float) {
     if (style != TransitionStyle.BLINDS && style != TransitionStyle.CHECKERBOARD) return
     val progress = remember { Animatable(0f) }
-    LaunchedEffect(style, page) {
+    LaunchedEffect(style, page, speed) {
         progress.snapTo(1f)
-        progress.animateTo(0f, tween(if (style == TransitionStyle.BLINDS) 700 else 850))
+        val baseDuration = if (style == TransitionStyle.BLINDS) 320 else 360
+        progress.animateTo(0f, tween((baseDuration / speed).toInt().coerceAtLeast(60)))
     }
     Canvas(modifier = Modifier.fillMaxSize()) {
         when (style) {

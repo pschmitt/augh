@@ -21,6 +21,34 @@ choose an absurd presentation style, and swipe through it when the moment arrive
 - Optional tap actions: invert, flash, beep, or advance to the next page.
 - Reduced-motion handling, keep-screen-awake presentation, and local persistence.
 
+## Automation intents
+
+Other Android apps can launch or control aughhhh through the exported `MainActivity`. The action
+names are also available as `AughhhhIntents` when depending on the app's source/API constants.
+
+- `dev.pschmitt.aughhhh.action.PRESENT` starts full-screen Present mode. Pass `EXTRA_TEXT` or
+  `EXTRA_PAGES`, plus optional styling extras such as `EXTRA_FOREGROUND`, `EXTRA_BACKGROUND`,
+  `EXTRA_FONT`, `EXTRA_ANIMATION`, `EXTRA_SPEED`, `EXTRA_BLINK_INTENSITY`, `EXTRA_TRANSITION`,
+  `EXTRA_TAP_ACTION`, `EXTRA_TEXT_ALIGNMENT`, `EXTRA_VERTICAL_POSITION`, and
+  `EXTRA_KEEP_SCREEN_AWAKE`.
+- `dev.pschmitt.aughhhh.action.NEXT_PAGE` and `PREVIOUS_PAGE` switch presentation pages.
+- `dev.pschmitt.aughhhh.action.TRIGGER_ACTION` performs the configured tap action as if the
+  presentation had been tapped.
+
+`EXTRA_PAGES` accepts either a `StringArrayList` or a `String[]`; `EXTRA_TEXT` also accepts the
+standard `android.intent.extra.TEXT`. Enum styling values use their names, for example `RED`,
+`CREAM`, `SANS`, `BLINK`, `FADE`, or `NEXT_PAGE`. Speed and blink intensity are floats from
+`0.15` to `2.0`, and keep-screen-awake is a boolean. A simple shell example:
+
+```sh
+adb shell am start -n dev.pschmitt.aughhhh/.MainActivity \
+  -a dev.pschmitt.aughhhh.action.PRESENT \
+  --es dev.pschmitt.aughhhh.extra.TEXT "PLEASE WAIT" \
+  --es dev.pschmitt.aughhhh.extra.FOREGROUND RED
+adb shell am start -n dev.pschmitt.aughhhh/.MainActivity \
+  -a dev.pschmitt.aughhhh.action.NEXT_PAGE
+```
+
 ## Screenshots
 
 <p>
