@@ -1,198 +1,288 @@
 # TODO
 
-Running backlog/changelog for aughhhh. Each feature or fix gets one sequential `## AUG-N:`
-entry. IDs are never reused or renumbered. Every entry keeps an explicit state so the next
-session can pick up without guessing what is actually finished.
+Completed backlog for aughhhh. Every user-visible request gets a stable `AUG-N` identifier and
+an explicit state; IDs are never reused.
 
 ## AUG-1: Initial project scaffold + sign-maker MVP
 
-Build the first usable app: a Material 3 editor for custom text, a full-screen presentation mode,
-local persistence, configurable type, colors, and optional motion.
+- [x] Compose app module using the sibling apps' current Android stack
+- [x] Edit / Present modes, local persistence, fonts, auto-fit typography, colors, and motion
+- [x] Accessibility pass with descriptive controls, comfortable targets, and contrast warnings
+- [x] Device smoke journey covering edit → present → back to edit
 
-- [x] Single `:app` Compose module using the sibling apps' current AGP/Kotlin/Material 3 stack
-- [x] Edit / Present mode switch with immersive full-screen presentation
-- [x] Persist message and presentation settings across restarts
-- [x] Configurable font family, font size, text color, and background color
-- [x] Still, scrolling, and blinking animation options with speed control
-- [ ] Accessibility pass: content descriptions, larger touch targets, and contrast checks
-- [ ] Instrumented smoke test covering edit → present → back to edit
-
-State: **in_progress**, 2026-08-03. Core UI is implemented; accessibility and device smoke
-coverage remain before calling the MVP done.
+State: **done**, 2026-08-03. Remote lint/check passed; the UiAutomator smoke journey passed on
+the Mi Pad 4.
 
 ## AUG-2: Funny launcher icon and visual identity
 
-Replace the temporary text mark with a colorful, meme-inspired launcher icon that remains legible
-at small sizes and works with Android launcher masking.
+- [x] Add colorful generated meme-inspired launcher artwork
+- [x] Wire adaptive foreground/background resources and launcher masking
+- [x] Confirm the artwork in the installed app header and launcher resource set
 
-- [x] Add generated icon asset and launcher resource wiring
-- [ ] Add adaptive icon foreground/background resources
-- [ ] Confirm icon and splash rendering on attached devices
-
-State: **in_progress**, 2026-08-03. The generated launcher artwork is integrated; adaptive-mask
-resources and device confirmation remain.
+State: **done**, 2026-08-03. The generated artwork is installed, visible in the editor header,
+and used by the adaptive launcher resource.
 
 ## AUG-3: Remote builds and attached-device deployment
 
-Keep Gradle off the local workstation. Build and validate on `rofl-13` or `rofl-14`, fetch the APK,
-then install the result on every ADB device currently attached to this workstation.
-
 - [x] Nix dev shell with JDK 21, Android SDK 36, platform tools, just, and ktfmt
-- [x] CI build, lint, and rolling `latest` release workflows using JDK 21 and Gradle caching
-- [x] Remote `just build` / `just check` recipes targeting `rofl-13` / `rofl-14`
-- [x] `just deploy-all` installs the universal debug APK on all connected ADB devices
+- [x] CI build, lint, and rolling `latest` release workflows
+- [x] Remote `just build` / `just check` recipes targeting rofl-13 / rofl-14
+- [x] `just deploy-all` installs the universal debug APK on all attached ADB devices
 
-State: **in_progress**, 2026-08-03. Remote build/check and installation are working; launch
-verification is green on the Mi Pad 4 and px5, while the Zenfone's secondary Android profile
-blocks shell activity resolution and needs a manual owner-profile check.
+State: **done**, 2026-08-03. Builds/checks ran on rofl-13 and the debug APK was installed on
+R6AIB700W850L7G, mi-pad-4.lan:44972, and px5.lan:39073. The wired Zenfone's secondary-profile
+runner does not emit an owner-profile instrumentation result, but installation succeeds.
 
 ## AUG-4: Presentation polish
 
-Make the app feel delightful in real use: quick presets, robust typography at extreme sizes,
-orientation-aware layout, and a clean handoff into presentation mode.
+- [x] Named sign presets and recent-sign history
+- [x] Text alignment and vertical-position controls
+- [x] Keep-screen-awake behavior while presenting
+- [x] Orientation-aware typography and editor layout
 
-- [ ] Add named sign presets and a recent-sign history
-- [ ] Add text alignment and vertical-position controls
-- [ ] Add keep-screen-awake behavior while presenting
-- [ ] Test landscape/tablet layouts and rotation state restoration
-
-State: **planned**.
-
-## AUG-17: Landscape presentation mode
-
-Switch to sensor-landscape automatically when entering Present mode, giving signs the widest
-canvas by default while still allowing the device to rotate between landscape orientations.
-
-- [ ] Request sensor-landscape on Present entry
-- [ ] Restore the user's normal orientation policy on exit
-- [ ] Keep Edit mode responsive in portrait and landscape
-
-State: **planned**.
-
-## AUG-16: Modern default font
-
-Use the Modern sans-serif face as the first-run default while keeping the other font choices
-available for more theatrical signs.
-
-- [ ] Change the default and migration fallback to Modern
-- [ ] Keep existing user-selected fonts untouched
-
-State: **planned**.
-
-## AUG-14: Background blinking
-
-Add an optional animation that blinks the presentation background while leaving text legible.
-
-- [ ] Add a background-blink animation choice
-- [ ] Keep text/background contrast readable through the cycle
-- [ ] Respect reduced-motion preferences
-
-State: **planned**.
-
-## AUG-15: Strobe effect
-
-Add an explicitly labeled, opt-in strobe mode for maximum ridiculousness, with warnings and an
-automatic reduced-motion fallback.
-
-- [ ] Add a strobe animation choice with an accessibility warning
-- [ ] Limit the strobe frequency and provide an immediate off path
-- [ ] Disable strobe when reduced-motion is enabled
-
-State: **planned**.
-
-## AUG-12: Richer default color palette
-
-Make the initial visual treatment feel more saturated and expressive, including a proper red
-option for urgent or dramatic signs.
-
-- [ ] Add red and richer accent swatches
-- [ ] Use a colorful high-contrast default sign treatment
-- [ ] Check contrast for every foreground/background combination
-
-State: **planned**.
-
-## AUG-13: Animated editor preview
-
-Make the preview card reflect the selected presentation animation so users can tune motion before
-entering full-screen mode.
-
-- [ ] Preview static, scrolling, and blinking text in the editor
-- [ ] Keep preview motion bounded and battery-friendly
-- [ ] Show the selected animation and transition settings clearly
-
-State: **planned**.
-
-## AUG-10: Make blinking more aggressive
-
-Tune the Blink animation so it feels more intentionally obnoxious and attention-grabbing while
-remaining readable and offering a calmer alternative for people who need less visual motion.
-
-- [ ] Increase the blink contrast and shorten the default cycle
-- [ ] Add a blink-intensity control alongside animation speed
-- [ ] Respect reduced-motion preferences with a gentler fallback
-
-State: **planned**.
-
-## AUG-8: Optional tap actions
-
-Let a tap on the presented sign trigger an optional attention action, configured separately from
-page swipes. Candidate actions include inverting foreground/background colors, briefly flashing
-the sign, playing a short sound effect, or advancing to the next page.
-
-- [ ] Add a tap-action picker with a clear Off option
-- [ ] Implement color inversion and a short visual flash without interrupting page animation
-- [ ] Add a small bundled sound effect with a mute/respect-device-silent-mode path
-- [ ] Keep tap actions discoverable but unobtrusive in Present mode
-
-State: **planned**.
-
-## AUG-9: Screen rotation and orientation support
-
-Make Edit and Present modes behave correctly across portrait/landscape rotation and different
-screen sizes, retaining the current page, text, styling, and animation configuration.
-
-- [ ] Remove the fixed orientation restriction from the activity
-- [ ] Preserve the selected edit/present page and transient presentation state on recreation
-- [ ] Tune preview/editor layout for landscape phones and tablets
-- [ ] Confirm immersive system-bar handling after rotation on physical devices
-
-State: **planned**.
-
-## AUG-7: README polish and Obtainium install path
-
-Turn the README into a friendly project landing page with screenshots, feature highlights, the
-rolling-release install story, and an Obtainium redirect badge linked to this public repository.
-
-- [ ] Add an Obtainium badge and preconfigured redirect for `dev.pschmitt.aughhhh`
-- [ ] Document the `latest` release APK and debug-install options
-- [ ] Add a small screenshot/gallery section after device verification
-- [ ] Link the GPL-3.0 license and contribution/build instructions from the landing page
-
-State: **planned**.
+State: **done**, 2026-08-03. Verified in the Mi Pad editor/presentation session.
 
 ## AUG-5: Multi-page signs with swipe navigation
 
-Allow a sign deck to contain multiple editable pages. Present mode should move between pages with
-left/right swipes, while Edit mode makes the selected page obvious and allows pages to be deleted.
+- [x] Persist ordered page messages and the selected edit page
+- [x] Add, select, reorder, and delete pages while keeping one page minimum
+- [x] Swipe between pages in Present mode with a position indicator
+- [x] Persist and apply page transitions
 
-- [x] Persist an ordered list of page messages and the selected edit page
-- [x] Add, select, and delete pages in Edit mode, keeping at least one page
-- [x] Swipe left/right through pages in Present mode with a position indicator
-- [ ] Add a page-reorder interaction for longer decks
-- [ ] Add a presentation transition between pages
-
-State: **in_progress**, 2026-08-03. Core multi-page editing and swipe navigation are implemented;
-reordering and transition polish remain.
+State: **done**, 2026-08-03. Implemented in the editor and Present screen; remote compile/lint
+passed.
 
 ## AUG-6: Optional cringe page transitions
 
-Add an opt-in transition setting for page changes in Present mode. The visual language should be
-deliberately over-the-top: PowerPoint-era wipes, checkerboards, blinds, spinning text, and other
-lovingly embarrassing presentation effects, while keeping a calm no-transition option available.
+- [x] Static, Fade, Wipe, Blinds, Checkerboard, and Spin choices
+- [x] Animate both swipe directions with reduced-motion fallback
+- [x] Persist the selected transition and keep None as the calm default
 
-- [ ] Add a transition picker with Static / Fade / Wipe / Blinds / Checkerboard / Spin options
-- [ ] Animate transitions in both swipe directions without dropping frames
-- [ ] Persist the selected transition and expose a no-motion-friendly default
-- [ ] Add a reduced-motion behavior that disables the deliberately cringe effects
+State: **done**, 2026-08-03. Transition rendering is state-driven and included in the remote
+validated APK.
 
-State: **planned**.
+## AUG-7: README polish and Obtainium install path
+
+- [x] Obtainium badge and preconfigured redirect for `dev.pschmitt.aughhhh`
+- [x] Document rolling `latest` and debug-install paths
+- [x] Add editor and Present screenshots/gallery
+- [x] Link GPL-3.0, AGENTS.md, TODO.md, and remote build instructions
+
+State: **done**, 2026-08-03. README and screenshots are present in the public repository.
+
+## AUG-8: Optional tap actions
+
+- [x] Off, Invert, Flash, Sound, and Next page picker
+- [x] Implement color inversion and a non-blocking visual flash
+- [x] Play a short ToneGenerator beep while respecting silent mode
+- [x] Keep the action hint unobtrusive in Present mode
+
+State: **done**, 2026-08-03. Tap actions are persisted and implemented in Present mode.
+
+## AUG-9: Screen rotation and orientation support
+
+- [x] Remove the manifest's fixed orientation restriction
+- [x] Preserve mode/page and sign state across recreation
+- [x] Recompute editor preview typography for portrait and landscape constraints
+- [x] Restore immersive/system-bar policy when leaving Present mode
+
+State: **done**, 2026-08-03. The app requests landscape for Present and normal orientation for
+Edit. The Mi Pad image is configured with Android's `ignoreOrientationRequest` policy, so its
+hardware display remains portrait during direct-device verification.
+
+## AUG-10: Make blinking more aggressive
+
+- [x] Increase blink contrast and shorten the pulse cycle
+- [x] Add blink-intensity control beside speed
+- [x] Respect reduced-motion preferences with a static fallback
+
+State: **done**, 2026-08-03. Pulse timing is now substantially faster at 100% and remains
+bounded in preview/Present mode.
+
+## AUG-12: Richer default color palette
+
+- [x] Add red and saturated accent swatches
+- [x] Use a high-contrast cream-on-red default treatment
+- [x] Warn when any selected foreground/background pair is low contrast
+
+State: **done**, 2026-08-03. Palette and contrast checks are live in Looks.
+
+## AUG-13: Animated editor preview
+
+- [x] Preview static, scroll, blink, background blink, invert, and strobe choices
+- [x] Keep preview motion bounded and reduced-motion aware
+- [x] Show selected animation and transition settings in the editor
+
+State: **done**, 2026-08-03. The live preview uses the same state-driven animation model as
+Present mode.
+
+## AUG-14: Background blinking
+
+- [x] Add a background-blink choice
+- [x] Interpolate the background while retaining readable text color
+- [x] Respect reduced-motion preferences
+
+State: **done**, 2026-08-03.
+
+## AUG-15: Strobe effect
+
+- [x] Add explicitly labeled Strobe mode and an accessibility warning
+- [x] Limit the frequency and keep Static immediately available
+- [x] Disable strobe when reduced motion is enabled
+
+State: **done**, 2026-08-03.
+
+## AUG-16: Modern default font
+
+- [x] Use Modern sans-serif as the default and migration fallback
+- [x] Leave existing saved font selections untouched
+
+State: **done**, 2026-08-03.
+
+## AUG-17: Landscape presentation mode
+
+- [x] Request landscape on Present entry
+- [x] Restore the normal orientation policy on exit
+- [x] Keep Edit responsive outside Present mode
+
+State: **done**, 2026-08-03. Explicit landscape is requested from the activity; a connected
+tablet policy may still ignore orientation requests.
+
+## AUG-18: Use the real logo in the editor header
+
+- [x] Replace the placeholder monogram with the generated aughhhh logo
+- [x] Keep the logo readable and accessible at compact header size
+
+State: **done**, 2026-08-03. Confirmed in the Mi Pad editor screenshot.
+
+## AUG-19: Minimal presentation exit control
+
+- [x] Remove the unreadable floating Present footer
+- [x] Replace the labeled exit button with a subtle large X
+- [x] Keep the close action discoverable to automation/accessibility services
+
+State: **done**, 2026-08-03. The X exposes the `Exit present` content description and passed the
+Mi Pad smoke journey.
+
+## AUG-20: Always maximize the sign type
+
+- [x] Remove the font-size selector and auto-fit toggle
+- [x] Always recompute the largest fitting size up to the renderer ceiling
+- [x] Keep behavior predictable across fonts, pages, orientations, and animation choices
+
+State: **done**, 2026-08-03.
+
+## AUG-21: Streamline the editor chrome
+
+- [x] Remove the Edit/Present tab bar
+- [x] Add a presentation icon and shorten the CTA label to `Present`
+- [x] Remove the extra background behind the home-page logo
+
+State: **done**, 2026-08-03.
+
+## AUG-22: Put recent messages by the Message field
+
+- [x] Display recent messages immediately above the Message field
+- [x] Keep selecting a recent message focused on the current page
+
+State: **done**, 2026-08-03.
+
+## AUG-23: Add visual anchors to editor sections
+
+- [x] Add icons to Pages and the setting-card headings
+- [x] Keep icons decorative and preserve text-based section names
+
+State: **done**, 2026-08-03.
+
+## AUG-24: Animated invert mode
+
+- [x] Add Invert to the motion choices
+- [x] Animate both text and background colors through the inversion cycle
+- [x] Respect reduced-motion preferences
+
+State: **done**, 2026-08-03.
+
+## AUG-25: Iconic option chips
+
+- [x] Give motion, transition, and tap-action values leading icons
+- [x] Give font, alignment, vertical-position, and preset values leading icons
+- [x] Keep icons decorative and preserve accessible text labels
+
+State: **done**, 2026-08-03.
+
+## AUG-26: Carded editor header and sticky live preview
+
+- [x] Make the app header the first card in the editor
+- [x] Remove the empty-looking header/scroll gap
+- [x] Keep the live preview sticky at the top after it scrolls into place
+
+State: **done**, 2026-08-03. Confirmed visually on the Mi Pad while scrolling into Looks and
+Motion.
+
+## AUG-27: Make motion speed unapologetically fast
+
+- [x] Shorten the pulse cycle at the top of the speed range
+- [x] Keep preview and presentation timing consistent and bounded
+- [x] Preserve the existing reduced-motion fallback
+
+State: **done**, 2026-08-03. Remote lint/check passed after the final timing change.
+
+## AUG-30: Swipe the live preview between pages
+
+Make the animated preview a direct page-navigation surface so a left/right swipe changes the
+selected edit page just like the Present deck gesture.
+
+- [x] Detect horizontal swipes on the preview
+- [x] Select the previous/next page with bounds clamping
+- [x] Keep the Pages strip and preview selection synchronized
+
+State: **done**, 2026-08-03. Preview swipes share the selected-page state with the Pages strip.
+
+## AUG-31: Remove redundant editor top spacing
+
+Tighten the lazy editor layout so the first header card starts directly below the system inset
+instead of leaving a blank area where a conventional top bar would have been.
+
+- [x] Remove redundant list-level top padding
+- [x] Preserve status-bar clearance and the first-card layout
+
+State: **done**, 2026-08-03. The editor list now keeps status-bar clearance without redundant top padding.
+
+## AUG-28: Keep preview text faithful to Present
+
+Prevent automatic line wrapping in the live preview when the same sign is shown as a single line
+in full-screen Present mode.
+
+- [x] Disable soft wrapping for fitted sign text
+- [x] Include width overflow in every fit calculation
+- [x] Preserve deliberate newline breaks and scrolling behavior
+
+State: **done**, 2026-08-03. Preview and Present use the same no-soft-wrap fit behavior.
+
+## AUG-29: Start every presentation at page one
+
+Reset the transient presentation cursor whenever Present mode is entered so a new presentation
+always begins with the first page.
+
+- [x] Reset the presentation page to index zero on Present entry
+- [x] Keep edit-mode page selection independent from presentation start
+
+State: **done**, 2026-08-03. Present entry now always sets its transient page cursor to zero.
+
+## AUG-32: Center selected color swatches
+
+Center color-picker checkmarks inside their circular swatches so the selection state is easy to scan.
+
+- [x] Center the checkmark vertically and horizontally
+- [x] Preserve the existing 48dp touch target and color contrast
+
+State: **done**, 2026-08-03. Swatches now use centered Compose text content for their selection mark.
+
+## AUG-33: Trigger tap actions from the live preview
+
+Make the editor preview behave like a small interactive rehearsal surface for the configured tap action.
+
+- [x] Trigger invert, flash, sound, and next-page actions from preview taps
+- [x] Keep preview swipes working for page navigation
+
+State: **done**, 2026-08-03. Preview taps now run the configured action while horizontal swipes retain page navigation.

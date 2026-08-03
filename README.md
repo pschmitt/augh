@@ -11,15 +11,22 @@ choose an absurd presentation style, and swipe through it when the moment arrive
 
 ## Features
 
-- Edit and Present modes with immersive, sensor-landscape presentation.
+- Edit and Present modes with immersive landscape presentation.
 - Multiple pages with add, delete, select, and reorder controls.
 - Auto-fit typography that recalculates for the available portrait or landscape canvas.
 - Modern, display, editorial, and mono font choices with alignment and vertical-position controls.
 - Rich text/background palettes, including red, presets, and recent messages.
-- Still, scrolling, blinking, background-blinking, and opt-in strobe motion.
+- Still, scrolling, blinking, background-blinking, invert, and opt-in strobe motion.
 - Optional PowerPoint-era page transitions: fade, wipe, blinds, checkerboard, and spin.
 - Optional tap actions: invert, flash, beep, or advance to the next page.
 - Reduced-motion handling, keep-screen-awake presentation, and local persistence.
+
+## Screenshots
+
+<p>
+  <img src="docs/images/editor.png" alt="aughhhh editor with logo, presets, preview, and page controls" width="48%">
+  <img src="docs/images/present.png" alt="aughhhh full-screen presentation" width="48%">
+</p>
 
 ## Install
 

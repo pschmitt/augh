@@ -1,7 +1,6 @@
 package dev.pschmitt.aughhhh
 
 import android.content.Context
-import android.app.Activity
 import android.content.pm.ActivityInfo
 import android.media.AudioManager
 import android.media.ToneGenerator
@@ -30,6 +29,8 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.border
@@ -41,6 +42,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -51,10 +53,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.selection.toggleable
@@ -66,6 +68,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.OutlinedTextField
@@ -74,7 +77,6 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Tab
-import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.VerticalDivider
@@ -94,10 +96,10 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
@@ -129,54 +131,55 @@ class MainActivity : ComponentActivity() {
         installSplashScreen()
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        setContent { AughhhhTheme { AughhhhApp(window = window) } }
+        setContent { AughhhhTheme { AughhhhApp(activity = this, window = window) } }
     }
 }
 
 private enum class AppMode { EDIT, PRESENT }
 
-private enum class AnimationStyle(val label: String, val description: String) {
-    STATIC("Still", "Clean and calm"),
-    SCROLL("Scroll", "Keep it moving"),
-    BLINK("Blink", "Hard to ignore"),
-    BLINK_BACKGROUND("BG blink", "The background joins in"),
-    STROBE("Strobe", "Very cursed · use carefully"),
+private enum class AnimationStyle(val label: String, val description: String, val icon: Int) {
+    STATIC("Still", "Clean and calm", R.drawable.ic_static),
+    SCROLL("Scroll", "Keep it moving", R.drawable.ic_scroll),
+    BLINK("Blink", "Hard to ignore", R.drawable.ic_blink),
+    BLINK_BACKGROUND("BG blink", "The background joins in", R.drawable.ic_background),
+    STROBE("Strobe", "Very cursed · use carefully", R.drawable.ic_strobe),
+    INVERT("Invert", "Swap colors in motion", R.drawable.ic_invert),
 }
 
-private enum class TransitionStyle(val label: String, val description: String) {
-    NONE("None", "No drama"),
-    FADE("Fade", "A tasteful entrance"),
-    WIPE("Wipe", "Corporate presentation energy"),
-    BLINDS("Blinds", "You paid for PowerPoint"),
-    CHECKERBOARD("Checkerboard", "Absolutely cursed"),
-    SPIN("Spin", "Please stop the spinning"),
+private enum class TransitionStyle(val label: String, val description: String, val icon: Int) {
+    NONE("None", "No drama", R.drawable.ic_none),
+    FADE("Fade", "A tasteful entrance", R.drawable.ic_fade),
+    WIPE("Wipe", "Corporate presentation energy", R.drawable.ic_wipe),
+    BLINDS("Blinds", "You paid for PowerPoint", R.drawable.ic_blinds),
+    CHECKERBOARD("Checkerboard", "Absolutely cursed", R.drawable.ic_checkerboard),
+    SPIN("Spin", "Please stop the spinning", R.drawable.ic_spin),
 }
 
-private enum class TapAction(val label: String, val description: String) {
-    OFF("Off", "Taps do nothing"),
-    INVERT("Invert", "Swap text and background"),
-    FLASH("Flash", "A tiny attention grab"),
-    SOUND("Sound", "A tiny device-safe beep"),
-    NEXT_PAGE("Next page", "Advance the deck"),
+private enum class TapAction(val label: String, val description: String, val icon: Int) {
+    OFF("Off", "Taps do nothing", R.drawable.ic_off),
+    INVERT("Invert", "Swap text and background", R.drawable.ic_invert),
+    FLASH("Flash", "A tiny attention grab", R.drawable.ic_flash),
+    SOUND("Sound", "A tiny device-safe beep", R.drawable.ic_sound),
+    NEXT_PAGE("Next page", "Advance the deck", R.drawable.ic_next),
 }
 
-private enum class TextAlignmentChoice(val label: String, val value: TextAlign) {
-    LEFT("Left", TextAlign.Left),
-    CENTER("Center", TextAlign.Center),
-    RIGHT("Right", TextAlign.Right),
+private enum class TextAlignmentChoice(val label: String, val value: TextAlign, val icon: Int) {
+    LEFT("Left", TextAlign.Left, R.drawable.ic_align_left),
+    CENTER("Center", TextAlign.Center, R.drawable.ic_align_center),
+    RIGHT("Right", TextAlign.Right, R.drawable.ic_align_right),
 }
 
-private enum class VerticalPosition(val label: String, val alignment: Alignment) {
-    TOP("Top", Alignment.TopCenter),
-    CENTER("Center", Alignment.Center),
-    BOTTOM("Bottom", Alignment.BottomCenter),
+private enum class VerticalPosition(val label: String, val alignment: Alignment, val icon: Int) {
+    TOP("Top", Alignment.TopCenter, R.drawable.ic_align_top),
+    CENTER("Center", Alignment.Center, R.drawable.ic_center_vertical),
+    BOTTOM("Bottom", Alignment.BottomCenter, R.drawable.ic_align_bottom),
 }
 
-private enum class FontChoice(val label: String, val family: FontFamily) {
-    SANS("Modern", FontFamily.SansSerif),
-    DISPLAY("Display", FontFamily.Cursive),
-    SERIF("Editorial", FontFamily.Serif),
-    MONO("Mono", FontFamily.Monospace),
+private enum class FontChoice(val label: String, val family: FontFamily, val icon: Int) {
+    SANS("Modern", FontFamily.SansSerif, R.drawable.ic_looks),
+    DISPLAY("Display", FontFamily.Cursive, R.drawable.ic_vibes),
+    SERIF("Editorial", FontFamily.Serif, R.drawable.ic_pages),
+    MONO("Mono", FontFamily.Monospace, R.drawable.ic_motion),
 }
 
 private enum class Palette(val label: String, val color: Color) {
@@ -199,19 +202,18 @@ private enum class Preset(
     val background: Palette,
     val font: FontChoice,
     val animation: AnimationStyle,
+    val icon: Int,
 ) {
-    YELL("Yell", "AUGHHHH!", Palette.CREAM, Palette.PEACH, FontChoice.DISPLAY, AnimationStyle.BLINK),
-    APPLAUSE("Applause", "👏👏👏", Palette.INK, Palette.LEMON, FontChoice.DISPLAY, AnimationStyle.STATIC),
-    EMERGENCY("Emergency", "PLEASE WAIT", Palette.WHITE, Palette.PEACH, FontChoice.MONO, AnimationStyle.BLINK),
-    CHILL("Chill", "one sec…", Palette.INK, Palette.MINT, FontChoice.SERIF, AnimationStyle.STATIC),
+    YELL("Yell", "AUGHHHH!", Palette.CREAM, Palette.PEACH, FontChoice.DISPLAY, AnimationStyle.BLINK, R.drawable.ic_flash),
+    APPLAUSE("Applause", "👏👏👏", Palette.INK, Palette.LEMON, FontChoice.DISPLAY, AnimationStyle.STATIC, R.drawable.ic_vibes),
+    EMERGENCY("Emergency", "PLEASE WAIT", Palette.WHITE, Palette.PEACH, FontChoice.MONO, AnimationStyle.BLINK, R.drawable.ic_strobe),
+    CHILL("Chill", "one sec…", Palette.INK, Palette.MINT, FontChoice.SERIF, AnimationStyle.STATIC, R.drawable.ic_none),
 }
 
 private data class SignState(
     val pages: List<String> = listOf("aughhhh"),
     val selectedPage: Int = 0,
     val font: FontChoice = FontChoice.SANS,
-    val size: Float = 256f,
-    val autoSize: Boolean = true,
     val foreground: Palette = Palette.CREAM,
     val background: Palette = Palette.RED,
     val animation: AnimationStyle = AnimationStyle.STATIC,
@@ -257,8 +259,6 @@ private class SignStore(context: Context) {
             .putString("pages", JSONArray(state.pages).toString())
             .putInt("selectedPage", state.selectedPage)
             .putString("font", state.font.name)
-            .putFloat("size", state.size)
-            .putBoolean("autoSize", state.autoSize)
             .putString("foreground", state.foreground.name)
             .putString("background", state.background.name)
             .putString("animation", state.animation.name)
@@ -278,8 +278,6 @@ private class SignStore(context: Context) {
             pages = loadPages(),
             selectedPage = preferences.getInt("selectedPage", 0),
             font = enumOrDefault("font", FontChoice.SANS),
-            size = preferences.getFloat("size", SignState().size),
-            autoSize = preferences.getBoolean("autoSize", SignState().autoSize),
             foreground = enumOrDefault("foreground", Palette.CREAM),
             background = enumOrDefault("background", Palette.RED),
             animation = enumOrDefault("animation", AnimationStyle.STATIC),
@@ -323,7 +321,7 @@ private class SignStore(context: Context) {
 }
 
 @Composable
-private fun AughhhhApp(window: android.view.Window) {
+private fun AughhhhApp(activity: MainActivity, window: android.view.Window) {
     val context = LocalContext.current
     val store = remember { SignStore(context.applicationContext) }
     var modeName by rememberSaveable { mutableStateOf(AppMode.EDIT.name) }
@@ -331,19 +329,18 @@ private fun AughhhhApp(window: android.view.Window) {
     val mode = AppMode.valueOf(modeName)
 
     DisposableEffect(mode) {
-        val activity = context as? Activity
         val controller = WindowCompat.getInsetsController(window, window.decorView)
         if (mode == AppMode.PRESENT) {
-            activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+            activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
             controller.hide(WindowInsetsCompat.Type.systemBars())
             controller.systemBarsBehavior =
                 WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         } else {
-            activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+            activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
             controller.show(WindowInsetsCompat.Type.systemBars())
         }
         onDispose {
-            if (mode == AppMode.PRESENT) activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+            if (mode == AppMode.PRESENT) activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
             if (mode == AppMode.PRESENT) {
                 WindowCompat.getInsetsController(window, window.decorView)
                     .show(WindowInsetsCompat.Type.systemBars())
@@ -366,13 +363,14 @@ private fun AughhhhApp(window: android.view.Window) {
             onStateChange = store::update,
             onRememberRecent = store::rememberRecent,
             onPresent = {
-                presentPage = store.state.selectedPage
+                presentPage = 0
                 modeName = AppMode.PRESENT.name
             },
         )
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun EditorScreen(
     state: SignState,
@@ -389,32 +387,52 @@ private fun EditorScreen(
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 14.dp).navigationBarsPadding(),
                     shape = RoundedCornerShape(18.dp),
                 ) {
-                    Text("Present full screen", fontWeight = FontWeight.Bold)
+                    Icon(
+                        painter = painterResource(R.drawable.ic_present),
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp),
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text("Present", fontWeight = FontWeight.Bold)
                 }
             }
         },
     ) { padding ->
-        Column(
-            modifier = Modifier.fillMaxSize().padding(padding).safeDrawingPadding().verticalScroll(rememberScrollState()),
+        LazyColumn(
+            modifier = Modifier.fillMaxSize().padding(padding).safeDrawingPadding(),
+            contentPadding = PaddingValues(horizontal = 20.dp),
         ) {
-            Header()
-            PrimaryTabRow(selectedTabIndex = 0, containerColor = Color.Transparent) {
-                Tab(selected = true, onClick = {}, text = { Text("Edit", fontWeight = FontWeight.Bold) })
-                Tab(selected = false, onClick = onPresent, text = { Text("Present") })
+            item { Header() }
+            item {
+                Column {
+                    Spacer(Modifier.height(14.dp))
+                    Text("Your sign, your rules", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+                    Text(
+                        "Make it loud, make it weird, make it yours.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Spacer(Modifier.height(18.dp))
+                    PresetsCard(state = state, onStateChange = onStateChange, onRememberRecent = onRememberRecent)
+                }
             }
-            Column(modifier = Modifier.padding(horizontal = 20.dp, vertical = 18.dp)) {
-                Text("Your sign, your rules", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-                Text(
-                    "Make it loud, make it weird, make it yours.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                Spacer(Modifier.height(18.dp))
-                PresetsCard(state = state, onStateChange = onStateChange, onRememberRecent = onRememberRecent)
-                Spacer(Modifier.height(12.dp))
-                SignPreview(state)
-                Spacer(Modifier.height(18.dp))
-                PageStrip(
+            stickyHeader {
+                Surface(color = MaterialTheme.colorScheme.background) {
+                    SignPreview(
+                        state,
+                        modifier = Modifier.padding(vertical = 12.dp),
+                        onPageChange = { delta ->
+                            onStateChange { current ->
+                                current.copy(selectedPage = (current.selectedPage + delta).coerceIn(current.pages.indices))
+                            }
+                        },
+                    )
+                }
+            }
+            item {
+                Column {
+                    Spacer(Modifier.height(6.dp))
+                    PageStrip(
                     pageCount = state.pages.size,
                     selectedPage = state.selectedPage,
                     onSelect = { index -> onStateChange { it.copy(selectedPage = index) } },
@@ -454,9 +472,10 @@ private fun EditorScreen(
                             }
                         }
                     },
-                )
-                Spacer(Modifier.height(14.dp))
-                OutlinedTextField(
+                    )
+                    Spacer(Modifier.height(14.dp))
+                    RecentMessages(state = state, onStateChange = onStateChange)
+                    OutlinedTextField(
                     value = state.text,
                     onValueChange = { text ->
                         onStateChange { current ->
@@ -476,12 +495,13 @@ private fun EditorScreen(
                     maxLines = 6,
                     supportingText = { Text("${state.text.length} characters") },
                     shape = RoundedCornerShape(20.dp),
-                )
-                Spacer(Modifier.height(12.dp))
-                LooksCard(state = state, onStateChange = onStateChange)
-                Spacer(Modifier.height(12.dp))
-                MotionCard(state = state, onStateChange = onStateChange)
-                Spacer(Modifier.height(92.dp))
+                    )
+                    Spacer(Modifier.height(12.dp))
+                    LooksCard(state = state, onStateChange = onStateChange)
+                    Spacer(Modifier.height(12.dp))
+                    MotionCard(state = state, onStateChange = onStateChange)
+                    Spacer(Modifier.height(92.dp))
+                }
             }
         }
     }
@@ -498,6 +518,13 @@ private fun PageStrip(
 ) {
     Column {
         Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+                painter = painterResource(R.drawable.ic_pages),
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(22.dp),
+            )
+            Spacer(Modifier.width(8.dp))
             Text("Pages", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
             Spacer(Modifier.width(8.dp))
             Text("$pageCount total", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -551,30 +578,85 @@ private fun PageStrip(
 
 @Composable
 private fun Header() {
-    Row(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 16.dp),
-        verticalAlignment = Alignment.CenterVertically,
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
     ) {
-        Box(
-            modifier = Modifier.size(48.dp).clip(RoundedCornerShape(16.dp)).background(
-                Brush.linearGradient(listOf(Color(0xFFFF6B6B), Color(0xFFFFC857), Color(0xFFB28DFF)))
-            ),
-            contentAlignment = Alignment.Center,
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(18.dp),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text("A!", color = Color(0xFF24172D), fontWeight = FontWeight.Black, fontSize = 19.sp)
-        }
-        Spacer(Modifier.width(12.dp))
-        Column {
-            Text("aughhhh", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
-            Text("tiny app · big feelings", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Box(
+                modifier = Modifier.size(48.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Image(
+                    painter = painterResource(R.drawable.aughhhh_icon),
+                    contentDescription = "aughhhh app logo",
+                    modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(12.dp)),
+                )
+            }
+            Spacer(Modifier.width(12.dp))
+            Column {
+                Text("aughhhh", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
+                Text("tiny app · big feelings", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
         }
     }
 }
 
 @Composable
-private fun SignPreview(state: SignState) {
+private fun SignPreview(
+    state: SignState,
+    modifier: Modifier = Modifier,
+    onPageChange: ((Int) -> Unit)? = null,
+) {
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+    var inverted by rememberSaveable(state.selectedPage) { mutableStateOf(false) }
+    var flashTick by rememberSaveable(state.selectedPage) { mutableIntStateOf(0) }
+    var flashActive by remember { mutableStateOf(false) }
+    val foreground = if (inverted) state.background.color else state.foreground.color
+    val background = if (inverted) state.foreground.color else state.background.color
+
+    LaunchedEffect(flashTick) {
+        if (flashTick > 0) {
+            flashActive = true
+            delay(180)
+            flashActive = false
+        }
+    }
+
+    fun performTapAction() {
+        when (state.tapAction) {
+            TapAction.OFF -> Unit
+            TapAction.INVERT -> inverted = !inverted
+            TapAction.FLASH -> flashTick++
+            TapAction.SOUND -> coroutineScope.launch { playTapSound(context) }
+            TapAction.NEXT_PAGE -> onPageChange?.invoke(1)
+        }
+    }
+
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable(enabled = state.tapAction != TapAction.OFF, onClick = ::performTapAction)
+            .then(
+                if (onPageChange == null) {
+                    Modifier
+                } else {
+                    Modifier.pointerInput(state.selectedPage, state.pages.size) {
+                        var dragDistance = 0f
+                        detectHorizontalDragGestures(
+                            onHorizontalDrag = { _, dragAmount -> dragDistance += dragAmount },
+                            onDragEnd = {
+                                if (abs(dragDistance) > 64f) onPageChange(if (dragDistance < 0) 1 else -1)
+                            },
+                        )
+                    }
+                }
+            ),
         shape = RoundedCornerShape(28.dp),
         colors = CardDefaults.cardColors(containerColor = Color.Transparent),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
@@ -585,6 +667,8 @@ private fun SignPreview(state: SignState) {
                 modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(28.dp)).padding(22.dp),
                 maxLines = 3,
                 preview = true,
+                foreground = foreground,
+                background = background,
             )
             Surface(
                 modifier = Modifier.align(Alignment.TopStart),
@@ -592,6 +676,9 @@ private fun SignPreview(state: SignState) {
                 shape = RoundedCornerShape(50),
             ) {
                 Text("LIVE PREVIEW", modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp), color = state.foreground.color, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+            }
+            if (flashActive) {
+                Box(modifier = Modifier.fillMaxSize().background(foreground.copy(alpha = 0.82f)))
             }
         }
     }
@@ -603,7 +690,7 @@ private fun PresetsCard(
     onStateChange: (((SignState) -> SignState)) -> Unit,
     onRememberRecent: (String) -> Unit,
 ) {
-    SettingCard(title = "Quick vibes", subtitle = "Because choosing is hard") {
+    SettingCard(title = "Quick vibes", subtitle = "Because choosing is hard", icon = R.drawable.ic_vibes) {
         ChipRow {
             Preset.entries.forEach { preset ->
                 FilterChip(
@@ -622,31 +709,38 @@ private fun PresetsCard(
                             )
                         }
                     },
+                    leadingIcon = { OptionIcon(preset.icon) },
                     label = { Text(preset.label) },
                 )
             }
         }
-        if (state.recentTexts.isNotEmpty()) {
-            Spacer(Modifier.height(12.dp))
-            Text("Recent", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
-            ChipRow {
-                state.recentTexts.forEach { recent ->
-                    FilterChip(
-                        selected = recent == state.text,
-                        onClick = {
-                            onStateChange { current ->
-                                current.copy(
-                                    pages = current.pages.mapIndexed { index, page ->
-                                        if (index == current.selectedPage) recent else page
-                                    }
-                                )
-                            }
-                        },
-                        label = { Text(recent.take(18)) },
-                    )
-                }
+    }
+}
+
+@Composable
+private fun RecentMessages(state: SignState, onStateChange: (((SignState) -> SignState)) -> Unit) {
+    if (state.recentTexts.isEmpty()) return
+    Column {
+        Text("Recent messages", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+        Spacer(Modifier.height(8.dp))
+        ChipRow {
+            state.recentTexts.forEach { recent ->
+                FilterChip(
+                    selected = recent == state.text,
+                    onClick = {
+                        onStateChange { current ->
+                            current.copy(
+                                pages = current.pages.mapIndexed { index, page ->
+                                    if (index == current.selectedPage) recent else page
+                                }
+                            )
+                        }
+                    },
+                    label = { Text(recent.take(18)) },
+                )
             }
         }
+        Spacer(Modifier.height(12.dp))
     }
 }
 
@@ -668,7 +762,11 @@ private fun AnimatedSignText(
         targetValue = 1f,
         animationSpec = infiniteRepeatable(
             animation = tween(
-                durationMillis = if (preview) (2400 / state.speed).toInt() else (1450 / state.speed).toInt().coerceAtLeast(120),
+                durationMillis = if (preview) {
+                    (900 / state.speed).toInt().coerceAtLeast(180)
+                } else {
+                    (650 / state.speed).toInt().coerceAtLeast(100)
+                },
             ),
             repeatMode = RepeatMode.Reverse,
         ),
@@ -679,10 +777,16 @@ private fun AnimatedSignText(
             (1f - (pulse * state.blinkIntensity * 0.94f)).coerceIn(0.04f, 1f)
         } else 1f
     val animatedBackground =
-        if (animation == AnimationStyle.BLINK_BACKGROUND || animation == AnimationStyle.STROBE) {
-            androidx.compose.ui.graphics.lerp(background, foreground, pulse)
-        } else background
-    CompositionLocalProvider(LocalContentColor provides foreground) {
+        when (animation) {
+            AnimationStyle.BLINK_BACKGROUND, AnimationStyle.STROBE -> androidx.compose.ui.graphics.lerp(background, foreground, pulse)
+            AnimationStyle.INVERT -> androidx.compose.ui.graphics.lerp(background, foreground, pulse)
+            else -> background
+        }
+    val animatedForeground =
+        if (animation == AnimationStyle.INVERT) {
+            androidx.compose.ui.graphics.lerp(foreground, background, pulse)
+        } else foreground
+    CompositionLocalProvider(LocalContentColor provides animatedForeground) {
         Box(modifier = modifier.background(animatedBackground), contentAlignment = state.verticalPosition.alignment) {
             FittedSignText(
                 text = state.text.ifBlank { "aughhhh" },
@@ -713,17 +817,14 @@ private fun FittedSignText(
         val textMeasurer = rememberTextMeasurer()
         val maxWidth = with(density) { maxWidth.toPx().roundToInt().coerceAtLeast(1) }
         val maxHeight = with(density) { maxHeight.toPx().roundToInt().coerceAtLeast(1) }
-        val fontSize =
-            if (state.autoSize) {
-                fitFontSize(
-                    textMeasurer = textMeasurer,
-                    text = text,
-                    state = state,
-                    maxWidth = if (maxLines == 1) maxWidth.coerceAtLeast(4096) else maxWidth,
-                    maxHeight = maxHeight,
-                    maxLines = maxLines,
-                )
-            } else state.size
+        val fontSize = fitFontSize(
+            textMeasurer = textMeasurer,
+            text = text,
+            state = state,
+            maxWidth = if (maxLines == 1) maxWidth.coerceAtLeast(4096) else maxWidth,
+            maxHeight = maxHeight,
+            maxLines = maxLines,
+        )
         Text(
             text = text,
             modifier = Modifier.fillMaxWidth(),
@@ -734,6 +835,7 @@ private fun FittedSignText(
             textAlign = state.textAlignment.value,
             lineHeight = (fontSize * 1.05f).sp,
             maxLines = maxLines,
+            softWrap = false,
         )
     }
 }
@@ -747,7 +849,7 @@ private fun fitFontSize(
     maxLines: Int,
 ): Float {
     var low = 18f
-    var high = state.size.coerceIn(low, 256f)
+    var high = 256f
     repeat(12) {
         val candidate = (low + high) / 2f
         val result =
@@ -760,8 +862,9 @@ private fun fitFontSize(
                 ),
                 constraints = Constraints(maxWidth = maxWidth, maxHeight = maxHeight),
                 maxLines = maxLines,
+                softWrap = false,
             )
-        val fits = !result.didOverflowHeight && (maxLines == 1 || !result.didOverflowWidth)
+        val fits = !result.didOverflowHeight && !result.didOverflowWidth
         if (fits) low = candidate else high = candidate
     }
     return low
@@ -777,36 +880,28 @@ private fun rememberReducedMotion(context: Context): Boolean {
 
 @Composable
 private fun LooksCard(state: SignState, onStateChange: (((SignState) -> SignState)) -> Unit) {
-    SettingCard(title = "Looks", subtitle = "Type is a personality") {
+    SettingCard(title = "Looks", subtitle = "Type is a personality", icon = R.drawable.ic_looks) {
         Text("Font", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
         ChipRow {
             FontChoice.entries.forEach { choice ->
                 FilterChip(
                     selected = state.font == choice,
                     onClick = { onStateChange { it.copy(font = choice) } },
+                    leadingIcon = { OptionIcon(choice.icon) },
                     label = { Text(choice.label) },
                 )
             }
         }
         Spacer(Modifier.height(12.dp))
-        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    if (state.autoSize) "Size · auto-fit" else "Size · ${state.size.toInt()} sp",
-                    style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.Bold,
-                )
-                Text("Max ${state.size.toInt()} sp", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-            Switch(
-                checked = state.autoSize,
-                onCheckedChange = { enabled -> onStateChange { it.copy(autoSize = enabled) } },
-            )
-        }
-        Slider(
-            value = state.size,
-            onValueChange = { onStateChange { current -> current.copy(size = it, autoSize = false) } },
-            valueRange = 48f..256f,
+        Text(
+            "Size · largest possible",
+            style = MaterialTheme.typography.labelLarge,
+            fontWeight = FontWeight.Bold,
+        )
+        Text(
+            "Automatically fitted to the available canvas",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Text("Text alignment", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
         ChipRow {
@@ -814,6 +909,7 @@ private fun LooksCard(state: SignState, onStateChange: (((SignState) -> SignStat
                 FilterChip(
                     selected = state.textAlignment == alignment,
                     onClick = { onStateChange { it.copy(textAlignment = alignment) } },
+                    leadingIcon = { OptionIcon(alignment.icon) },
                     label = { Text(alignment.label) },
                 )
             }
@@ -825,6 +921,7 @@ private fun LooksCard(state: SignState, onStateChange: (((SignState) -> SignStat
                 FilterChip(
                     selected = state.verticalPosition == position,
                     onClick = { onStateChange { it.copy(verticalPosition = position) } },
+                    leadingIcon = { OptionIcon(position.icon) },
                     label = { Text(position.label) },
                 )
             }
@@ -868,12 +965,13 @@ private fun relativeLuminance(color: Color): Float {
 
 @Composable
 private fun MotionCard(state: SignState, onStateChange: (((SignState) -> SignState)) -> Unit) {
-    SettingCard(title = "Motion", subtitle = "Optional chaos, responsibly applied") {
+    SettingCard(title = "Motion", subtitle = "Optional chaos, responsibly applied", icon = R.drawable.ic_motion) {
         ChipRow {
             AnimationStyle.entries.forEach { animation ->
                 FilterChip(
                     selected = state.animation == animation,
                     onClick = { onStateChange { it.copy(animation = animation) } },
+                    leadingIcon = { OptionIcon(animation.icon) },
                     label = { Text(animation.label) },
                 )
             }
@@ -915,6 +1013,7 @@ private fun MotionCard(state: SignState, onStateChange: (((SignState) -> SignSta
                 FilterChip(
                     selected = state.transition == transition,
                     onClick = { onStateChange { it.copy(transition = transition) } },
+                    leadingIcon = { OptionIcon(transition.icon) },
                     label = { Text(transition.label) },
                 )
             }
@@ -931,6 +1030,7 @@ private fun MotionCard(state: SignState, onStateChange: (((SignState) -> SignSta
                 FilterChip(
                     selected = state.tapAction == action,
                     onClick = { onStateChange { it.copy(tapAction = action) } },
+                    leadingIcon = { OptionIcon(action.icon) },
                     label = { Text(action.label) },
                 )
             }
@@ -961,14 +1061,23 @@ private fun MotionCard(state: SignState, onStateChange: (((SignState) -> SignSta
 }
 
 @Composable
-private fun SettingCard(title: String, subtitle: String, content: @Composable () -> Unit) {
+private fun SettingCard(title: String, subtitle: String, icon: Int, content: @Composable () -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
     ) {
         Column(modifier = Modifier.padding(18.dp)) {
-            Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    painter = painterResource(icon),
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(22.dp),
+                )
+                Spacer(Modifier.width(8.dp))
+                Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            }
             Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Spacer(Modifier.height(16.dp))
             content()
@@ -981,6 +1090,16 @@ private fun ChipRow(content: @Composable () -> Unit) {
     Row(modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         content()
     }
+}
+
+@Composable
+private fun OptionIcon(resourceId: Int) {
+    Icon(
+        painter = painterResource(resourceId),
+        contentDescription = null,
+        tint = LocalContentColor.current,
+        modifier = Modifier.size(18.dp),
+    )
 }
 
 @Composable
@@ -1010,11 +1129,13 @@ private fun ColorPicker(title: String, selected: Palette, onSelect: (Palette) ->
                     },
                 contentAlignment = Alignment.Center,
             ) {
-                BasicText(
-                    text = if (selected == palette) "✓" else "",
-                    modifier = Modifier.fillMaxSize(),
-                    style = TextStyle(color = if (palette == Palette.INK) Color.White else Color(0xFF24172D), fontSize = 17.sp, textAlign = TextAlign.Center),
-                )
+                if (selected == palette) {
+                    Text(
+                        text = "✓",
+                        color = if (palette == Palette.INK) Color.White else Color(0xFF24172D),
+                        fontSize = 17.sp,
+                    )
+                }
             }
         }
     }
@@ -1134,30 +1255,15 @@ private fun PresentScreen(
         if (flashActive) {
             Box(modifier = Modifier.fillMaxSize().background(foreground.copy(alpha = 0.82f)))
         }
-        Surface(
-            modifier = Modifier.align(Alignment.TopEnd).padding(16.dp),
-            color = foreground.copy(alpha = 0.12f),
-            contentColor = foreground,
-            shape = RoundedCornerShape(50),
+        TextButton(
+            onClick = onExit,
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(10.dp)
+                .size(64.dp)
+                .semantics { contentDescription = "Exit present" },
         ) {
-            TextButton(onClick = onExit) { Text("Exit present") }
-        }
-        Column(
-            modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 18.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            Text(
-                text = "${presentPage + 1} / ${state.pages.size}  ·  swipe to navigate",
-                color = foreground.copy(alpha = 0.62f),
-                style = MaterialTheme.typography.labelMedium,
-            )
-            if (state.tapAction != TapAction.OFF) {
-                Text(
-                    text = "tap: ${state.tapAction.label.lowercase()}",
-                    color = foreground.copy(alpha = 0.45f),
-                    style = MaterialTheme.typography.labelSmall,
-                )
-            }
+            Text("×", color = foreground.copy(alpha = 0.62f), fontSize = 40.sp, fontWeight = FontWeight.Light)
         }
     }
 }
