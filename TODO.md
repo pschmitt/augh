@@ -38,7 +38,7 @@ Keep Gradle off the local workstation. Build and validate on `rofl-13` or `rofl-
 then install the result on every ADB device currently attached to this workstation.
 
 - [x] Nix dev shell with JDK 21, Android SDK 36, platform tools, just, and ktfmt
-- [x] CI build and rolling `latest` release workflow using JDK 21 and Gradle caching
+- [x] CI build, lint, and rolling `latest` release workflows using JDK 21 and Gradle caching
 - [ ] Remote `just build` / `just check` recipes targeting `rofl-13` / `rofl-14`
 - [ ] `just deploy-all` install and launch smoke check for all connected ADB devices
 
