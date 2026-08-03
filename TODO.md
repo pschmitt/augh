@@ -567,3 +567,15 @@ Add a presentation-screen preference that wraps page navigation around at both e
 
 State: **done**, 2026-08-03. Present mode now optionally wraps page navigation in both directions,
 including swipes, tap actions, and external intents.
+
+## AUG-61: Fix animated presentation insets and intent exit
+
+Keep the full presentation background synchronized with animated sign colors on devices that expose
+landscape safe-area insets, and ensure an intent-launched presentation does not restart after exit.
+
+- [x] Synchronize the full-window presentation background with the sign animation pulse
+- [x] Avoid re-processing the original presentation intent after orientation recreation
+- [x] Rebuild and deploy the presentation fix
+
+State: **done**, 2026-08-03. PX5 presentation margins now follow the animated sign background,
+and X exits intent-launched Present mode cleanly after the orientation reset.

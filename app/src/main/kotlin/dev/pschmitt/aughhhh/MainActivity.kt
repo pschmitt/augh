@@ -143,7 +143,7 @@ class MainActivity : ComponentActivity() {
         installSplashScreen()
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        incomingIntent = intent
+        incomingIntent = if (savedInstanceState == null) intent else null
         setContent {
             AughhhhTheme {
                 AughhhhApp(
@@ -1146,22 +1146,29 @@ private fun AnimatedSignText(
     preview: Boolean,
     foreground: Color = state.foreground.color,
     background: Color = state.background.color,
+    pulseOverride: Float? = null,
 ) {
     val context = LocalContext.current
     val reducedMotion = rememberReducedMotion(context)
     val animation = if (reducedMotion) AnimationStyle.STATIC else state.animation
-    val transition = rememberInfiniteTransition(label = "sign-motion-${if (preview) "preview" else "present"}")
-    val pulse by transition.animateFloat(
-        initialValue = 0f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(
-                durationMillis = (220 / state.speed).toInt().coerceAtLeast(50),
-            ),
-            repeatMode = RepeatMode.Reverse,
-        ),
-        label = "sign-pulse",
-    )
+    val pulse =
+        if (pulseOverride != null) {
+            pulseOverride
+        } else {
+            val transition = rememberInfiniteTransition(label = "sign-motion-${if (preview) "preview" else "present"}")
+            val animatedPulse by transition.animateFloat(
+                initialValue = 0f,
+                targetValue = 1f,
+                animationSpec = infiniteRepeatable(
+                    animation = tween(
+                        durationMillis = (220 / state.speed).toInt().coerceAtLeast(50),
+                    ),
+                    repeatMode = RepeatMode.Reverse,
+                ),
+                label = "sign-pulse",
+            )
+            animatedPulse
+        }
     val blinkAlpha =
         if (animation == AnimationStyle.BLINK || animation == AnimationStyle.STROBE) {
             (1f - (pulse * state.blinkIntensity * 0.94f)).coerceIn(0.04f, 1f)
@@ -1542,6 +1549,25 @@ private fun PresentScreen(
     val foreground = if (inverted) state.background.color else state.foreground.color
     val background = if (inverted) state.foreground.color else state.background.color
     val presentPage = initialPage.coerceIn(state.pages.indices)
+    val animation = if (reducedMotion) AnimationStyle.STATIC else state.animation
+    val pulseTransition = rememberInfiniteTransition(label = "present-background-motion")
+    val pulse by pulseTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(
+                durationMillis = (220 / state.speed).toInt().coerceAtLeast(50),
+            ),
+            repeatMode = RepeatMode.Reverse,
+        ),
+        label = "present-background-pulse",
+    )
+    val animatedPresentationBackground =
+        when (animation) {
+            AnimationStyle.BLINK_BACKGROUND, AnimationStyle.STROBE, AnimationStyle.INVERT ->
+                androidx.compose.ui.graphics.lerp(background, foreground, pulse)
+            else -> background
+        }
 
     DisposableEffect(state.keepScreenAwake) {
         if (state.keepScreenAwake) window.addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
@@ -1594,7 +1620,7 @@ private fun PresentScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(background)
+            .background(animatedPresentationBackground)
             .safeDrawingPadding()
             .pointerInput(state.pages.size, presentPage) {
                 var dragDistance = 0f
@@ -1644,6 +1670,7 @@ private fun PresentScreen(
                 preview = false,
                 foreground = foreground,
                 background = background,
+                pulseOverride = pulse,
             )
         }
         PageTransitionOverlay(style = transitionStyle, page = presentPage, color = foreground, speed = state.speed)
