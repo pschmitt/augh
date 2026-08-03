@@ -50,9 +50,7 @@ android {
         }
     }
 
-    buildTypes.named("release") {
-        signingConfig = signingConfigs.getByName("debug")
-    }
+    buildTypes.named("release") { signingConfig = signingConfigs.getByName("debug") }
 
     packaging.resources.excludes += "/META-INF/{AL2.0,LGPL2.1}"
 }
