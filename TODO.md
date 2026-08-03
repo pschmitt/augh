@@ -618,6 +618,17 @@ Use the current “make it bold!” tagline throughout the app’s identity surf
 
 State: **done**, 2026-08-04.
 
+## AUG-66: Apply motion timing changes live in Preview
+
+Make changes to animation speed and blink/strobe frequency take effect immediately in the live
+preview, matching presentation mode.
+
+- [x] Restart the preview pulse with the current timing parameters
+- [x] Keep blink, background blink, strobe, and speed-driven motion synchronized
+- [x] Rebuild and deploy the live timing fix
+
+State: **done**, 2026-08-04.
+
 ## AUG-65: Give Looks its own theme icon
 
 Use a palette icon for the Looks section so it is visually distinct from the Message section.

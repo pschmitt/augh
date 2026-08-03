@@ -1308,19 +1308,13 @@ private fun AnimatedSignText(
         if (pulseOverride != null) {
             pulseOverride
         } else {
-            val transition = rememberInfiniteTransition(label = "sign-motion-${if (preview) "preview" else "present"}")
-            val animatedPulse by transition.animateFloat(
-                initialValue = 0f,
-                targetValue = 1f,
-                animationSpec = infiniteRepeatable(
-                    animation = tween(
-                        durationMillis = pulseDurationMillis(animation, state.speed, state.blinkRateHz, refreshRateHz),
-                    ),
-                    repeatMode = RepeatMode.Reverse,
-                ),
-                label = "sign-pulse",
+            rememberMotionPulse(
+                animation = animation,
+                speed = state.speed,
+                blinkRateHz = state.blinkRateHz,
+                refreshRateHz = refreshRateHz,
+                label = "sign-motion-${if (preview) "preview" else "present"}",
             )
-            animatedPulse
         }
     val blinkAlpha =
         if (animation == AnimationStyle.BLINK || animation == AnimationStyle.STROBE) {
@@ -1358,6 +1352,29 @@ private fun AnimatedSignText(
             )
         }
     }
+}
+
+@Composable
+private fun rememberMotionPulse(
+    animation: AnimationStyle,
+    speed: Float,
+    blinkRateHz: Float,
+    refreshRateHz: Float,
+    label: String,
+): Float {
+    val transition = key(animation, speed, blinkRateHz, refreshRateHz) {
+        rememberInfiniteTransition(label = label)
+    }
+    val pulse by transition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = pulseDurationMillis(animation, speed, blinkRateHz, refreshRateHz)),
+            repeatMode = RepeatMode.Reverse,
+        ),
+        label = "sign-pulse",
+    )
+    return pulse
 }
 
 @Composable
@@ -1757,17 +1774,12 @@ private fun PresentScreen(
     val presentPage = initialPage.coerceIn(state.pages.indices)
     val animation = if (reducedMotion) AnimationStyle.STATIC else state.animation
     val refreshRateHz = LocalView.current.display?.refreshRate?.takeIf { it > 0f } ?: 60f
-    val pulseTransition = rememberInfiniteTransition(label = "present-background-motion")
-    val pulse by pulseTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(
-                durationMillis = pulseDurationMillis(animation, state.speed, state.blinkRateHz, refreshRateHz),
-            ),
-            repeatMode = RepeatMode.Reverse,
-        ),
-        label = "present-background-pulse",
+    val pulse = rememberMotionPulse(
+        animation = animation,
+        speed = state.speed,
+        blinkRateHz = state.blinkRateHz,
+        refreshRateHz = refreshRateHz,
+        label = "present-background-motion",
     )
     val animatedPresentationBackground =
         when (animation) {
