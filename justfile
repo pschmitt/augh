@@ -4,7 +4,6 @@ application_id := "dev.pschmitt.aughhhh.debug"
 remote_host := env_var_or_default("AUGHHHH_REMOTE_HOST", "rofl-13.brkn.lol")
 remote_path := env_var_or_default("AUGHHHH_REMOTE_PATH", "~/build/aughhhh")
 local_dist := env_var_or_default("AUGHHHH_DIST_DIR", "./dist")
-default_abi := env_var_or_default("AUGHHHH_ABI", "arm64-v8a")
 
 default:
     @just --list
@@ -27,11 +26,11 @@ build variant="debug" host=remote_host:
     just sync "{{host}}"
     ssh "{{host}}" "cd {{remote_path}} && nix develop --command ./gradlew :app:$task"
 
-fetch variant="debug" host=remote_host abi=default_abi:
+fetch variant="debug" host=remote_host:
     #!/usr/bin/env bash
     set -euo pipefail
     mkdir -p "{{local_dist}}"
-    scp "{{host}}:{{remote_path}}/app/build/outputs/apk/{{variant}}/app-{{abi}}-{{variant}}.apk" "{{local_dist}}/"
+    scp "{{host}}:{{remote_path}}/app/build/outputs/apk/{{variant}}/app-{{variant}}.apk" "{{local_dist}}/"
 
 build-fetch variant="debug" host=remote_host:
     just build {{variant}} {{host}}
@@ -47,7 +46,7 @@ deploy-all variant="debug" host=remote_host:
     #!/usr/bin/env bash
     set -euo pipefail
     just build-fetch "{{variant}}" "{{host}}"
-    apk="{{local_dist}}/app-{{default_abi}}-{{variant}}.apk"
+    apk="{{local_dist}}/app-{{variant}}.apk"
     mapfile -t targets < <(adb devices | awk '$2 == "device" { print $1 }')
     if [[ "${#targets[@]}" -eq 0 ]]; then
       printf 'No attached ADB devices are ready for installation\n' >&2
