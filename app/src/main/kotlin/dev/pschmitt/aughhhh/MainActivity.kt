@@ -197,9 +197,9 @@ private enum class AppMode { EDIT, PRESENT }
 private enum class AnimationStyle(val label: String, val description: String, val icon: Int) {
     STATIC("Still", "Clean and calm", R.drawable.ic_static),
     SCROLL("Scroll", "Keep it moving", R.drawable.ic_scroll),
-    BLINK("Blink", "Hard to ignore", R.drawable.ic_blink),
-    BLINK_BACKGROUND("BG blink", "The background joins in", R.drawable.ic_background),
-    STROBE("Strobe", "Very cursed · use carefully", R.drawable.ic_strobe),
+    BLINK("Text blink", "Only the text fades in and out", R.drawable.ic_blink),
+    BLINK_BACKGROUND("Background flash", "Only the background flashes", R.drawable.ic_background),
+    STROBE("Full strobe", "Text and background flash together", R.drawable.ic_strobe),
     INVERT("Invert", "Swap colors in motion", R.drawable.ic_invert),
 }
 
@@ -1573,7 +1573,7 @@ private fun MotionCard(
         )
         if (state.animation == AnimationStyle.STROBE) {
             Text(
-                "Strobe can trigger discomfort or photosensitive reactions.",
+                "Full strobe can trigger discomfort or photosensitive reactions.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.error,
                 fontWeight = FontWeight.Bold,
@@ -1581,17 +1581,21 @@ private fun MotionCard(
         }
         if (!state.highIntensityMode) {
             Text(
-                "High-intensity mode unlocks speeds up to 400% and Strobe.",
+                "High-intensity mode unlocks speeds up to 400% and Full strobe.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
-        if (state.animation != AnimationStyle.STATIC) {
+        val usesAnimationSpeed =
+            state.animation == AnimationStyle.SCROLL ||
+                state.animation == AnimationStyle.INVERT ||
+                state.transition != TransitionStyle.NONE
+        if (usesAnimationSpeed) {
             Spacer(Modifier.height(12.dp))
             val speedIsDangerous = state.speed > NORMAL_MAX_SPEED
             val speedColor = if (speedIsDangerous) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
             Text(
-                "Speed · ${(state.speed * 100).toInt()}%",
+                "Animation speed · ${(state.speed * 100).toInt()}%",
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.Bold,
                 color = if (speedIsDangerous) speedColor else LocalContentColor.current,
@@ -1613,7 +1617,7 @@ private fun MotionCard(
             state.animation == AnimationStyle.BLINK_BACKGROUND ||
             state.animation == AnimationStyle.STROBE
         ) {
-            Text("Blink rate · ${"%.1f".format(state.blinkRateHz)} Hz", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+            Text("Flash frequency · ${"%.1f".format(state.blinkRateHz)} Hz", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
             Slider(
                 value = state.blinkRateHz,
                 onValueChange = { onStateChange { current -> current.copy(blinkRateHz = it) } },

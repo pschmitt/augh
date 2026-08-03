@@ -640,6 +640,17 @@ motion sliders change.
 
 State: **done**, 2026-08-04.
 
+## AUG-72: Simplify animation timing controls
+
+Make the effect choices and their timing controls understandable at a glance.
+
+- [x] Rename text blink, background flash, and full strobe for explicit behavior
+- [x] Show animation speed only where it affects moving effects or page transitions
+- [x] Rename blink rate to flash frequency and update the documentation
+
+State: **done**, 2026-08-04. The controls now distinguish movement speed from flash frequency,
+and each flashing mode states whether it affects the text, background, or both.
+
 ## AUG-69: Keep the sticky preview state current
 
 Ensure the live preview observes editor state changes while it remains mounted in the sticky
