@@ -353,3 +353,53 @@ Opt out of Android 16's large-screen compatibility behavior that ignores runtime
 - [x] Verify and refresh the landscape presentation capture
 
 State: **done**, 2026-08-03. Present mode now explicitly opts out of the large-screen orientation override; the Mi Pad previously ignored the request because it is `sw600dp`.
+
+## AUG-41: Remove the obsolete size section
+
+Remove the leftover “largest possible” copy now that font sizing is always automatic and has no user-facing setting.
+
+- [x] Remove the obsolete size heading
+- [x] Remove the redundant auto-fit explanation
+- [x] Preserve automatic fitting and alignment controls
+
+State: **done**, 2026-08-03. Looks now moves directly from font choices to alignment without the retired size section.
+
+## AUG-42: Navigate to Message on preview long-press
+
+Make the live preview a shortcut back to the primary editing field.
+
+- [x] Detect a long-press on the editor preview
+- [x] Scroll the Message field into view and focus it
+- [x] Preserve preview taps and horizontal swipe navigation
+
+State: **done**, 2026-08-03. Long-pressing the editor preview now jumps to and focuses Message.
+
+## AUG-43: Showcase page transitions in the live preview
+
+Replay the selected transition within the preview when its transition setting changes, without changing the selected page.
+
+- [x] Re-enter the same preview page through a transition-only key
+- [x] Showcase the configured transition and overlay effects
+- [x] Preserve page selection and stored content
+
+State: **done**, 2026-08-03. Changing Page transition now visibly replays that transition in the live preview.
+
+## AUG-44: Match preview animation timing
+
+Keep blinking, strobing, background effects, inversion, and other speed-sensitive motion faithful in the live preview.
+
+- [x] Use the same speed curve and timing floor as Present mode
+- [x] Keep blink intensity and motion style changes live in the preview
+- [x] Preserve reduced-motion accessibility behavior
+
+State: **done**, 2026-08-03. The preview now uses the same speed-sensitive pulse timing as the full-screen presentation.
+
+## AUG-45: Replay a selected page transition
+
+Retrigger the live preview when the selected Page transition chip is tapped, including when it was already selected.
+
+- [x] Treat every transition-chip tap as a preview replay request
+- [x] Replay the current page without changing page selection
+- [x] Keep the transition setting and stored content unchanged by replaying
+
+State: **done**, 2026-08-03. Tapping any transition chip now showcases it immediately, even when it is already selected.

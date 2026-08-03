@@ -36,6 +36,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.horizontalScroll
@@ -55,6 +56,7 @@ import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -85,6 +87,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -96,6 +99,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -490,6 +495,11 @@ private fun EditorScreen(
     onRememberRecent: (String) -> Unit,
     onPresent: () -> Unit,
 ) {
+    val listState = rememberLazyListState()
+    val coroutineScope = rememberCoroutineScope()
+    val messageFocusRequester = remember { FocusRequester() }
+    var transitionReplayKey by remember { mutableIntStateOf(0) }
+
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         bottomBar = {
@@ -512,6 +522,7 @@ private fun EditorScreen(
     ) { padding ->
         LazyColumn(
             modifier = Modifier.fillMaxSize().padding(padding),
+            state = listState,
             contentPadding = PaddingValues(horizontal = 20.dp),
         ) {
             item { Header() }
@@ -533,9 +544,16 @@ private fun EditorScreen(
                     SignPreview(
                         state,
                         modifier = Modifier.padding(vertical = 12.dp),
+                        replayKey = transitionReplayKey,
                         onPageChange = { delta ->
                             onStateChange { current ->
                                 current.copy(selectedPage = (current.selectedPage + delta).coerceIn(current.pages.indices))
+                            }
+                        },
+                        onLongPress = {
+                            coroutineScope.launch {
+                                listState.animateScrollToItem(3)
+                                messageFocusRequester.requestFocus()
                             }
                         },
                     )
@@ -598,9 +616,12 @@ private fun EditorScreen(
                             )
                         }
                     },
-                    modifier = Modifier.fillMaxWidth().onFocusChanged { focusState ->
-                        if (!focusState.isFocused) onRememberRecent(state.text)
-                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .focusRequester(messageFocusRequester)
+                        .onFocusChanged { focusState ->
+                            if (!focusState.isFocused) onRememberRecent(state.text)
+                        },
                     label = { Text("Message") },
                     placeholder = { Text("Type something worth displaying…") },
                     minLines = 3,
@@ -611,7 +632,11 @@ private fun EditorScreen(
                     Spacer(Modifier.height(12.dp))
                     LooksCard(state = state, onStateChange = onStateChange)
                     Spacer(Modifier.height(12.dp))
-                    MotionCard(state = state, onStateChange = onStateChange)
+                    MotionCard(
+                        state = state,
+                        onStateChange = onStateChange,
+                        onTransitionReplay = { transitionReplayKey++ },
+                    )
                     Spacer(Modifier.height(92.dp))
                 }
             }
@@ -719,15 +744,19 @@ private fun Header() {
 }
 
 @Composable
+@OptIn(ExperimentalFoundationApi::class)
 private fun SignPreview(
     state: SignState,
     modifier: Modifier = Modifier,
+    replayKey: Int = 0,
     onPageChange: ((Int) -> Unit)? = null,
+    onLongPress: (() -> Unit)? = null,
 ) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     var inverted by rememberSaveable(state.selectedPage) { mutableStateOf(false) }
     var flashTick by rememberSaveable(state.selectedPage) { mutableIntStateOf(0) }
+    var transitionPreviewKey by remember { mutableIntStateOf(0) }
     var flashActive by remember { mutableStateOf(false) }
     val foreground = if (inverted) state.background.color else state.foreground.color
     val background = if (inverted) state.foreground.color else state.background.color
@@ -739,6 +768,8 @@ private fun SignPreview(
             flashActive = false
         }
     }
+
+    LaunchedEffect(state.transition, replayKey) { transitionPreviewKey++ }
 
     fun performTapAction() {
         when (state.tapAction) {
@@ -753,7 +784,11 @@ private fun SignPreview(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .clickable(enabled = state.tapAction != TapAction.OFF, onClick = ::performTapAction)
+            .combinedClickable(
+                enabled = state.tapAction != TapAction.OFF || onLongPress != null,
+                onClick = if (state.tapAction != TapAction.OFF) ::performTapAction else ({}),
+                onLongClick = onLongPress,
+            )
             .then(
                 if (onPageChange == null) {
                     Modifier
@@ -774,14 +809,45 @@ private fun SignPreview(
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
     ) {
         Box(modifier = Modifier.fillMaxWidth().height(196.dp)) {
-            AnimatedSignText(
-                state = state,
-                modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(28.dp)).padding(22.dp),
-                maxLines = 3,
-                preview = true,
-                foreground = foreground,
-                background = background,
-            )
+            AnimatedContent(
+                targetState = transitionPreviewKey,
+                modifier = Modifier.fillMaxSize(),
+                transitionSpec = {
+                    fun duration(base: Int) = (base / state.speed).toInt().coerceAtLeast(60)
+                    val enter =
+                        when (state.transition) {
+                            TransitionStyle.NONE -> fadeIn(tween(0))
+                            TransitionStyle.FADE -> fadeIn(tween(duration(260)))
+                            TransitionStyle.WIPE -> slideInHorizontally(tween(duration(300))) { it } + fadeIn(tween(duration(300)))
+                            TransitionStyle.BLINDS -> scaleIn(tween(duration(320)), initialScale = 0.82f) + fadeIn(tween(duration(320)))
+                            TransitionStyle.CHECKERBOARD -> scaleIn(tween(duration(360)), initialScale = 1.18f) + fadeIn(tween(duration(360)))
+                            TransitionStyle.SPIN -> scaleIn(tween(duration(360)), initialScale = 0.45f) + fadeIn(tween(duration(360)))
+                        }
+                    val exit =
+                        when (state.transition) {
+                            TransitionStyle.NONE -> fadeOut(tween(0))
+                            TransitionStyle.FADE -> fadeOut(tween(duration(260)))
+                            TransitionStyle.WIPE -> slideOutHorizontally(tween(duration(300))) { -it } + fadeOut(tween(duration(300)))
+                            TransitionStyle.BLINDS -> fadeOut(tween(duration(320)))
+                            TransitionStyle.CHECKERBOARD -> scaleOut(tween(duration(360)), targetScale = 1.18f) + fadeOut(tween(duration(360)))
+                            TransitionStyle.SPIN -> scaleOut(tween(duration(360)), targetScale = 0.45f) + fadeOut(tween(duration(360)))
+                        }
+                    (enter togetherWith exit).using(SizeTransform(clip = false))
+                },
+                label = "preview-transition",
+            ) { previewKey ->
+                key(previewKey) {
+                    AnimatedSignText(
+                        state = state,
+                        modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(28.dp)).padding(22.dp),
+                        maxLines = 3,
+                        preview = true,
+                        foreground = foreground,
+                        background = background,
+                    )
+                }
+            }
+            PageTransitionOverlay(style = state.transition, page = transitionPreviewKey, color = foreground, speed = state.speed)
             Surface(
                 modifier = Modifier.align(Alignment.TopStart),
                 color = state.foreground.color.copy(alpha = 0.16f),
@@ -874,11 +940,7 @@ private fun AnimatedSignText(
         targetValue = 1f,
         animationSpec = infiniteRepeatable(
             animation = tween(
-                durationMillis = if (preview) {
-                    (300 / state.speed).toInt().coerceAtLeast(70)
-                } else {
-                    (220 / state.speed).toInt().coerceAtLeast(50)
-                },
+                durationMillis = (220 / state.speed).toInt().coerceAtLeast(50),
             ),
             repeatMode = RepeatMode.Reverse,
         ),
@@ -1008,16 +1070,6 @@ private fun LooksCard(state: SignState, onStateChange: (((SignState) -> SignStat
             }
         }
         Spacer(Modifier.height(12.dp))
-        Text(
-            "Size · largest possible",
-            style = MaterialTheme.typography.labelLarge,
-            fontWeight = FontWeight.Bold,
-        )
-        Text(
-            "Automatically fitted to the available canvas",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
         Text("Text alignment", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
         ChipRow {
             TextAlignmentChoice.entries.forEach { alignment ->
@@ -1079,7 +1131,11 @@ private fun relativeLuminance(color: Color): Float {
 }
 
 @Composable
-private fun MotionCard(state: SignState, onStateChange: (((SignState) -> SignState)) -> Unit) {
+private fun MotionCard(
+    state: SignState,
+    onStateChange: (((SignState) -> SignState)) -> Unit,
+    onTransitionReplay: () -> Unit,
+) {
     SettingCard(title = "Motion", subtitle = "Optional chaos, responsibly applied", icon = R.drawable.ic_motion) {
         ChipRow {
             AnimationStyle.entries.forEach { animation ->
@@ -1127,7 +1183,10 @@ private fun MotionCard(state: SignState, onStateChange: (((SignState) -> SignSta
             TransitionStyle.entries.forEach { transition ->
                 FilterChip(
                     selected = state.transition == transition,
-                    onClick = { onStateChange { it.copy(transition = transition) } },
+                    onClick = {
+                        onTransitionReplay()
+                        onStateChange { it.copy(transition = transition) }
+                    },
                     leadingIcon = { OptionIcon(transition.icon) },
                     label = { Text(transition.label) },
                 )
