@@ -442,6 +442,7 @@ private fun AughhhhApp(
     var presentPage by rememberSaveable { mutableIntStateOf(0) }
     var presentationSession by rememberSaveable { mutableIntStateOf(0) }
     var externalActionTick by rememberSaveable { mutableIntStateOf(0) }
+    var presentationExitRequest by rememberSaveable { mutableIntStateOf(0) }
     var showAbout by rememberSaveable { mutableStateOf(false) }
     var showSettings by rememberSaveable { mutableStateOf(false) }
     val mode = AppMode.valueOf(modeName)
@@ -453,6 +454,7 @@ private fun AughhhhApp(
                 applyPresentationIntent(command, store)
                 presentPage = 0
                 presentationSession++
+                presentationExitRequest = 0
                 modeName = AppMode.PRESENT.name
             }
             AughhhhIntents.ACTION_NEXT_PAGE, AughhhhIntents.ACTION_PREVIOUS_PAGE -> {
@@ -460,6 +462,7 @@ private fun AughhhhApp(
                 val basePage = if (mode == AppMode.PRESENT) presentPage else store.state.selectedPage
                 presentPage = pageIndexAfterMove(basePage, direction, store.state.pages.size, store.state.loopPages)
                 if (mode != AppMode.PRESENT) presentationSession++
+                presentationExitRequest = 0
                 modeName = AppMode.PRESENT.name
             }
             AughhhhIntents.ACTION_TRIGGER_ACTION -> {
@@ -467,6 +470,7 @@ private fun AughhhhApp(
                     presentPage = store.state.selectedPage
                     presentationSession++
                 }
+                presentationExitRequest = 0
                 modeName = AppMode.PRESENT.name
                 externalActionTick++
             }
@@ -496,7 +500,7 @@ private fun AughhhhApp(
 
     BackHandler(enabled = mode == AppMode.PRESENT || showAbout || showSettings) {
         when {
-            mode == AppMode.PRESENT -> modeName = AppMode.EDIT.name
+            mode == AppMode.PRESENT -> presentationExitRequest++
             showAbout -> showAbout = false
             showSettings -> showSettings = false
         }
@@ -510,6 +514,8 @@ private fun AughhhhApp(
             externalActionTick = externalActionTick,
             onPageChanged = { presentPage = it },
             onExit = { modeName = AppMode.EDIT.name },
+            exitRequest = presentationExitRequest,
+            onExitRequested = { presentationExitRequest++ },
         )
     } else if (showAbout) {
         AboutScreen(onBack = { showAbout = false })
@@ -531,6 +537,7 @@ private fun AughhhhApp(
             onPresent = {
                 presentPage = 0
                 presentationSession++
+                presentationExitRequest = 0
                 modeName = AppMode.PRESENT.name
             },
             onSettings = { showSettings = true },
@@ -1271,6 +1278,8 @@ private fun AnimatedSignText(
                         if (animation == AnimationStyle.SCROLL) {
                             Modifier.basicMarquee(
                                 iterations = Int.MAX_VALUE,
+                                repeatDelayMillis = 0,
+                                initialDelayMillis = 0,
                                 velocity = (110f * state.speed).dp,
                             )
                         } else Modifier
@@ -1630,8 +1639,10 @@ private fun PresentScreen(
     initialPage: Int,
     presentationSession: Int,
     externalActionTick: Int,
+    exitRequest: Int,
     onPageChanged: (Int) -> Unit,
     onExit: () -> Unit,
+    onExitRequested: () -> Unit,
 ) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
@@ -1641,6 +1652,7 @@ private fun PresentScreen(
     var inverted by rememberSaveable(presentationSession) { mutableStateOf(false) }
     var flashTick by rememberSaveable(presentationSession) { mutableIntStateOf(0) }
     var flashActive by remember { mutableStateOf(false) }
+    val powerOffProgress = remember(presentationSession) { Animatable(0f) }
     val foreground = if (inverted) state.background.color else state.foreground.color
     val background = if (inverted) state.foreground.color else state.background.color
     val presentPage = initialPage.coerceIn(state.pages.indices)
@@ -1713,68 +1725,103 @@ private fun PresentScreen(
         if (externalActionTick > 0) performTapAction()
     }
 
+    LaunchedEffect(exitRequest, reducedMotion) {
+        if (exitRequest == 0) return@LaunchedEffect
+        if (reducedMotion) {
+            onExit()
+            return@LaunchedEffect
+        }
+        powerOffProgress.snapTo(0f)
+        powerOffProgress.animateTo(1f, tween(320))
+        onExit()
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(animatedPresentationBackground)
-            .safeDrawingPadding()
-            .pointerInput(state.pages.size, presentPage) {
-                var dragDistance = 0f
-                detectHorizontalDragGestures(
-                    onHorizontalDrag = { _, dragAmount -> dragDistance += dragAmount },
-                    onDragEnd = {
-                        if (abs(dragDistance) > 64f) {
-                            if (dragDistance < 0) movePage(1) else movePage(-1)
+            .background(Color.Black),
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .graphicsLayer {
+                    val verticalCollapse = powerOffProgress.value.coerceIn(0f, 1f)
+                    val horizontalCollapse = ((powerOffProgress.value - 0.62f) / 0.38f).coerceIn(0f, 1f)
+                    scaleY = 1f - verticalCollapse * 0.97f
+                    scaleX = 1f - horizontalCollapse * 0.97f
+                    alpha = 1f - powerOffProgress.value * 0.16f
+                }
+                .background(animatedPresentationBackground)
+                .safeDrawingPadding()
+                .pointerInput(state.pages.size, presentPage, exitRequest) {
+                    var dragDistance = 0f
+                    detectHorizontalDragGestures(
+                        onHorizontalDrag = { _, dragAmount -> dragDistance += dragAmount },
+                        onDragEnd = {
+                            if (exitRequest == 0 && abs(dragDistance) > 64f) {
+                                if (dragDistance < 0) movePage(1) else movePage(-1)
+                            }
+                        },
+                    )
+                }
+                .clickable(enabled = exitRequest == 0, onClick = ::performTapAction),
+        ) {
+            AnimatedContent(
+                targetState = presentPage,
+                modifier = Modifier.fillMaxSize().padding(horizontal = 24.dp).graphicsLayer(rotationZ = spinRotation.value),
+                transitionSpec = {
+                    val direction = if (targetState >= initialState) 1 else -1
+                    fun duration(base: Int) = (base / state.speed).toInt().coerceAtLeast(60)
+                    val enter =
+                        when (transitionStyle) {
+                            TransitionStyle.NONE -> fadeIn(tween(0))
+                            TransitionStyle.FADE -> fadeIn(tween(duration(260)))
+                            TransitionStyle.WIPE -> slideInHorizontally(tween(duration(300))) { it * direction } + fadeIn(tween(duration(300)))
+                            TransitionStyle.BLINDS -> scaleIn(tween(duration(320)), initialScale = 0.82f) + fadeIn(tween(duration(320)))
+                            TransitionStyle.CHECKERBOARD -> scaleIn(tween(duration(360)), initialScale = 1.18f) + fadeIn(tween(duration(360)))
+                            TransitionStyle.SPIN -> scaleIn(tween(duration(360)), initialScale = 0.45f) + fadeIn(tween(duration(360)))
                         }
-                    },
+                    val exit =
+                        when (transitionStyle) {
+                            TransitionStyle.NONE -> fadeOut(tween(0))
+                            TransitionStyle.FADE -> fadeOut(tween(duration(260)))
+                            TransitionStyle.WIPE -> slideOutHorizontally(tween(duration(300))) { -it * direction } + fadeOut(tween(duration(300)))
+                            TransitionStyle.BLINDS -> fadeOut(tween(duration(320)))
+                            TransitionStyle.CHECKERBOARD -> scaleOut(tween(duration(360)), targetScale = 1.18f) + fadeOut(tween(duration(360)))
+                            TransitionStyle.SPIN -> scaleOut(tween(duration(360)), targetScale = 0.45f) + fadeOut(tween(duration(360)))
+                        }
+                    (enter togetherWith exit).using(SizeTransform(clip = false))
+                },
+                label = "page-transition",
+            ) { page ->
+                AnimatedSignText(
+                    state = state.copy(pages = listOf(state.pages[page]), selectedPage = 0),
+                    modifier = Modifier.fillMaxSize(),
+                    maxLines = 4,
+                    preview = false,
+                    foreground = foreground,
+                    background = background,
+                    pulseOverride = pulse,
                 )
             }
-            .clickable(onClick = ::performTapAction),
-    ) {
-        AnimatedContent(
-            targetState = presentPage,
-            modifier = Modifier.fillMaxSize().padding(horizontal = 24.dp).graphicsLayer(rotationZ = spinRotation.value),
-            transitionSpec = {
-                val direction = if (targetState >= initialState) 1 else -1
-                fun duration(base: Int) = (base / state.speed).toInt().coerceAtLeast(60)
-                val enter =
-                    when (transitionStyle) {
-                        TransitionStyle.NONE -> fadeIn(tween(0))
-                        TransitionStyle.FADE -> fadeIn(tween(duration(260)))
-                        TransitionStyle.WIPE -> slideInHorizontally(tween(duration(300))) { it * direction } + fadeIn(tween(duration(300)))
-                        TransitionStyle.BLINDS -> scaleIn(tween(duration(320)), initialScale = 0.82f) + fadeIn(tween(duration(320)))
-                        TransitionStyle.CHECKERBOARD -> scaleIn(tween(duration(360)), initialScale = 1.18f) + fadeIn(tween(duration(360)))
-                        TransitionStyle.SPIN -> scaleIn(tween(duration(360)), initialScale = 0.45f) + fadeIn(tween(duration(360)))
-                    }
-                val exit =
-                    when (transitionStyle) {
-                        TransitionStyle.NONE -> fadeOut(tween(0))
-                        TransitionStyle.FADE -> fadeOut(tween(duration(260)))
-                        TransitionStyle.WIPE -> slideOutHorizontally(tween(duration(300))) { -it * direction } + fadeOut(tween(duration(300)))
-                        TransitionStyle.BLINDS -> fadeOut(tween(duration(320)))
-                        TransitionStyle.CHECKERBOARD -> scaleOut(tween(duration(360)), targetScale = 1.18f) + fadeOut(tween(duration(360)))
-                        TransitionStyle.SPIN -> scaleOut(tween(duration(360)), targetScale = 0.45f) + fadeOut(tween(duration(360)))
-                    }
-                (enter togetherWith exit).using(SizeTransform(clip = false))
-            },
-            label = "page-transition",
-        ) { page ->
-            AnimatedSignText(
-                state = state.copy(pages = listOf(state.pages[page]), selectedPage = 0),
-                modifier = Modifier.fillMaxSize(),
-                maxLines = 4,
-                preview = false,
-                foreground = foreground,
-                background = background,
-                pulseOverride = pulse,
-            )
+            PageTransitionOverlay(style = transitionStyle, page = presentPage, color = foreground, speed = state.speed)
+            if (flashActive) {
+                Box(modifier = Modifier.fillMaxSize().background(foreground.copy(alpha = 0.82f)))
+            }
         }
-        PageTransitionOverlay(style = transitionStyle, page = presentPage, color = foreground, speed = state.speed)
-        if (flashActive) {
-            Box(modifier = Modifier.fillMaxSize().background(foreground.copy(alpha = 0.82f)))
+        if (powerOffProgress.value > 0.54f) {
+            Canvas(modifier = Modifier.fillMaxSize()) {
+                val lineProgress = ((powerOffProgress.value - 0.54f) / 0.46f).coerceIn(0f, 1f)
+                drawRect(
+                    color = Color.White.copy(alpha = (1f - lineProgress * 0.82f).coerceIn(0f, 1f)),
+                    topLeft = androidx.compose.ui.geometry.Offset(0f, size.height / 2f - 2.dp.toPx()),
+                    size = androidx.compose.ui.geometry.Size(size.width * (1f - lineProgress * 0.96f), 4.dp.toPx()),
+                )
+            }
         }
         TextButton(
-            onClick = onExit,
+            onClick = onExitRequested,
+            enabled = exitRequest == 0,
             modifier = Modifier
                 .align(Alignment.TopEnd)
                 .padding(10.dp)
