@@ -58,6 +58,31 @@ orientation-aware layout, and a clean handoff into presentation mode.
 
 State: **planned**.
 
+## AUG-8: Optional tap actions
+
+Let a tap on the presented sign trigger an optional attention action, configured separately from
+page swipes. Candidate actions include inverting foreground/background colors, briefly flashing
+the sign, playing a short sound effect, or advancing to the next page.
+
+- [ ] Add a tap-action picker with a clear Off option
+- [ ] Implement color inversion and a short visual flash without interrupting page animation
+- [ ] Add a small bundled sound effect with a mute/respect-device-silent-mode path
+- [ ] Keep tap actions discoverable but unobtrusive in Present mode
+
+State: **planned**.
+
+## AUG-9: Screen rotation and orientation support
+
+Make Edit and Present modes behave correctly across portrait/landscape rotation and different
+screen sizes, retaining the current page, text, styling, and animation configuration.
+
+- [ ] Remove the fixed orientation restriction from the activity
+- [ ] Preserve the selected edit/present page and transient presentation state on recreation
+- [ ] Tune preview/editor layout for landscape phones and tablets
+- [ ] Confirm immersive system-bar handling after rotation on physical devices
+
+State: **planned**.
+
 ## AUG-7: README polish and Obtainium install path
 
 Turn the README into a friendly project landing page with screenshots, feature highlights, the
