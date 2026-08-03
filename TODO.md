@@ -58,6 +58,70 @@ orientation-aware layout, and a clean handoff into presentation mode.
 
 State: **planned**.
 
+## AUG-17: Landscape presentation mode
+
+Switch to sensor-landscape automatically when entering Present mode, giving signs the widest
+canvas by default while still allowing the device to rotate between landscape orientations.
+
+- [ ] Request sensor-landscape on Present entry
+- [ ] Restore the user's normal orientation policy on exit
+- [ ] Keep Edit mode responsive in portrait and landscape
+
+State: **planned**.
+
+## AUG-16: Modern default font
+
+Use the Modern sans-serif face as the first-run default while keeping the other font choices
+available for more theatrical signs.
+
+- [ ] Change the default and migration fallback to Modern
+- [ ] Keep existing user-selected fonts untouched
+
+State: **planned**.
+
+## AUG-14: Background blinking
+
+Add an optional animation that blinks the presentation background while leaving text legible.
+
+- [ ] Add a background-blink animation choice
+- [ ] Keep text/background contrast readable through the cycle
+- [ ] Respect reduced-motion preferences
+
+State: **planned**.
+
+## AUG-15: Strobe effect
+
+Add an explicitly labeled, opt-in strobe mode for maximum ridiculousness, with warnings and an
+automatic reduced-motion fallback.
+
+- [ ] Add a strobe animation choice with an accessibility warning
+- [ ] Limit the strobe frequency and provide an immediate off path
+- [ ] Disable strobe when reduced-motion is enabled
+
+State: **planned**.
+
+## AUG-12: Richer default color palette
+
+Make the initial visual treatment feel more saturated and expressive, including a proper red
+option for urgent or dramatic signs.
+
+- [ ] Add red and richer accent swatches
+- [ ] Use a colorful high-contrast default sign treatment
+- [ ] Check contrast for every foreground/background combination
+
+State: **planned**.
+
+## AUG-13: Animated editor preview
+
+Make the preview card reflect the selected presentation animation so users can tune motion before
+entering full-screen mode.
+
+- [ ] Preview static, scrolling, and blinking text in the editor
+- [ ] Keep preview motion bounded and battery-friendly
+- [ ] Show the selected animation and transition settings clearly
+
+State: **planned**.
+
 ## AUG-10: Make blinking more aggressive
 
 Tune the Blink animation so it feels more intentionally obnoxious and attention-grabbing while

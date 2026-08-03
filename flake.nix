@@ -28,7 +28,7 @@
           jdk21
           just
           ktfmt
-          nixfmt-rfc-style
+          nixfmt
           android-sdk
         ];
 
