@@ -58,6 +58,17 @@ orientation-aware layout, and a clean handoff into presentation mode.
 
 State: **planned**.
 
+## AUG-10: Make blinking more aggressive
+
+Tune the Blink animation so it feels more intentionally obnoxious and attention-grabbing while
+remaining readable and offering a calmer alternative for people who need less visual motion.
+
+- [ ] Increase the blink contrast and shorten the default cycle
+- [ ] Add a blink-intensity control alongside animation speed
+- [ ] Respect reduced-motion preferences with a gentler fallback
+
+State: **planned**.
+
 ## AUG-8: Optional tap actions
 
 Let a tap on the presented sign trigger an optional attention action, configured separately from
