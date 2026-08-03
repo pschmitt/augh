@@ -1544,6 +1544,34 @@ private fun relativeLuminance(color: Color): Float {
 }
 
 @Composable
+private fun SpeedControl(
+    label: String,
+    state: SignState,
+    onStateChange: (((SignState) -> SignState)) -> Unit,
+) {
+    val speedIsDangerous = state.speed > NORMAL_MAX_SPEED
+    val speedColor = if (speedIsDangerous) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
+    Text(
+        "$label · ${(state.speed * 100).toInt()}%",
+        style = MaterialTheme.typography.labelLarge,
+        fontWeight = FontWeight.Bold,
+        color = if (speedIsDangerous) speedColor else LocalContentColor.current,
+    )
+    Slider(
+        value = state.speed,
+        onValueChange = { onStateChange { current -> current.copy(speed = it) } },
+        valueRange = MIN_SPEED..if (state.highIntensityMode) HIGH_INTENSITY_MAX_SPEED else NORMAL_MAX_SPEED,
+        colors = SliderDefaults.colors(
+            thumbColor = speedColor,
+            activeTrackColor = speedColor,
+            inactiveTrackColor = speedColor.copy(alpha = 0.24f),
+            activeTickColor = speedColor,
+            inactiveTickColor = speedColor.copy(alpha = 0.54f),
+        ),
+    )
+}
+
+@Composable
 private fun MotionCard(
     state: SignState,
     onStateChange: (((SignState) -> SignState)) -> Unit,
@@ -1588,30 +1616,10 @@ private fun MotionCard(
         }
         val usesAnimationSpeed =
             state.animation == AnimationStyle.SCROLL ||
-                state.animation == AnimationStyle.INVERT ||
-                state.transition != TransitionStyle.NONE
+                state.animation == AnimationStyle.INVERT
         if (usesAnimationSpeed) {
             Spacer(Modifier.height(12.dp))
-            val speedIsDangerous = state.speed > NORMAL_MAX_SPEED
-            val speedColor = if (speedIsDangerous) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
-            Text(
-                "Animation speed · ${(state.speed * 100).toInt()}%",
-                style = MaterialTheme.typography.labelLarge,
-                fontWeight = FontWeight.Bold,
-                color = if (speedIsDangerous) speedColor else LocalContentColor.current,
-            )
-            Slider(
-                value = state.speed,
-                onValueChange = { onStateChange { current -> current.copy(speed = it) } },
-                valueRange = MIN_SPEED..if (state.highIntensityMode) HIGH_INTENSITY_MAX_SPEED else NORMAL_MAX_SPEED,
-                colors = SliderDefaults.colors(
-                    thumbColor = speedColor,
-                    activeTrackColor = speedColor,
-                    inactiveTrackColor = speedColor.copy(alpha = 0.24f),
-                    activeTickColor = speedColor,
-                    inactiveTickColor = speedColor.copy(alpha = 0.54f),
-                ),
-            )
+            SpeedControl(label = "Animation speed", state = state, onStateChange = onStateChange)
         }
         if (state.animation == AnimationStyle.BLINK ||
             state.animation == AnimationStyle.BLINK_BACKGROUND ||
@@ -1652,6 +1660,10 @@ private fun MotionCard(
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
+        if (state.transition != TransitionStyle.NONE) {
+            Spacer(Modifier.height(12.dp))
+            SpeedControl(label = "Transition speed", state = state, onStateChange = onStateChange)
+        }
         Spacer(Modifier.height(10.dp))
         Text("Tap action", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
         ChipRow {

@@ -651,6 +651,18 @@ Make the effect choices and their timing controls understandable at a glance.
 State: **done**, 2026-08-04. The controls now distinguish movement speed from flash frequency,
 and each flashing mode states whether it affects the text, background, or both.
 
+## AUG-73: Place speed in the correct section
+
+Keep Still free of motion controls while exposing transition timing alongside the selected page
+transition.
+
+- [x] Keep animation speed with Scroll and Invert
+- [x] Move transition speed below the page transition choices
+- [x] Rebuild and deploy the contextual timing controls
+
+State: **done**, 2026-08-04. Transition timing is now shown directly below the selected page
+transition, while Still has no unrelated motion-speed control.
+
 ## AUG-69: Keep the sticky preview state current
 
 Ensure the live preview observes editor state changes while it remains mounted in the sticky
