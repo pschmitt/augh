@@ -47,7 +47,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRow
+import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -232,7 +232,7 @@ private fun EditorScreen(
             modifier = Modifier.fillMaxSize().padding(padding).safeDrawingPadding().verticalScroll(rememberScrollState()),
         ) {
             Header()
-            TabRow(selectedTabIndex = 0, containerColor = Color.Transparent) {
+            PrimaryTabRow(selectedTabIndex = 0, containerColor = Color.Transparent) {
                 Tab(selected = true, onClick = {}, text = { Text("Edit", fontWeight = FontWeight.Bold) })
                 Tab(selected = false, onClick = onPresent, text = { Text("Present") })
             }

@@ -39,10 +39,12 @@ then install the result on every ADB device currently attached to this workstati
 
 - [x] Nix dev shell with JDK 21, Android SDK 36, platform tools, just, and ktfmt
 - [x] CI build, lint, and rolling `latest` release workflows using JDK 21 and Gradle caching
-- [ ] Remote `just build` / `just check` recipes targeting `rofl-13` / `rofl-14`
-- [ ] `just deploy-all` install and launch smoke check for all connected ADB devices
+- [x] Remote `just build` / `just check` recipes targeting `rofl-13` / `rofl-14`
+- [x] `just deploy-all` installs the universal debug APK on all connected ADB devices
 
-State: **in_progress**, 2026-08-03. The workflow is being aligned with the reference apps.
+State: **in_progress**, 2026-08-03. Remote build/check and installation are working; launch
+verification is green on the Mi Pad 4 and px5, while the Zenfone's secondary Android profile
+blocks shell activity resolution and needs a manual owner-profile check.
 
 ## AUG-4: Presentation polish
 
