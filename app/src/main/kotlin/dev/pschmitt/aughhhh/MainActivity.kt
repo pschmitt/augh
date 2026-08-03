@@ -693,30 +693,11 @@ private fun EditorScreen(
                     },
                     )
                     Spacer(Modifier.height(14.dp))
-                    RecentMessages(state = state, onStateChange = onStateChange)
-                    OutlinedTextField(
-                    value = state.text,
-                    onValueChange = { text ->
-                        onStateChange { current ->
-                            current.copy(
-                                pages = current.pages.mapIndexed { index, page ->
-                                    if (index == current.selectedPage) text else page
-                                }
-                            )
-                        }
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .focusRequester(messageFocusRequester)
-                        .onFocusChanged { focusState ->
-                            if (!focusState.isFocused) onRememberRecent(state.text)
-                        },
-                    label = { Text("Message") },
-                    placeholder = { Text("Type something worth displaying…") },
-                    minLines = 3,
-                    maxLines = 6,
-                    supportingText = { Text("${state.text.length} characters") },
-                    shape = RoundedCornerShape(20.dp),
+                    MessageCard(
+                        state = state,
+                        onStateChange = onStateChange,
+                        messageFocusRequester = messageFocusRequester,
+                        onRememberRecent = onRememberRecent,
                     )
                     Spacer(Modifier.height(12.dp))
                     LooksCard(state = state, onStateChange = onStateChange)
@@ -1224,41 +1205,78 @@ private fun SignPreview(
 }
 
 @Composable
+private fun MessageCard(
+    state: SignState,
+    onStateChange: (((SignState) -> SignState)) -> Unit,
+    messageFocusRequester: FocusRequester,
+    onRememberRecent: (String) -> Unit,
+) {
+    SettingCard(title = "Message", subtitle = "Text and recent history", icon = R.drawable.ic_looks) {
+        OutlinedTextField(
+            value = state.text,
+            onValueChange = { text ->
+                onStateChange { current ->
+                    current.copy(
+                        pages = current.pages.mapIndexed { index, page ->
+                            if (index == current.selectedPage) text else page
+                        }
+                    )
+                }
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .focusRequester(messageFocusRequester)
+                .onFocusChanged { focusState ->
+                    if (!focusState.isFocused) onRememberRecent(state.text)
+                },
+            label = { Text("Message") },
+            placeholder = { Text("Type something worth displaying…") },
+            minLines = 3,
+            maxLines = 6,
+            supportingText = { Text("${state.text.length} characters") },
+            shape = RoundedCornerShape(20.dp),
+        )
+        RecentMessages(state = state, onStateChange = onStateChange)
+    }
+}
+
+@Composable
 private fun RecentMessages(state: SignState, onStateChange: (((SignState) -> SignState)) -> Unit) {
     if (state.recentTexts.isEmpty()) return
-    SettingCard(title = "Recent messages", subtitle = "Saved signs for quick reuse", icon = R.drawable.ic_vibes) {
-        ChipRow {
-            state.recentTexts.forEach { recent ->
-                InputChip(
-                    selected = recent == state.text,
-                    onClick = {
-                        onStateChange { current ->
-                            current.copy(
-                                pages = current.pages.mapIndexed { index, page ->
-                                    if (index == current.selectedPage) recent else page
-                                }
-                            )
-                        }
-                    },
-                    label = { Text(recent.take(18)) },
-                    trailingIcon = {
-                        IconButton(
-                            onClick = {
-                                onStateChange { current ->
-                                    current.copy(recentTexts = current.recentTexts.filterNot { it == recent })
-                                }
-                            },
-                            modifier = Modifier.size(32.dp),
-                        ) {
-                            Icon(
-                                painter = painterResource(R.drawable.ic_delete),
-                                contentDescription = "Delete $recent",
-                                modifier = Modifier.size(18.dp),
-                            )
-                        }
-                    },
-                )
-            }
+    Spacer(Modifier.height(14.dp))
+    Text("Recent messages", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+    Spacer(Modifier.height(8.dp))
+    ChipRow {
+        state.recentTexts.forEach { recent ->
+            InputChip(
+                selected = recent == state.text,
+                onClick = {
+                    onStateChange { current ->
+                        current.copy(
+                            pages = current.pages.mapIndexed { index, page ->
+                                if (index == current.selectedPage) recent else page
+                            }
+                        )
+                    }
+                },
+                label = { Text(recent.take(18)) },
+                trailingIcon = {
+                    IconButton(
+                        onClick = {
+                            onStateChange { current ->
+                                current.copy(recentTexts = current.recentTexts.filterNot { it == recent })
+                            }
+                        },
+                        modifier = Modifier.size(32.dp),
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_delete),
+                            contentDescription = "Delete $recent",
+                            modifier = Modifier.size(18.dp),
+                        )
+                    }
+                },
+            )
         }
     }
 }
