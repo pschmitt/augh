@@ -420,4 +420,5 @@ Add the canonical pronunciation recording to the README.
 
 - [x] Link the pronunciation recording from the README introduction
 
-State: **done**, 2026-08-03. The README now links to the correct aughhhh pronunciation.
+State: **done**, 2026-08-03. The opening README sentence now includes the IPA-style pronunciation
+and links it directly to the recording.

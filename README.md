@@ -6,10 +6,9 @@
 
 <p align="center"><strong>Make a sign. Make it loud. Make it extremely unnecessary.</strong></p>
 
-aughhhh is a colorful Android sign maker for custom full-screen text. Build a deck of pages,
-choose an absurd presentation style, and swipe through it when the moment arrives.
-
-Pronounce it correctly: [aughhhh](https://youtu.be/99tzO1y3PGo).
+aughhhh (pronunciation: [ɑːhhhh](https://youtu.be/99tzO1y3PGo)) is a colorful Android sign maker
+for custom full-screen text. Build a deck of pages, choose an absurd presentation style, and
+swipe through it when the moment arrives.
 
 ## Features
 
