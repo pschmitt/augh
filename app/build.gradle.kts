@@ -1,7 +1,25 @@
+import java.time.Instant
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose.compiler)
 }
+
+fun buildConfigString(value: String): String =
+    "\"${value.replace("\\", "\\\\").replace("\"", "\\\"")}\""
+
+val buildCommit =
+    providers
+        .gradleProperty("aughhhhCommit")
+        .orElse(providers.environmentVariable("GITHUB_SHA"))
+        .orElse("unknown")
+        .get()
+val buildDate =
+    providers
+        .gradleProperty("aughhhhBuildDate")
+        .orElse(providers.environmentVariable("BUILD_DATE"))
+        .orElse(Instant.now().toString())
+        .get()
 
 val configuredVersionCode =
     providers
@@ -29,6 +47,8 @@ android {
         versionCode = configuredVersionCode
         versionName = configuredVersionName
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        buildConfigField("String", "BUILD_COMMIT", buildConfigString(buildCommit))
+        buildConfigField("String", "BUILD_DATE", buildConfigString(buildDate))
     }
 
     buildTypes {

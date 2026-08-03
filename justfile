@@ -4,6 +4,7 @@ application_id := "dev.pschmitt.aughhhh.debug"
 remote_host := env_var_or_default("AUGHHHH_REMOTE_HOST", "rofl-13.brkn.lol")
 remote_path := env_var_or_default("AUGHHHH_REMOTE_PATH", "~/build/aughhhh")
 local_dist := env_var_or_default("AUGHHHH_DIST_DIR", "./dist")
+source_commit := `git rev-parse HEAD`
 
 default:
     @just --list
@@ -14,7 +15,7 @@ sync host=remote_host:
 
 # All Gradle work happens inside the remote Nix dev shell.
 gradle host=remote_host *tasks: (sync host)
-    ssh {{host}} 'cd {{remote_path}} && nix develop --command ./gradlew {{tasks}}'
+    ssh {{host}} "cd {{remote_path}} && nix develop --command ./gradlew {{tasks}} -PaughhhhCommit={{source_commit}}"
 
 build variant="debug" host=remote_host:
     #!/usr/bin/env bash
@@ -24,7 +25,7 @@ build variant="debug" host=remote_host:
       task=assembleRelease
     fi
     just sync "{{host}}"
-    ssh "{{host}}" "cd {{remote_path}} && nix develop --command ./gradlew :app:$task"
+    ssh "{{host}}" "cd {{remote_path}} && nix develop --command ./gradlew :app:$task -PaughhhhCommit={{source_commit}}"
 
 fetch variant="debug" host=remote_host:
     #!/usr/bin/env bash

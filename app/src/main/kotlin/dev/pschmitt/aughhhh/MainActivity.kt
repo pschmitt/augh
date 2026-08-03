@@ -849,6 +849,14 @@ private fun AboutScreen(onBack: () -> Unit) {
             Spacer(Modifier.height(24.dp))
             ExternalLinkCard(
                 context = context,
+                icon = R.drawable.ic_info,
+                title = "Build ${BuildConfig.BUILD_COMMIT.take(7)}",
+                subtitle = "Built ${BuildConfig.BUILD_DATE}",
+                url = "https://github.com/pschmitt/aughhhh/commit/${BuildConfig.BUILD_COMMIT}",
+            )
+            Spacer(Modifier.height(10.dp))
+            ExternalLinkCard(
+                context = context,
                 icon = R.drawable.ic_pages,
                 title = "GitHub repository",
                 subtitle = "View the source code and report issues",
@@ -939,37 +947,33 @@ private fun SettingsScreen(
                 )
             }
             Spacer(Modifier.height(20.dp))
-            Text("Application", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-            Text(
-                "App-wide options and project information.",
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            Spacer(Modifier.height(18.dp))
-            Card(
-                modifier = Modifier.fillMaxWidth().clickable(onClick = onAbout),
-                shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically,
+            SettingCard(title = "Application", subtitle = "App-wide options and project information.", icon = R.drawable.ic_info) {
+                Card(
+                    modifier = Modifier.fillMaxWidth().clickable(onClick = onAbout),
+                    shape = RoundedCornerShape(20.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
                 ) {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_info),
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(24.dp),
-                    )
-                    Spacer(Modifier.width(14.dp))
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text("About", fontWeight = FontWeight.Bold)
-                        Text(
-                            "Version and project links",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_info),
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(24.dp),
                         )
+                        Spacer(Modifier.width(14.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text("About", fontWeight = FontWeight.Bold)
+                            Text(
+                                "Version and project links",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                        Text("›", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.primary)
                     }
-                    Text("›", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.primary)
                 }
             }
         }
