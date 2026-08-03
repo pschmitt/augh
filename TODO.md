@@ -618,6 +618,17 @@ Use the current “make it bold!” tagline throughout the app’s identity surf
 
 State: **done**, 2026-08-04.
 
+## AUG-68: Simplify the launcher artwork
+
+Use the expressive round face as the launcher identity without the speech-bubble tail, hands,
+decorations, or background.
+
+- [x] Isolate the face with transparent padding
+- [x] Preserve the colorful 3D expression and recognizable features
+- [x] Rebuild and deploy the updated launcher artwork
+
+State: **done**, 2026-08-04.
+
 ## AUG-67: Allow zero animation speed
 
 Let users pause speed-driven motion at 0% while keeping blink and strobe frequency controlled by
