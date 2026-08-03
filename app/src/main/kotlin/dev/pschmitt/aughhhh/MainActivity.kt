@@ -622,12 +622,6 @@ private fun EditorScreen(
             state = listState,
             contentPadding = PaddingValues(horizontal = 20.dp),
         ) {
-            item {
-                Column {
-                    Spacer(Modifier.height(14.dp))
-                    PresetsCard(state = state, onStateChange = onStateChange, onRememberRecent = onRememberRecent)
-                }
-            }
             stickyHeader {
                 Surface(color = MaterialTheme.colorScheme.surface) {
                     SignPreview(
@@ -643,7 +637,7 @@ private fun EditorScreen(
                         },
                         onLongPress = {
                             coroutineScope.launch {
-                                listState.animateScrollToItem(3)
+                                listState.animateScrollToItem(1)
                                 messageFocusRequester.requestFocus()
                             }
                         },
@@ -694,6 +688,8 @@ private fun EditorScreen(
                         }
                     },
                     )
+                    Spacer(Modifier.height(14.dp))
+                    PresetsCard(state = state, onStateChange = onStateChange, onRememberRecent = onRememberRecent)
                     Spacer(Modifier.height(14.dp))
                     RecentMessages(state = state, onStateChange = onStateChange)
                     OutlinedTextField(
