@@ -529,3 +529,15 @@ selected action.
 
 State: **done**, 2026-08-03. Tap-action chips now preview their own effect immediately, including
 when the chip was already selected.
+
+## AUG-58: Add a dedicated Settings screen
+
+Provide an app-wide Settings destination from the editor header and move About into it.
+
+- [x] Add a gear action to the editor top bar
+- [x] Add a standard Settings screen with a back button
+- [x] Move About to a Settings entry while preserving its links and navigation
+- [x] Rebuild and deploy the updated navigation
+
+State: **done**, 2026-08-03. Settings is now the home for app-wide options, with About available
+as its first entry.

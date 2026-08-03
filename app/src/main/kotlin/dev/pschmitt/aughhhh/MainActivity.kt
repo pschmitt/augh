@@ -406,6 +406,7 @@ private fun AughhhhApp(
     var presentationSession by rememberSaveable { mutableIntStateOf(0) }
     var externalActionTick by rememberSaveable { mutableIntStateOf(0) }
     var showAbout by rememberSaveable { mutableStateOf(false) }
+    var showSettings by rememberSaveable { mutableStateOf(false) }
     val mode = AppMode.valueOf(modeName)
 
     LaunchedEffect(incomingIntent) {
@@ -456,8 +457,12 @@ private fun AughhhhApp(
         }
     }
 
-    BackHandler(enabled = mode == AppMode.PRESENT || showAbout) {
-        if (mode == AppMode.PRESENT) modeName = AppMode.EDIT.name else showAbout = false
+    BackHandler(enabled = mode == AppMode.PRESENT || showAbout || showSettings) {
+        when {
+            mode == AppMode.PRESENT -> modeName = AppMode.EDIT.name
+            showAbout -> showAbout = false
+            showSettings -> showSettings = false
+        }
     }
     if (mode == AppMode.PRESENT) {
         PresentScreen(
@@ -471,6 +476,14 @@ private fun AughhhhApp(
         )
     } else if (showAbout) {
         AboutScreen(onBack = { showAbout = false })
+    } else if (showSettings) {
+        SettingsScreen(
+            onBack = { showSettings = false },
+            onAbout = {
+                showSettings = false
+                showAbout = true
+            },
+        )
     } else {
         EditorScreen(
             state = store.state,
@@ -481,7 +494,7 @@ private fun AughhhhApp(
                 presentationSession++
                 modeName = AppMode.PRESENT.name
             },
-            onAbout = { showAbout = true },
+            onSettings = { showSettings = true },
         )
     }
 }
@@ -493,7 +506,7 @@ private fun EditorScreen(
     onStateChange: (((SignState) -> SignState)) -> Unit,
     onRememberRecent: (String) -> Unit,
     onPresent: () -> Unit,
-    onAbout: () -> Unit,
+    onSettings: () -> Unit,
 ) {
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
@@ -525,10 +538,10 @@ private fun EditorScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = onAbout) {
+                    IconButton(onClick = onSettings) {
                         Icon(
-                            painter = painterResource(R.drawable.ic_info),
-                            contentDescription = "About",
+                            painter = painterResource(R.drawable.ic_settings),
+                            contentDescription = "Settings",
                         )
                     }
                 },
@@ -818,6 +831,65 @@ private fun AboutScreen(onBack: () -> Unit) {
                 subtitle = "How aughhhh handles your information",
                 url = "https://github.com/pschmitt/aughhhh/blob/main/PRIVACY.md",
             )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun SettingsScreen(onBack: () -> Unit, onAbout: () -> Unit) {
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Settings") },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_back),
+                            contentDescription = "Back",
+                        )
+                    }
+                },
+            )
+        },
+        containerColor = MaterialTheme.colorScheme.background,
+    ) { padding ->
+        Column(
+            modifier = Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(20.dp),
+        ) {
+            Text("Application", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+            Text(
+                "App-wide options and project information.",
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Spacer(Modifier.height(18.dp))
+            Card(
+                modifier = Modifier.fillMaxWidth().clickable(onClick = onAbout),
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_info),
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(24.dp),
+                    )
+                    Spacer(Modifier.width(14.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text("About aughhhh", fontWeight = FontWeight.Bold)
+                        Text(
+                            "Version, license, project links, and privacy policy",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                    Text("›", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.primary)
+                }
+            }
         }
     }
 }
