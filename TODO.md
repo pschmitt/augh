@@ -413,3 +413,11 @@ Keep the sign typography centered and remove the unnecessary horizontal alignmen
 - [x] Remove the obsolete alignment intent and persisted setting
 
 State: **done**, 2026-08-03. Text is now always centered; vertical positioning remains configurable.
+
+## AUG-47: Document the aughhhh pronunciation
+
+Add the canonical pronunciation recording to the README.
+
+- [x] Link the pronunciation recording from the README introduction
+
+State: **done**, 2026-08-03. The README now links to the correct aughhhh pronunciation.
