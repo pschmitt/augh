@@ -180,7 +180,6 @@ object AughhhhIntents {
     const val EXTRA_BLINK_INTENSITY = "dev.pschmitt.aughhhh.extra.BLINK_INTENSITY"
     const val EXTRA_TRANSITION = "dev.pschmitt.aughhhh.extra.TRANSITION"
     const val EXTRA_TAP_ACTION = "dev.pschmitt.aughhhh.extra.TAP_ACTION"
-    const val EXTRA_VERTICAL_POSITION = "dev.pschmitt.aughhhh.extra.VERTICAL_POSITION"
     const val EXTRA_KEEP_SCREEN_AWAKE = "dev.pschmitt.aughhhh.extra.KEEP_SCREEN_AWAKE"
 }
 
@@ -210,12 +209,6 @@ private enum class TapAction(val label: String, val description: String, val ico
     FLASH("Flash", "A tiny attention grab", R.drawable.ic_flash),
     SOUND("Sound", "A tiny device-safe beep", R.drawable.ic_sound),
     NEXT_PAGE("Next page", "Advance the deck", R.drawable.ic_next),
-}
-
-private enum class VerticalPosition(val label: String, val alignment: Alignment, val icon: Int) {
-    TOP("Top", Alignment.TopCenter, R.drawable.ic_align_top),
-    CENTER("Center", Alignment.Center, R.drawable.ic_center_vertical),
-    BOTTOM("Bottom", Alignment.BottomCenter, R.drawable.ic_align_bottom),
 }
 
 private enum class FontChoice(val label: String, val family: FontFamily, val icon: Int) {
@@ -264,8 +257,8 @@ private data class SignState(
     val blinkIntensity: Float = 0.92f,
     val transition: TransitionStyle = TransitionStyle.NONE,
     val tapAction: TapAction = TapAction.OFF,
-    val verticalPosition: VerticalPosition = VerticalPosition.CENTER,
     val keepScreenAwake: Boolean = true,
+    val maxBrightnessWhenPresenting: Boolean = false,
     val recentTexts: List<String> = emptyList(),
 ) {
     val text: String
@@ -308,8 +301,8 @@ private class SignStore(context: Context) {
             .putFloat("blinkIntensity", state.blinkIntensity)
             .putString("transition", state.transition.name)
             .putString("tapAction", state.tapAction.name)
-            .putString("verticalPosition", state.verticalPosition.name)
             .putBoolean("keepScreenAwake", state.keepScreenAwake)
+            .putBoolean("maxBrightnessWhenPresenting", state.maxBrightnessWhenPresenting)
             .putString("recentTexts", JSONArray(state.recentTexts).toString())
             .apply()
     }
@@ -326,8 +319,11 @@ private class SignStore(context: Context) {
             blinkIntensity = preferences.getFloat("blinkIntensity", SignState().blinkIntensity),
             transition = enumOrDefault("transition", TransitionStyle.NONE),
             tapAction = enumOrDefault("tapAction", TapAction.OFF),
-            verticalPosition = enumOrDefault("verticalPosition", VerticalPosition.CENTER),
             keepScreenAwake = preferences.getBoolean("keepScreenAwake", SignState().keepScreenAwake),
+            maxBrightnessWhenPresenting = preferences.getBoolean(
+                "maxBrightnessWhenPresenting",
+                SignState().maxBrightnessWhenPresenting,
+            ),
             recentTexts = loadRecentTexts(),
         ).let { state -> state.copy(selectedPage = state.selectedPage.coerceIn(state.pages.indices)) }
 
@@ -384,7 +380,6 @@ private fun applyPresentationIntent(intent: Intent, store: SignStore) {
             } else current.blinkIntensity,
             transition = intent.enumExtra(AughhhhIntents.EXTRA_TRANSITION) ?: current.transition,
             tapAction = intent.enumExtra(AughhhhIntents.EXTRA_TAP_ACTION) ?: current.tapAction,
-            verticalPosition = intent.enumExtra(AughhhhIntents.EXTRA_VERTICAL_POSITION) ?: current.verticalPosition,
             keepScreenAwake = if (intent.hasExtra(AughhhhIntents.EXTRA_KEEP_SCREEN_AWAKE)) {
                 intent.getBooleanExtra(AughhhhIntents.EXTRA_KEEP_SCREEN_AWAKE, current.keepScreenAwake)
             } else current.keepScreenAwake,
@@ -478,6 +473,8 @@ private fun AughhhhApp(
         AboutScreen(onBack = { showAbout = false })
     } else if (showSettings) {
         SettingsScreen(
+            state = store.state,
+            onStateChange = store::update,
             onBack = { showSettings = false },
             onAbout = {
                 showSettings = false
@@ -573,13 +570,6 @@ private fun EditorScreen(
             item {
                 Column {
                     Spacer(Modifier.height(14.dp))
-                    Text("Your sign, your rules", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-                    Text(
-                        "Make it loud, make it weird, make it yours.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    Spacer(Modifier.height(18.dp))
                     PresetsCard(state = state, onStateChange = onStateChange, onRememberRecent = onRememberRecent)
                 }
             }
@@ -837,7 +827,12 @@ private fun AboutScreen(onBack: () -> Unit) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun SettingsScreen(onBack: () -> Unit, onAbout: () -> Unit) {
+private fun SettingsScreen(
+    state: SignState,
+    onStateChange: (((SignState) -> SignState)) -> Unit,
+    onBack: () -> Unit,
+    onAbout: () -> Unit,
+) {
     Scaffold(
         topBar = {
             TopAppBar(
@@ -857,6 +852,21 @@ private fun SettingsScreen(onBack: () -> Unit, onAbout: () -> Unit) {
         Column(
             modifier = Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(20.dp),
         ) {
+            SettingCard(title = "Display", subtitle = "Presentation behavior", icon = R.drawable.ic_display) {
+                SettingSwitchRow(
+                    title = "Keep screen awake",
+                    subtitle = "While presenting",
+                    checked = state.keepScreenAwake,
+                    onCheckedChange = { enabled -> onStateChange { it.copy(keepScreenAwake = enabled) } },
+                )
+                SettingSwitchRow(
+                    title = "Max brightness",
+                    subtitle = "Use full brightness while presenting",
+                    checked = state.maxBrightnessWhenPresenting,
+                    onCheckedChange = { enabled -> onStateChange { it.copy(maxBrightnessWhenPresenting = enabled) } },
+                )
+            }
+            Spacer(Modifier.height(20.dp))
             Text("Application", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
             Text(
                 "App-wide options and project information.",
@@ -1149,7 +1159,7 @@ private fun AnimatedSignText(
             androidx.compose.ui.graphics.lerp(foreground, background, pulse)
         } else foreground
     CompositionLocalProvider(LocalContentColor provides animatedForeground) {
-        Box(modifier = modifier.background(animatedBackground), contentAlignment = state.verticalPosition.alignment) {
+        Box(modifier = modifier.background(animatedBackground), contentAlignment = Alignment.Center) {
             FittedSignText(
                 text = state.text.ifBlank { "aughhhh" },
                 state = state,
@@ -1254,18 +1264,6 @@ private fun LooksCard(state: SignState, onStateChange: (((SignState) -> SignStat
                     onClick = { onStateChange { it.copy(font = choice) } },
                     leadingIcon = { OptionIcon(choice.icon) },
                     label = { Text(choice.label) },
-                )
-            }
-        }
-        Spacer(Modifier.height(12.dp))
-        Text("Vertical position", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
-        ChipRow {
-            VerticalPosition.entries.forEach { position ->
-                FilterChip(
-                    selected = state.verticalPosition == position,
-                    onClick = { onStateChange { it.copy(verticalPosition = position) } },
-                    leadingIcon = { OptionIcon(position.icon) },
-                    label = { Text(position.label) },
                 )
             }
         }
@@ -1394,16 +1392,6 @@ private fun MotionCard(
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
-        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text("Keep screen awake", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
-                Text("While presenting", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-            Switch(
-                checked = state.keepScreenAwake,
-                onCheckedChange = { enabled -> onStateChange { it.copy(keepScreenAwake = enabled) } },
-            )
-        }
         if (rememberReducedMotion(LocalContext.current)) {
             Text(
                 "Reduced motion is enabled; dramatic transitions and strobe are softened.",
@@ -1411,6 +1399,25 @@ private fun MotionCard(
                 color = MaterialTheme.colorScheme.primary,
             )
         }
+    }
+}
+
+@Composable
+private fun SettingSwitchRow(
+    title: String,
+    subtitle: String,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(title, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+            Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+        Switch(checked = checked, onCheckedChange = onCheckedChange)
     }
 }
 
@@ -1521,6 +1528,15 @@ private fun PresentScreen(
     DisposableEffect(state.keepScreenAwake) {
         if (state.keepScreenAwake) window.addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         onDispose { window.clearFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON) }
+    }
+    DisposableEffect(window) {
+        val previousBrightness = window.attributes.screenBrightness
+        if (state.maxBrightnessWhenPresenting) {
+            window.attributes = window.attributes.apply { screenBrightness = 1f }
+        }
+        onDispose {
+            window.attributes = window.attributes.apply { screenBrightness = previousBrightness }
+        }
     }
     LaunchedEffect(flashTick) {
         if (flashTick > 0) {

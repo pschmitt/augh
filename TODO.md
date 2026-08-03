@@ -541,3 +541,17 @@ Provide an app-wide Settings destination from the editor header and move About i
 
 State: **done**, 2026-08-03. Settings is now the home for app-wide options, with About available
 as its first entry.
+
+## AUG-59: Simplify layout and add presentation display controls
+
+Keep sign content centered, remove the unused vertical-position and introductory heading controls,
+and put presentation display preferences in Settings.
+
+- [x] Move Keep screen awake to Settings → Display
+- [x] Add a max-brightness-while-presenting preference and restore the previous brightness on exit
+- [x] Remove the vertical-position setting and intent extra
+- [x] Remove the “Your sign, your rules” editor heading
+- [x] Rebuild and deploy the updated editor and settings
+
+State: **done**, 2026-08-03. Display preferences now live in Settings, presentation text is always
+centered, and the editor’s unused introductory heading and vertical-position control are gone.

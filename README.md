@@ -30,8 +30,7 @@ names are also available as `AughhhhIntents` when depending on the app's source/
 - `dev.pschmitt.aughhhh.action.PRESENT` starts full-screen Present mode. Pass `EXTRA_TEXT` or
   `EXTRA_PAGES`, plus optional styling extras such as `EXTRA_FOREGROUND`, `EXTRA_BACKGROUND`,
   `EXTRA_FONT`, `EXTRA_ANIMATION`, `EXTRA_SPEED`, `EXTRA_BLINK_INTENSITY`, `EXTRA_TRANSITION`,
-  `EXTRA_TAP_ACTION`, `EXTRA_VERTICAL_POSITION`, and
-  `EXTRA_KEEP_SCREEN_AWAKE`.
+  `EXTRA_TAP_ACTION`, and `EXTRA_KEEP_SCREEN_AWAKE`.
 - `dev.pschmitt.aughhhh.action.NEXT_PAGE` and `PREVIOUS_PAGE` switch presentation pages.
 - `dev.pschmitt.aughhhh.action.TRIGGER_ACTION` performs the configured tap action as if the
   presentation had been tapped.
