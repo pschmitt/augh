@@ -618,6 +618,28 @@ Use the current “make it bold!” tagline throughout the app’s identity surf
 
 State: **done**, 2026-08-04.
 
+## AUG-70: Remove stale AnimatedContent preview captures
+
+Keep the nested animated preview content synchronized with the current editor settings and prevent
+blank preview frames when sliders change.
+
+- [x] Read live sign state inside the preview’s AnimatedContent content lambda
+- [x] Keep preview transition overlays synchronized with current settings
+- [x] Rebuild and deploy the nested-preview state fix
+
+State: **done**, 2026-08-04.
+
+## AUG-71: Match Spin in the live preview
+
+Preview the actual rotating Spin page transition, and keep animated sign content current while
+motion sliders change.
+
+- [x] Carry the current sign state through the preview’s AnimatedContent target
+- [x] Add the same rotation animation used by Present mode
+- [x] Rebuild and deploy the corrected strobe and Spin preview behavior
+
+State: **done**, 2026-08-04.
+
 ## AUG-69: Keep the sticky preview state current
 
 Ensure the live preview observes editor state changes while it remains mounted in the sticky

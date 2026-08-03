@@ -1102,8 +1102,8 @@ private fun SignPreview(
     var flashTick by rememberSaveable(state.selectedPage) { mutableIntStateOf(0) }
     var transitionPreviewKey by remember { mutableIntStateOf(0) }
     var flashActive by remember { mutableStateOf(false) }
+    val spinRotation = remember { Animatable(0f) }
     val foreground = if (inverted) state.background.color else state.foreground.color
-    val background = if (inverted) state.foreground.color else state.background.color
 
     LaunchedEffect(flashTick) {
         if (flashTick > 0) {
@@ -1114,6 +1114,15 @@ private fun SignPreview(
     }
 
     LaunchedEffect(state.transition, replayKey) { transitionPreviewKey++ }
+
+    LaunchedEffect(state.transition, transitionPreviewKey, state.speed) {
+        if (state.transition == TransitionStyle.SPIN) {
+            spinRotation.snapTo(360f)
+            spinRotation.animateTo(0f, tween(motionDurationMillis(360, state.speed)))
+        } else {
+            spinRotation.snapTo(0f)
+        }
+    }
 
     fun performTapAction(action: TapAction) {
         when (action) {
@@ -1162,44 +1171,62 @@ private fun SignPreview(
     ) {
         Box(modifier = Modifier.fillMaxWidth().height(196.dp)) {
             AnimatedContent(
-                targetState = transitionPreviewKey,
-                modifier = Modifier.fillMaxSize(),
+                targetState = state to transitionPreviewKey,
+                modifier = Modifier.fillMaxSize().graphicsLayer(rotationZ = spinRotation.value),
                 transitionSpec = {
-                    fun duration(base: Int) = motionDurationMillis(base, state.speed)
+                    val currentState = targetState.first
+                    fun duration(base: Int) = motionDurationMillis(base, currentState.speed)
+                    val animateTransition = initialState.second != targetState.second
                     val enter =
-                        when (state.transition) {
-                            TransitionStyle.NONE -> fadeIn(tween(0))
-                            TransitionStyle.FADE -> fadeIn(tween(duration(260)))
-                            TransitionStyle.WIPE -> slideInHorizontally(tween(duration(300))) { it } + fadeIn(tween(duration(300)))
-                            TransitionStyle.BLINDS -> scaleIn(tween(duration(320)), initialScale = 0.82f) + fadeIn(tween(duration(320)))
-                            TransitionStyle.CHECKERBOARD -> scaleIn(tween(duration(360)), initialScale = 1.18f) + fadeIn(tween(duration(360)))
-                            TransitionStyle.SPIN -> scaleIn(tween(duration(360)), initialScale = 0.45f) + fadeIn(tween(duration(360)))
+                        if (!animateTransition) {
+                            fadeIn(tween(0))
+                        } else {
+                            when (currentState.transition) {
+                                TransitionStyle.NONE -> fadeIn(tween(0))
+                                TransitionStyle.FADE -> fadeIn(tween(duration(260)))
+                                TransitionStyle.WIPE -> slideInHorizontally(tween(duration(300))) { it } + fadeIn(tween(duration(300)))
+                                TransitionStyle.BLINDS -> scaleIn(tween(duration(320)), initialScale = 0.82f) + fadeIn(tween(duration(320)))
+                                TransitionStyle.CHECKERBOARD -> scaleIn(tween(duration(360)), initialScale = 1.18f) + fadeIn(tween(duration(360)))
+                                TransitionStyle.SPIN -> scaleIn(tween(duration(360)), initialScale = 0.45f) + fadeIn(tween(duration(360)))
+                            }
                         }
                     val exit =
-                        when (state.transition) {
-                            TransitionStyle.NONE -> fadeOut(tween(0))
-                            TransitionStyle.FADE -> fadeOut(tween(duration(260)))
-                            TransitionStyle.WIPE -> slideOutHorizontally(tween(duration(300))) { -it } + fadeOut(tween(duration(300)))
-                            TransitionStyle.BLINDS -> fadeOut(tween(duration(320)))
-                            TransitionStyle.CHECKERBOARD -> scaleOut(tween(duration(360)), targetScale = 1.18f) + fadeOut(tween(duration(360)))
-                            TransitionStyle.SPIN -> scaleOut(tween(duration(360)), targetScale = 0.45f) + fadeOut(tween(duration(360)))
+                        if (!animateTransition) {
+                            fadeOut(tween(0))
+                        } else {
+                            when (currentState.transition) {
+                                TransitionStyle.NONE -> fadeOut(tween(0))
+                                TransitionStyle.FADE -> fadeOut(tween(duration(260)))
+                                TransitionStyle.WIPE -> slideOutHorizontally(tween(duration(300))) { -it } + fadeOut(tween(duration(300)))
+                                TransitionStyle.BLINDS -> fadeOut(tween(duration(320)))
+                                TransitionStyle.CHECKERBOARD -> scaleOut(tween(duration(360)), targetScale = 1.18f) + fadeOut(tween(duration(360)))
+                                TransitionStyle.SPIN -> scaleOut(tween(duration(360)), targetScale = 0.45f) + fadeOut(tween(duration(360)))
+                            }
                         }
                     (enter togetherWith exit).using(SizeTransform(clip = false))
                 },
                 label = "preview-transition",
-            ) { previewKey ->
-                key(previewKey) {
+            ) { previewTarget ->
+                key(previewTarget.second) {
+                    val currentState = previewTarget.first
+                    val currentForeground = if (inverted) currentState.background.color else currentState.foreground.color
+                    val currentBackground = if (inverted) currentState.foreground.color else currentState.background.color
                     AnimatedSignText(
-                        state = state,
+                        state = currentState,
                         modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(28.dp)).padding(22.dp),
                         maxLines = 3,
                         preview = true,
-                        foreground = foreground,
-                        background = background,
+                        foreground = currentForeground,
+                        background = currentBackground,
                     )
                 }
             }
-            PageTransitionOverlay(style = state.transition, page = transitionPreviewKey, color = foreground, speed = state.speed)
+            PageTransitionOverlay(
+                style = state.transition,
+                page = transitionPreviewKey,
+                color = if (inverted) state.background.color else state.foreground.color,
+                speed = state.speed,
+            )
             Surface(
                 modifier = Modifier.align(Alignment.TopStart),
                 color = state.foreground.color.copy(alpha = 0.16f),
