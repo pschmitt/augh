@@ -871,7 +871,7 @@ private fun AboutScreen(onBack: () -> Unit) {
             )
             Spacer(Modifier.height(16.dp))
             Text("aughhhh", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black)
-            Text("tiny app · big feelings", color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text("make it bold!", color = MaterialTheme.colorScheme.onSurfaceVariant)
             Spacer(Modifier.height(8.dp))
             Text(
                 "A colorful full-screen sign maker for messages that refuse to be subtle.",

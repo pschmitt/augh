@@ -607,3 +607,13 @@ and expose it as a motion setting.
 State: **done**, 2026-08-03. Blink timing is configured in Hz and capped at half the detected display
 refresh rate so on/off phases remain representable. The refresh-aware controls were checked remotely
 and deployed to the ZF10 and PX5.
+
+## AUG-64: Keep the tagline consistent
+
+Use the current “make it bold!” tagline throughout the app’s identity surfaces.
+
+- [x] Replace the outdated About-page tagline
+- [x] Confirm no stale tagline remains in the app
+- [x] Rebuild and deploy the updated About page
+
+State: **done**, 2026-08-04.
