@@ -955,9 +955,9 @@ private fun SettingsScreen(
                     )
                     Spacer(Modifier.width(14.dp))
                     Column(modifier = Modifier.weight(1f)) {
-                        Text("About aughhhh", fontWeight = FontWeight.Bold)
+                        Text("About", fontWeight = FontWeight.Bold)
                         Text(
-                            "Version, license, project links, and privacy policy",
+                            "Version and project links",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
