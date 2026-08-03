@@ -36,7 +36,7 @@ runner does not emit an owner-profile instrumentation result, but installation s
 ## AUG-4: Presentation polish
 
 - [x] Named sign presets and recent-sign history
-- [x] Text alignment and vertical-position controls
+- [x] Vertical-position controls
 - [x] Keep-screen-awake behavior while presenting
 - [x] Orientation-aware typography and editor layout
 
@@ -403,3 +403,13 @@ Retrigger the live preview when the selected Page transition chip is tapped, inc
 - [x] Keep the transition setting and stored content unchanged by replaying
 
 State: **done**, 2026-08-03. Tapping any transition chip now showcases it immediately, even when it is already selected.
+
+## AUG-46: Remove horizontal text alignment
+
+Keep the sign typography centered and remove the unnecessary horizontal alignment setting.
+
+- [x] Remove the horizontal alignment control from Looks
+- [x] Render all sign text centered in Edit and Present modes
+- [x] Remove the obsolete alignment intent and persisted setting
+
+State: **done**, 2026-08-03. Text is now always centered; vertical positioning remains configurable.

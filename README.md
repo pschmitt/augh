@@ -14,7 +14,7 @@ choose an absurd presentation style, and swipe through it when the moment arrive
 - Edit and Present modes with immersive landscape presentation.
 - Multiple pages with add, delete, select, and reorder controls.
 - Auto-fit typography that recalculates for the available portrait or landscape canvas.
-- Modern, display, editorial, and mono font choices with alignment and vertical-position controls.
+- Modern, display, editorial, and mono font choices with vertical-position controls.
 - Rich text/background palettes, including red, presets, and recent messages.
 - Still, scrolling, blinking, background-blinking, invert, and opt-in strobe motion.
 - Optional PowerPoint-era page transitions: fade, wipe, blinds, checkerboard, and spin.
@@ -29,7 +29,7 @@ names are also available as `AughhhhIntents` when depending on the app's source/
 - `dev.pschmitt.aughhhh.action.PRESENT` starts full-screen Present mode. Pass `EXTRA_TEXT` or
   `EXTRA_PAGES`, plus optional styling extras such as `EXTRA_FOREGROUND`, `EXTRA_BACKGROUND`,
   `EXTRA_FONT`, `EXTRA_ANIMATION`, `EXTRA_SPEED`, `EXTRA_BLINK_INTENSITY`, `EXTRA_TRANSITION`,
-  `EXTRA_TAP_ACTION`, `EXTRA_TEXT_ALIGNMENT`, `EXTRA_VERTICAL_POSITION`, and
+  `EXTRA_TAP_ACTION`, `EXTRA_VERTICAL_POSITION`, and
   `EXTRA_KEEP_SCREEN_AWAKE`.
 - `dev.pschmitt.aughhhh.action.NEXT_PAGE` and `PREVIOUS_PAGE` switch presentation pages.
 - `dev.pschmitt.aughhhh.action.TRIGGER_ACTION` performs the configured tap action as if the

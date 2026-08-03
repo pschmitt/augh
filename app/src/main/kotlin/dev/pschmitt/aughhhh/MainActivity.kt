@@ -176,7 +176,6 @@ object AughhhhIntents {
     const val EXTRA_BLINK_INTENSITY = "dev.pschmitt.aughhhh.extra.BLINK_INTENSITY"
     const val EXTRA_TRANSITION = "dev.pschmitt.aughhhh.extra.TRANSITION"
     const val EXTRA_TAP_ACTION = "dev.pschmitt.aughhhh.extra.TAP_ACTION"
-    const val EXTRA_TEXT_ALIGNMENT = "dev.pschmitt.aughhhh.extra.TEXT_ALIGNMENT"
     const val EXTRA_VERTICAL_POSITION = "dev.pschmitt.aughhhh.extra.VERTICAL_POSITION"
     const val EXTRA_KEEP_SCREEN_AWAKE = "dev.pschmitt.aughhhh.extra.KEEP_SCREEN_AWAKE"
 }
@@ -207,12 +206,6 @@ private enum class TapAction(val label: String, val description: String, val ico
     FLASH("Flash", "A tiny attention grab", R.drawable.ic_flash),
     SOUND("Sound", "A tiny device-safe beep", R.drawable.ic_sound),
     NEXT_PAGE("Next page", "Advance the deck", R.drawable.ic_next),
-}
-
-private enum class TextAlignmentChoice(val label: String, val value: TextAlign, val icon: Int) {
-    LEFT("Left", TextAlign.Left, R.drawable.ic_align_left),
-    CENTER("Center", TextAlign.Center, R.drawable.ic_align_center),
-    RIGHT("Right", TextAlign.Right, R.drawable.ic_align_right),
 }
 
 private enum class VerticalPosition(val label: String, val alignment: Alignment, val icon: Int) {
@@ -267,7 +260,6 @@ private data class SignState(
     val blinkIntensity: Float = 0.92f,
     val transition: TransitionStyle = TransitionStyle.NONE,
     val tapAction: TapAction = TapAction.OFF,
-    val textAlignment: TextAlignmentChoice = TextAlignmentChoice.CENTER,
     val verticalPosition: VerticalPosition = VerticalPosition.CENTER,
     val keepScreenAwake: Boolean = true,
     val recentTexts: List<String> = emptyList(),
@@ -312,7 +304,6 @@ private class SignStore(context: Context) {
             .putFloat("blinkIntensity", state.blinkIntensity)
             .putString("transition", state.transition.name)
             .putString("tapAction", state.tapAction.name)
-            .putString("textAlignment", state.textAlignment.name)
             .putString("verticalPosition", state.verticalPosition.name)
             .putBoolean("keepScreenAwake", state.keepScreenAwake)
             .putString("recentTexts", JSONArray(state.recentTexts).toString())
@@ -331,7 +322,6 @@ private class SignStore(context: Context) {
             blinkIntensity = preferences.getFloat("blinkIntensity", SignState().blinkIntensity),
             transition = enumOrDefault("transition", TransitionStyle.NONE),
             tapAction = enumOrDefault("tapAction", TapAction.OFF),
-            textAlignment = enumOrDefault("textAlignment", TextAlignmentChoice.CENTER),
             verticalPosition = enumOrDefault("verticalPosition", VerticalPosition.CENTER),
             keepScreenAwake = preferences.getBoolean("keepScreenAwake", SignState().keepScreenAwake),
             recentTexts = loadRecentTexts(),
@@ -390,7 +380,6 @@ private fun applyPresentationIntent(intent: Intent, store: SignStore) {
             } else current.blinkIntensity,
             transition = intent.enumExtra(AughhhhIntents.EXTRA_TRANSITION) ?: current.transition,
             tapAction = intent.enumExtra(AughhhhIntents.EXTRA_TAP_ACTION) ?: current.tapAction,
-            textAlignment = intent.enumExtra(AughhhhIntents.EXTRA_TEXT_ALIGNMENT) ?: current.textAlignment,
             verticalPosition = intent.enumExtra(AughhhhIntents.EXTRA_VERTICAL_POSITION) ?: current.verticalPosition,
             keepScreenAwake = if (intent.hasExtra(AughhhhIntents.EXTRA_KEEP_SCREEN_AWAKE)) {
                 intent.getBooleanExtra(AughhhhIntents.EXTRA_KEEP_SCREEN_AWAKE, current.keepScreenAwake)
@@ -1009,7 +998,7 @@ private fun FittedSignText(
             fontFamily = state.font.family,
             fontSize = fontSize.sp,
             fontWeight = FontWeight.Bold,
-            textAlign = state.textAlignment.value,
+            textAlign = TextAlign.Center,
             lineHeight = (fontSize * 1.05f).sp,
             maxLines = maxLines,
             softWrap = false,
@@ -1066,18 +1055,6 @@ private fun LooksCard(state: SignState, onStateChange: (((SignState) -> SignStat
                     onClick = { onStateChange { it.copy(font = choice) } },
                     leadingIcon = { OptionIcon(choice.icon) },
                     label = { Text(choice.label) },
-                )
-            }
-        }
-        Spacer(Modifier.height(12.dp))
-        Text("Text alignment", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
-        ChipRow {
-            TextAlignmentChoice.entries.forEach { alignment ->
-                FilterChip(
-                    selected = state.textAlignment == alignment,
-                    onClick = { onStateChange { it.copy(textAlignment = alignment) } },
-                    leadingIcon = { OptionIcon(alignment.icon) },
-                    label = { Text(alignment.label) },
                 )
             }
         }
