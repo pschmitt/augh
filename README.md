@@ -38,7 +38,7 @@ names are also available as `AughhhhIntents` when depending on the app's source/
 `EXTRA_PAGES` accepts either a `StringArrayList` or a `String[]`; `EXTRA_TEXT` also accepts the
 standard `android.intent.extra.TEXT`. Enum styling values use their names, for example `RED`,
 `CREAM`, `SANS`, `BLINK`, `FADE`, or `NEXT_PAGE`. Speed and blink intensity are floats from
-`0.15` to `2.0`, and keep-screen-awake is a boolean. A simple shell example:
+`0.0` to `4.0` (with high-intensity mode required above `1.0`), and keep-screen-awake is a boolean. A simple shell example:
 
 ```sh
 adb shell am start -n dev.pschmitt.aughhhh/.MainActivity \

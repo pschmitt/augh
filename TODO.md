@@ -618,6 +618,18 @@ Use the current “make it bold!” tagline throughout the app’s identity surf
 
 State: **done**, 2026-08-04.
 
+## AUG-67: Allow zero animation speed
+
+Let users pause speed-driven motion at 0% while keeping blink and strobe frequency controlled by
+their dedicated Hz setting.
+
+- [x] Lower the speed floor to 0% in persisted state, controls, and intents
+- [x] Pause scrolling and speed-driven pulse motion safely at zero
+- [x] Make page transitions instant at zero speed and update the documentation
+- [x] Rebuild and deploy the zero-speed behavior
+
+State: **done**, 2026-08-04.
+
 ## AUG-66: Apply motion timing changes live in Preview
 
 Make changes to animation speed and blink/strobe frequency take effect immediately in the live

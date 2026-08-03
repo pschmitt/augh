@@ -279,6 +279,7 @@ private data class SignState(
 
 private const val NORMAL_MAX_SPEED = 1f
 private const val HIGH_INTENSITY_MAX_SPEED = 4f
+private const val MIN_SPEED = 0f
 
 private class SignStore(context: Context) {
     private val preferences = context.getSharedPreferences("aughhhh", Context.MODE_PRIVATE)
@@ -351,7 +352,7 @@ private class SignStore(context: Context) {
         return state.copy(
             pages = state.pages.ifEmpty { listOf("aughhhh") },
             selectedPage = state.selectedPage.coerceIn(state.pages.ifEmpty { listOf("") }.indices),
-            speed = state.speed.coerceIn(0.15f, maxSpeed),
+            speed = state.speed.coerceIn(MIN_SPEED, maxSpeed),
             blinkRateHz = state.blinkRateHz.coerceIn(0.5f, maxBlinkRate),
             animation = if (!state.highIntensityMode && state.animation == AnimationStyle.STROBE) {
                 AnimationStyle.BLINK
@@ -406,10 +407,13 @@ private fun pulseDurationMillis(animation: AnimationStyle, speed: Float, blinkRa
                 val effectiveRate = blinkRateHz.coerceAtMost(refreshRateHz / 2f).coerceAtLeast(0.5f)
                 500f / effectiveRate
             }
-            else -> 220f / speed
+            else -> if (speed <= MIN_SPEED) 0f else 220f / speed
         }
     return durationMillis.roundToInt().coerceAtLeast(50)
 }
+
+private fun motionDurationMillis(baseDuration: Int, speed: Float): Int =
+    if (speed <= MIN_SPEED) 0 else (baseDuration / speed).toInt().coerceAtLeast(60)
 
 private fun applyPresentationIntent(intent: Intent, store: SignStore) {
     val suppliedPages =
@@ -427,7 +431,7 @@ private fun applyPresentationIntent(intent: Intent, store: SignStore) {
             speed = if (intent.hasExtra(AughhhhIntents.EXTRA_SPEED)) {
                 intent
                     .getFloatExtra(AughhhhIntents.EXTRA_SPEED, current.speed)
-                    .coerceIn(0.15f, if (current.highIntensityMode) HIGH_INTENSITY_MAX_SPEED else NORMAL_MAX_SPEED)
+                    .coerceIn(MIN_SPEED, if (current.highIntensityMode) HIGH_INTENSITY_MAX_SPEED else NORMAL_MAX_SPEED)
             } else current.speed,
             blinkIntensity = if (intent.hasExtra(AughhhhIntents.EXTRA_BLINK_INTENSITY)) {
                 intent.getFloatExtra(AughhhhIntents.EXTRA_BLINK_INTENSITY, current.blinkIntensity).coerceIn(0.2f, 1f)
@@ -1157,7 +1161,7 @@ private fun SignPreview(
                 targetState = transitionPreviewKey,
                 modifier = Modifier.fillMaxSize(),
                 transitionSpec = {
-                    fun duration(base: Int) = (base / state.speed).toInt().coerceAtLeast(60)
+                    fun duration(base: Int) = motionDurationMillis(base, state.speed)
                     val enter =
                         when (state.transition) {
                             TransitionStyle.NONE -> fadeIn(tween(0))
@@ -1339,7 +1343,7 @@ private fun AnimatedSignText(
                     .fillMaxWidth()
                     .alpha(blinkAlpha)
                     .then(
-                        if (animation == AnimationStyle.SCROLL) {
+                        if (animation == AnimationStyle.SCROLL && state.speed > MIN_SPEED) {
                             Modifier.basicMarquee(
                                 iterations = Int.MAX_VALUE,
                                 repeatDelayMillis = 0,
@@ -1362,6 +1366,13 @@ private fun rememberMotionPulse(
     refreshRateHz: Float,
     label: String,
 ): Float {
+    if (speed <= MIN_SPEED &&
+        animation != AnimationStyle.BLINK &&
+        animation != AnimationStyle.BLINK_BACKGROUND &&
+        animation != AnimationStyle.STROBE
+    ) {
+        return 0f
+    }
     val transition = key(animation, speed, blinkRateHz, refreshRateHz) {
         rememberInfiniteTransition(label = label)
     }
@@ -1557,7 +1568,7 @@ private fun MotionCard(
             Slider(
                 value = state.speed,
                 onValueChange = { onStateChange { current -> current.copy(speed = it) } },
-                valueRange = 0.15f..if (state.highIntensityMode) HIGH_INTENSITY_MAX_SPEED else NORMAL_MAX_SPEED,
+                valueRange = MIN_SPEED..if (state.highIntensityMode) HIGH_INTENSITY_MAX_SPEED else NORMAL_MAX_SPEED,
                 colors = SliderDefaults.colors(
                     thumbColor = speedColor,
                     activeTrackColor = speedColor,
@@ -1811,7 +1822,7 @@ private fun PresentScreen(
     LaunchedEffect(presentPage, transitionStyle, state.speed) {
         if (transitionStyle == TransitionStyle.SPIN) {
             spinRotation.snapTo(360f)
-            spinRotation.animateTo(0f, tween((360 / state.speed).toInt().coerceAtLeast(70)))
+            spinRotation.animateTo(0f, tween(motionDurationMillis(360, state.speed)))
         } else {
             spinRotation.snapTo(0f)
         }
@@ -1895,7 +1906,7 @@ private fun PresentScreen(
                 modifier = Modifier.fillMaxSize().padding(horizontal = 24.dp).graphicsLayer(rotationZ = spinRotation.value),
                 transitionSpec = {
                     val direction = if (targetState >= initialState) 1 else -1
-                    fun duration(base: Int) = (base / state.speed).toInt().coerceAtLeast(60)
+                    fun duration(base: Int) = motionDurationMillis(base, state.speed)
                     val enter =
                         when (transitionStyle) {
                             TransitionStyle.NONE -> fadeIn(tween(0))
@@ -1964,7 +1975,7 @@ private fun PageTransitionOverlay(style: TransitionStyle, page: Int, color: Colo
     LaunchedEffect(style, page, speed) {
         progress.snapTo(1f)
         val baseDuration = if (style == TransitionStyle.BLINDS) 320 else 360
-        progress.animateTo(0f, tween((baseDuration / speed).toInt().coerceAtLeast(60)))
+        progress.animateTo(0f, tween(motionDurationMillis(baseDuration, speed)))
     }
     Canvas(modifier = Modifier.fillMaxSize()) {
         when (style) {
