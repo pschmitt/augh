@@ -617,3 +617,13 @@ Use the current “make it bold!” tagline throughout the app’s identity surf
 - [x] Rebuild and deploy the updated About page
 
 State: **done**, 2026-08-04.
+
+## AUG-65: Give Looks its own theme icon
+
+Use a palette icon for the Looks section so it is visually distinct from the Message section.
+
+- [x] Add a native palette vector drawable
+- [x] Use it on the Looks card while retaining the Message icon
+- [x] Rebuild and deploy the updated section icon
+
+State: **done**, 2026-08-04.

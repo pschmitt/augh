@@ -1435,7 +1435,7 @@ private fun rememberReducedMotion(context: Context): Boolean {
 
 @Composable
 private fun LooksCard(state: SignState, onStateChange: (((SignState) -> SignState)) -> Unit) {
-    SettingCard(title = "Looks", subtitle = "Type is a personality", icon = R.drawable.ic_looks) {
+    SettingCard(title = "Looks", subtitle = "Type is a personality", icon = R.drawable.ic_palette) {
         Text("Font", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
         ChipRow {
             FontChoice.entries.forEach { choice ->
