@@ -1425,7 +1425,11 @@ private fun MotionCard(
     onTransitionReplay: () -> Unit,
     onTapActionPreview: (TapAction) -> Unit,
 ) {
-    SettingCard(title = "Motion", subtitle = "Optional chaos, responsibly applied", icon = R.drawable.ic_motion) {
+    SettingCard(
+        title = "Animations and effects",
+        subtitle = "Optional chaos, responsibly applied",
+        icon = R.drawable.ic_motion,
+    ) {
         ChipRow {
             AnimationStyle.entries.forEach { animation ->
                 FilterChip(
