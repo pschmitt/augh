@@ -71,8 +71,10 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.OutlinedTextField
@@ -83,6 +85,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -441,11 +444,11 @@ private fun AughhhhApp(
             controller.systemBarsBehavior =
                 WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         } else {
-            activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+            activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
             controller.show(WindowInsetsCompat.Type.systemBars())
         }
         onDispose {
-            if (mode == AppMode.PRESENT) activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+            if (mode == AppMode.PRESENT) activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
             if (mode == AppMode.PRESENT) {
                 WindowCompat.getInsetsController(window, window.decorView)
                     .show(WindowInsetsCompat.Type.systemBars())
@@ -483,7 +486,7 @@ private fun AughhhhApp(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
 private fun EditorScreen(
     state: SignState,
@@ -499,6 +502,36 @@ private fun EditorScreen(
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
+        topBar = {
+            TopAppBar(
+                title = {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Image(
+                            painter = painterResource(R.drawable.aughhhh_icon),
+                            contentDescription = "aughhhh app logo",
+                            modifier = Modifier.size(40.dp).clip(RoundedCornerShape(10.dp)),
+                        )
+                        Spacer(Modifier.width(10.dp))
+                        Column {
+                            Text("aughhhh", fontWeight = FontWeight.Black)
+                            Text(
+                                "tiny app · big feelings",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    }
+                },
+                actions = {
+                    IconButton(onClick = onAbout) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_info),
+                            contentDescription = "About",
+                        )
+                    }
+                },
+            )
+        },
         bottomBar = {
             Surface(shadowElevation = 8.dp, color = MaterialTheme.colorScheme.surface) {
                 Button(
@@ -522,7 +555,6 @@ private fun EditorScreen(
             state = listState,
             contentPadding = PaddingValues(horizontal = 20.dp),
         ) {
-            item { Header(onAbout = onAbout) }
             item {
                 Column {
                     Spacer(Modifier.height(14.dp))
@@ -710,51 +742,23 @@ private fun PageStrip(
     }
 }
 
-@Composable
-private fun Header(onAbout: () -> Unit) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(18.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Box(
-                modifier = Modifier.size(48.dp),
-                contentAlignment = Alignment.Center,
-            ) {
-                Image(
-                    painter = painterResource(R.drawable.aughhhh_icon),
-                    contentDescription = "aughhhh app logo",
-                    modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(12.dp)),
-                )
-            }
-            Spacer(Modifier.width(12.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Text("aughhhh", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
-                Text("tiny app · big feelings", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-            TextButton(onClick = onAbout) { Text("About") }
-        }
-    }
-}
-
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun AboutScreen(onBack: () -> Unit) {
     val context = LocalContext.current
     Scaffold(
         topBar = {
-            Surface(color = MaterialTheme.colorScheme.surface) {
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    TextButton(onClick = onBack) { Text("Back") }
-                    Text("About", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                }
-            }
+            TopAppBar(
+                title = { Text("About") },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_back),
+                            contentDescription = "Back",
+                        )
+                    }
+                },
+            )
         },
         containerColor = MaterialTheme.colorScheme.background,
     ) { padding ->

@@ -465,3 +465,55 @@ Publish a concise privacy policy for Play Console and link it from the app and R
 - [x] Link the public policy from the About page and README
 
 State: **done**, 2026-08-03. The policy is available at `PRIVACY.md` and linked from the app.
+
+## AUG-52: Respect About page system insets
+
+Keep the About app bar below the Android status bar in edge-to-edge mode.
+
+- [x] Apply the status-bar inset to the About top bar
+- [x] Preserve the About content's scroll and navigation behavior
+- [x] Rebuild and verify the corrected screen
+
+State: **done**, 2026-08-03. The About header now starts below the system status bar.
+
+## AUG-53: Use a standard About top app bar
+
+Replace the custom About back/title row with a conventional Material top app bar.
+
+- [x] Use a standard top app bar with a leading back icon
+- [x] Keep the About content below the app bar and system status bar
+- [x] Rebuild and verify the corrected navigation affordance
+
+State: **done**, 2026-08-03. About now uses a regular Material header with a normal back button.
+
+## AUG-54: Use a regular editor header with sticky preview layering
+
+Use a standard editor top app bar while keeping the live preview pinned beneath it during scroll.
+
+- [x] Move the app icon, identity, and About link into the editor top app bar
+- [x] Remove the oversized identity card from the scrolling content
+- [x] Keep the live preview sticky below the fixed app bar
+- [x] Rebuild and deploy the updated editor layout
+
+State: **done**, 2026-08-03. The editor now has a conventional fixed header, and its preview
+remains a separate sticky layer below that header.
+
+## AUG-55: Restore portrait orientation after Present
+
+Return the device to portrait orientation when leaving full-screen presentation mode.
+
+- [x] Request portrait orientation when returning to Edit or About
+- [x] Preserve landscape orientation while Present is active
+- [x] Rebuild and deploy the orientation fix
+
+State: **done**, 2026-08-03. Exiting Present now requests portrait mode immediately.
+
+## AUG-56: Use an About icon in the editor header
+
+Keep the standard editor top app bar compact by representing the About link with an info icon.
+
+- [x] Replace the text About action with an accessible info icon
+- [x] Preserve the existing About navigation behavior
+- [x] Rebuild and deploy the updated header
+
+State: **done**, 2026-08-03. The editor header now uses a conventional info action for About.
