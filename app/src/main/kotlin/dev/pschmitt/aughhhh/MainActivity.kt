@@ -576,6 +576,10 @@ private fun EditorScreen(
     var transitionReplayKey by remember { mutableIntStateOf(0) }
     var tapActionPreview by remember { mutableStateOf<TapAction?>(null) }
     var tapActionPreviewKey by remember { mutableIntStateOf(0) }
+    val latestState = rememberUpdatedState(state)
+    val latestReplayKey = rememberUpdatedState(transitionReplayKey)
+    val latestTapActionPreview = rememberUpdatedState(tapActionPreview)
+    val latestTapActionPreviewKey = rememberUpdatedState(tapActionPreviewKey)
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -635,11 +639,11 @@ private fun EditorScreen(
             stickyHeader {
                 Surface(color = MaterialTheme.colorScheme.surface) {
                     SignPreview(
-                        state,
+                        state = latestState.value,
                         modifier = Modifier.padding(vertical = 12.dp),
-                        replayKey = transitionReplayKey,
-                        tapActionPreview = tapActionPreview,
-                        tapActionPreviewKey = tapActionPreviewKey,
+                        replayKey = latestReplayKey.value,
+                        tapActionPreview = latestTapActionPreview.value,
+                        tapActionPreviewKey = latestTapActionPreviewKey.value,
                         onPageChange = { delta ->
                             onStateChange { current ->
                                 current.copy(selectedPage = (current.selectedPage + delta).coerceIn(current.pages.indices))

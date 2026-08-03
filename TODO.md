@@ -618,6 +618,17 @@ Use the current “make it bold!” tagline throughout the app’s identity surf
 
 State: **done**, 2026-08-04.
 
+## AUG-69: Keep the sticky preview state current
+
+Ensure the live preview observes editor state changes while it remains mounted in the sticky
+header, including animation speed and blink/strobe frequency sliders.
+
+- [x] Feed the sticky preview from an always-current state holder
+- [x] Keep transition and tap-action preview triggers current as well
+- [x] Rebuild and deploy the sticky-preview refresh fix
+
+State: **done**, 2026-08-04.
+
 ## AUG-68: Simplify the launcher artwork
 
 Use the expressive round face as the launcher identity without the speech-bubble tail, hands,
