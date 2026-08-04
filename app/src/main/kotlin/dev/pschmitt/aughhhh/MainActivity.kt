@@ -1826,6 +1826,8 @@ private fun PresentScreen(
     var flashActive by remember { mutableStateOf(false) }
     val powerOnProgress = remember(presentationSession) { Animatable(0f) }
     val powerOffProgress = remember(presentationSession) { Animatable(0f) }
+    var pageTransitionReady by remember(presentationSession) { mutableStateOf(false) }
+    var pageTransitionKey by remember(presentationSession) { mutableIntStateOf(0) }
     val foreground = if (inverted) state.background.color else state.foreground.color
     val background = if (inverted) state.foreground.color else state.background.color
     val presentPage = initialPage.coerceIn(state.pages.indices)
@@ -1866,12 +1868,16 @@ private fun PresentScreen(
         }
     }
     LaunchedEffect(presentPage, transitionStyle, state.speed) {
-        if (transitionStyle == TransitionStyle.SPIN) {
+        if (pageTransitionReady && transitionStyle == TransitionStyle.SPIN) {
             spinRotation.snapTo(360f)
             spinRotation.animateTo(0f, tween(motionDurationMillis(360, state.speed)))
         } else {
             spinRotation.snapTo(0f)
         }
+    }
+
+    LaunchedEffect(presentPage) {
+        if (pageTransitionReady) pageTransitionKey++
     }
 
     fun movePage(delta: Int) {
@@ -1894,11 +1900,14 @@ private fun PresentScreen(
     }
 
     LaunchedEffect(presentationSession, reducedMotion) {
+        pageTransitionReady = false
         if (reducedMotion) {
             powerOnProgress.snapTo(1f)
+            pageTransitionReady = true
         } else {
             powerOnProgress.snapTo(0f)
             powerOnProgress.animateTo(1f, tween(360, easing = FastOutSlowInEasing))
+            pageTransitionReady = true
         }
     }
 
@@ -1931,12 +1940,12 @@ private fun PresentScreen(
                     alpha = enterProgress * (1f - exitProgress)
                 }
                 .background(animatedPresentationBackground)
-                .pointerInput(state.pages.size, presentPage, exitRequest) {
+                .pointerInput(state.pages.size, presentPage, exitRequest, pageTransitionReady) {
                     var dragDistance = 0f
                     detectHorizontalDragGestures(
                         onHorizontalDrag = { _, dragAmount -> dragDistance += dragAmount },
                         onDragEnd = {
-                            if (exitRequest == 0 && abs(dragDistance) > 64f) {
+                            if (pageTransitionReady && exitRequest == 0 && abs(dragDistance) > 64f) {
                                 if (dragDistance < 0) movePage(1) else movePage(-1)
                             }
                         },
@@ -1953,7 +1962,9 @@ private fun PresentScreen(
                 transitionSpec = {
                     val direction = if (targetState >= initialState) 1 else -1
                     fun duration(base: Int) = motionDurationMillis(base, state.speed)
-                    val enter =
+                    val enter = if (!pageTransitionReady) {
+                        fadeIn(tween(0))
+                    } else {
                         when (transitionStyle) {
                             TransitionStyle.NONE -> fadeIn(tween(0))
                             TransitionStyle.FADE -> fadeIn(tween(duration(260)))
@@ -1962,7 +1973,10 @@ private fun PresentScreen(
                             TransitionStyle.CHECKERBOARD -> scaleIn(tween(duration(360)), initialScale = 1.18f) + fadeIn(tween(duration(360)))
                             TransitionStyle.SPIN -> scaleIn(tween(duration(360)), initialScale = 0.45f) + fadeIn(tween(duration(360)))
                         }
-                    val exit =
+                    }
+                    val exit = if (!pageTransitionReady) {
+                        fadeOut(tween(0))
+                    } else {
                         when (transitionStyle) {
                             TransitionStyle.NONE -> fadeOut(tween(0))
                             TransitionStyle.FADE -> fadeOut(tween(duration(260)))
@@ -1971,6 +1985,7 @@ private fun PresentScreen(
                             TransitionStyle.CHECKERBOARD -> scaleOut(tween(duration(360)), targetScale = 1.18f) + fadeOut(tween(duration(360)))
                             TransitionStyle.SPIN -> scaleOut(tween(duration(360)), targetScale = 0.45f) + fadeOut(tween(duration(360)))
                         }
+                    }
                     (enter togetherWith exit).using(SizeTransform(clip = false))
                 },
                 label = "page-transition",
@@ -1985,7 +2000,9 @@ private fun PresentScreen(
                     pulseOverride = pulse,
                 )
             }
-            PageTransitionOverlay(style = transitionStyle, page = presentPage, color = foreground, speed = state.speed)
+            if (pageTransitionKey > 0) {
+                PageTransitionOverlay(style = transitionStyle, page = pageTransitionKey, color = foreground, speed = state.speed)
+            }
             if (flashActive) {
                 Box(modifier = Modifier.fillMaxSize().background(foreground.copy(alpha = 0.82f)))
             }

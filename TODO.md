@@ -686,6 +686,18 @@ Ensure the presentation cannot remain invisible when the device does not rotate 
 State: **done**, 2026-08-04. The entry animation now starts regardless of orientation, so a
 portrait device cannot leave the presentation content at zero alpha.
 
+## AUG-76: Skip page transition on presentation start
+
+Do not play the selected page transition when entering Present mode; it should only run after
+the user changes pages.
+
+- [x] Keep page transitions disabled while the presentation entry animation runs
+- [x] Suppress initial spin and overlay effects as well as the content transition
+- [x] Rebuild, deploy, and verify presentation startup
+
+State: **done**, 2026-08-04. Present mode now starts with only the polished entry animation;
+the selected page transition is reserved for subsequent page changes.
+
 ## AUG-69: Keep the sticky preview state current
 
 Ensure the live preview observes editor state changes while it remains mounted in the sticky
