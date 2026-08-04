@@ -809,3 +809,76 @@ Use a palette icon for the Looks section so it is visually distinct from the Mes
 - [x] Rebuild and deploy the updated section icon
 
 State: **done**, 2026-08-04.
+
+## AUG-80: fix the stale launcher fallback icon and adaptive-icon safe zone
+
+`app/src/main/res/mipmap/ic_launcher.png` still held the original meme-style icon (gradient
+background, clutching hands, speech-bubble tail) from before AUG-2's "simplify launcher icon to
+face" commit - the adaptive foreground (`aughhhh_icon.png`) had moved on to the plain face, but
+this flat fallback never got regenerated, so some launchers/tools would show a different icon
+than everyone else. Separately, that face itself filled its canvas almost edge to edge, well
+past the adaptive-icon safe zone.
+
+- [x] Regenerate `mipmap/ic_launcher.png` from the current face art, composited on the real
+  `icon_background` purple, so every icon surface agrees.
+- [x] Shrink and recenter `aughhhh_icon.png` so its opaque content sits inside the 66dp safe
+  zone instead of running to its edges.
+- [x] Rebuild and deploy to attached devices to confirm neither icon clips.
+
+**Why:** user's explicit direction - the launcher icon is otherwise fine, but this fallback
+asset was left behind by a previous edit, and Nyetbox's launcher-icon work the same day surfaced
+the same class of bug (a face filling its adaptive-icon canvas with too little margin actually
+clips on real devices, not just past a documentation line).
+**How to apply:** `magick -trim` measured the face's opaque bounding box at 1006x1018 inside the
+1254x1254 canvas (only ~10% margin, well short of the ~39% margin the safe zone needs), scaled
+it to 688x696 (~68% of original) and recentered on a transparent canvas for ~9% real margin, and
+composited that same art onto solid `#6C2E70` for the flat fallback.
+
+State: **done**, 2026-08-04.
+
+## AUG-81: lighten the icon background and enlarge the editor header logo
+
+Follow-up polish on AUG-80's icon work, both from direct user feedback.
+
+- [x] Swap `icon_background` (the adaptive-icon backdrop behind Sign guy) from dark purple
+  `#6C2E70` to coral `#F4A69C` - regenerated the legacy `mipmap/ic_launcher.png` fallback to
+  match, same as AUG-80 did for the original purple.
+- [x] Enlarge the editor top-bar logo from 40dp to 52dp (and its corner radius from 10dp to
+  13dp to stay proportional) so it reads clearly instead of feeling like an afterthought next
+  to the title text.
+- [x] Verify on-device: confirmed via screenshot on Zenfone 10 (coral bezel visible, "AUGH!"
+  legible at the enlarged header size), then deployed to all three attached devices.
+
+**Why:** user's explicit direction after seeing AUG-80's fix deployed.
+**How to apply:** background is a single `@color/icon_background` resource, no code changes
+needed beyond regenerating the raster fallback; header size is `MainActivity.kt`'s
+`EditorScreen` top bar `Image` modifier.
+
+State: **done**, 2026-08-04 - verified on Zenfone 10 screenshot, deployed to Zenfone 10, Mi Pad
+4, and Pixel 5 via `just deploy-all debug`.
+
+## AUG-82: fix splash screen background mismatch
+
+The splash screen didn't match the app icon's coral background - it wasn't the old purple
+either, it just wasn't wired up at all. `installSplashScreen()` was being called in
+`MainActivity` with no dedicated splash theme behind it (no `windowSplashScreenBackground`,
+no `postSplashScreenTheme`), so the androidx compat library was falling back to some default
+rather than reading `icon_background`.
+
+- [x] Added `Theme.Aughhhh.Splash` (parent `Theme.SplashScreen`) with
+  `windowSplashScreenBackground="@color/icon_background"`,
+  `windowSplashScreenAnimatedIcon="@mipmap/ic_launcher"`, and
+  `postSplashScreenTheme="@style/Theme.Aughhhh"` - the same pattern Nyetbox already uses.
+- [x] Set it as `MainActivity`'s own `android:theme` in the manifest (the `<application>` tag
+  keeps the plain `Theme.Aughhhh`).
+- [x] Removed the unused `aughhhh_splash` color (`#16121C`) - it was never actually referenced
+  anywhere, which is exactly why the splash wasn't coral already. The new splash theme points
+  straight at `icon_background` so the two can't drift apart again.
+- [x] Verified on-device: caught the actual splash frame on a cold start via
+  `am force-stop` + `am start` + immediate `screencap`, confirmed coral background with Sign
+  guy, then deployed to all three attached devices.
+
+**Why:** user's direct report - the splash didn't match the app's own icon background.
+**How to apply:** N/A, self-contained fix.
+
+State: **done**, 2026-08-04.

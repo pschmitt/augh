@@ -598,7 +598,7 @@ private fun EditorScreen(
                         Image(
                             painter = painterResource(R.drawable.aughhhh_icon),
                             contentDescription = "aughhhh app logo",
-                            modifier = Modifier.size(40.dp).clip(RoundedCornerShape(10.dp)),
+                            modifier = Modifier.size(52.dp).clip(RoundedCornerShape(13.dp)),
                         )
                         Spacer(Modifier.width(10.dp))
                         Column {
