@@ -629,13 +629,16 @@ hosts per AGENTS.md.
 - [x] Add `fastlane/` config (Appfile, Screengrabfile, Fastfile) scoped to en-US only
 - [x] Add a `screenshots` Nix dev shell and `just screenshots` / `screenshots-build` recipes
 - [x] Run `just screenshots` end to end against a real device and verify output
-- [ ] Replace the manually captured images in `docs/images/play-store/` once we're happy with the
-      captured framing/content, and cover the 7"/10" tablet screenshot buckets too
+- [x] Upload fresh phone screenshots to the live Play Console listing via `gpc` (playconsole-cli),
+      replacing the previous two images
+- [ ] Cover the 7"/10" tablet screenshot buckets too
 
-State: **POC verified**, 2026-08-04. Ran end to end against the wired Zenfone 10
+State: **POC verified, screenshots live**, 2026-08-04. Ran end to end against the wired Zenfone 10
 (`R6AIB700W850L7G`): `just screenshots-build` then `ANDROID_SERIAL=R6AIB700W850L7G nix develop
 .#screenshots --command fastlane screenshots` produced real 1080x2400 editor and 2400x1080 present
-screenshots in `fastlane/metadata/android/en-US/images/phoneScreenshots/`. See
+screenshots in `fastlane/metadata/android/en-US/images/phoneScreenshots/`. Deleted the two prior
+`en-US`/`phoneScreenshots` images via `gpc images delete-all` and uploaded the fresh pair via `gpc
+images upload` (image ids `12613574554439085137`, `11505818489115745351`). See
 `docs/screenshots.md` for usage on an emulator or another attached device.
 
 ## AUG-70: Remove stale AnimatedContent preview captures
