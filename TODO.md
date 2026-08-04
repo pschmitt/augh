@@ -675,6 +675,17 @@ directions.
 State: **done**, 2026-08-04. Presentation entry and exit now use a subtle fade-and-scale
 transition without the old CRT scanline effect.
 
+## AUG-75: Always start the presentation entry animation
+
+Ensure the presentation cannot remain invisible when the device does not rotate to landscape.
+
+- [x] Start the entry animation independently of the current orientation
+- [x] Preserve the subtle fade-and-scale presentation transition
+- [x] Rebuild and verify the fix on the Mi Pad 4
+
+State: **done**, 2026-08-04. The entry animation now starts regardless of orientation, so a
+portrait device cannot leave the presentation content at zero alpha.
+
 ## AUG-69: Keep the sticky preview state current
 
 Ensure the live preview observes editor state changes while it remains mounted in the sticky

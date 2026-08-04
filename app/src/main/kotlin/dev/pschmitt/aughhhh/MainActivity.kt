@@ -115,7 +115,6 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
@@ -1820,7 +1819,6 @@ private fun PresentScreen(
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     val reducedMotion = rememberReducedMotion(context)
-    val isLandscape = LocalConfiguration.current.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
     val transitionStyle = if (reducedMotion) TransitionStyle.NONE else state.transition
     val spinRotation = remember { Animatable(0f) }
     var inverted by rememberSaveable(presentationSession) { mutableStateOf(false) }
@@ -1895,8 +1893,7 @@ private fun PresentScreen(
         if (externalActionTick > 0) performTapAction()
     }
 
-    LaunchedEffect(presentationSession, reducedMotion, isLandscape) {
-        if (!isLandscape) return@LaunchedEffect
+    LaunchedEffect(presentationSession, reducedMotion) {
         if (reducedMotion) {
             powerOnProgress.snapTo(1f)
         } else {
