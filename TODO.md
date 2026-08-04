@@ -882,3 +882,25 @@ rather than reading `icon_background`.
 **How to apply:** N/A, self-contained fix.
 
 State: **done**, 2026-08-04.
+
+## AUG-83: sync Play Console icon/banner to the current branding
+
+User asked to confirm all three apps' Play Console assets were current. aughhhh's icon was
+already synced (AUG-81's coral version, uploaded same day), but the feature graphic was still
+the pre-simplification character art (confirmed by comparing the live asset's sha1 against
+`docs/images/play-store/feature-graphic.png` - exact match, meaning it had never been touched
+since the original upload).
+
+- [x] Rebuilt `docs/images/play-store/feature-graphic.png` (1024x500) around Sign guy - same
+  spirit as the original (diagonal red/purple/yellow gradient, confetti shapes, "aughhhh" +
+  "tiny app - big feelings") with the current phone-and-stick mark instead of the retired
+  scream-with-hands character.
+- [x] Re-confirmed the icon is the coral version already live (`gpc images list`, sha1 matched
+  AUG-81's upload) - no re-upload needed there.
+- [x] Uploaded the new feature graphic via `gpc images upload --type featureGraphic`.
+
+**Why:** user's direct question surfaced that this asset had been missed in AUG-80/81's icon
+work - the feature graphic isn't generated from the same launcher-icon source, so it doesn't
+update automatically when that does.
+
+State: **done**, 2026-08-04.
