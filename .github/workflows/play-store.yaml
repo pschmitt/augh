@@ -103,7 +103,7 @@ jobs:
         id: ci_keystore
         uses: timheuer/base64-to-file@v2
         with:
-          fileName: 'aughhhh-ci.jks'
+          fileName: 'augh-ci.jks'
           encodedString: ${{ secrets.CI_KEYSTORE_BASE64 }}
 
       - name: Run unit tests
@@ -127,7 +127,7 @@ jobs:
       - name: Upload bundle artifact
         uses: actions/upload-artifact@v7
         with:
-          name: aughhhh-${{ steps.version.outputs.name }}-${{ steps.version.outputs.code }}-aab
+          name: augh-${{ steps.version.outputs.name }}-${{ steps.version.outputs.code }}-aab
           path: app/build/outputs/bundle/release/app-release.aab
           if-no-files-found: error
 
@@ -135,7 +135,7 @@ jobs:
         uses: r0adkll/upload-google-play@v1
         with:
           serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
-          packageName: dev.pschmitt.aughhhh
+          packageName: dev.pschmitt.augh
           releaseFiles: app/build/outputs/bundle/release/app-release.aab
           tracks: internal
           status: completed

@@ -1,6 +1,6 @@
 # TODO
 
-Completed backlog for aughhhh. Every user-visible request gets a stable `AUG-N` identifier and
+Completed backlog for AUGH!. Every user-visible request gets a stable `AUG-N` identifier and
 an explicit state; IDs are never reused.
 
 ## AUG-1: Initial project scaffold + sign-maker MVP
@@ -902,5 +902,83 @@ since the original upload).
 **Why:** user's direct question surfaced that this asset had been missed in AUG-80/81's icon
 work - the feature graphic isn't generated from the same launcher-icon source, so it doesn't
 update automatically when that does.
+
+State: **done**, 2026-08-04.
+
+## AUG-84: rename the app and repo from aughhhh to AUGH!
+
+In-progress rebrand from "aughhhh" to "AUGH!" (matching the app icon's phone-screen artwork,
+which reads "AUGH!"), including the applicationId, GitHub repo, and every mention across the
+codebase and docs. The GitHub repo rename (`pschmitt/aughhhh` -> `pschmitt/augh`), the local
+directory rename, the git remote update, the `dev.pschmitt.augh` namespace/applicationId, the
+Kotlin source `git mv` to `dev/pschmitt/augh/`, the `AughhhhTheme`/`AughhhhApp`/`AughhhhIntents`
+identifier renames, the launcher drawable `git mv` to `augh_icon.png`, `strings.xml`'s
+`app_name`, and `MainActivity.kt`'s hardcoded display strings/GitHub URLs were already done
+before this entry; this entry covers the remaining sweep.
+
+- [x] Renamed `themes.xml` style names `Theme.Aughhhh`/`Theme.Aughhhh.Splash` to
+  `Theme.Augh`/`Theme.Augh.Splash` and updated both `AndroidManifest.xml` theme references plus
+  the style's own `postSplashScreenTheme` self-reference.
+- [x] Renamed `settings.gradle.kts`'s `rootProject.name` to `"augh"`.
+- [x] Renamed `justfile`'s `application_id`, its `AUGHHHH_*` env vars to `AUGH_*`
+  (`AUGH_REMOTE_HOST`, `AUGH_REMOTE_PATH`, `AUGH_DIST_DIR`, `AUGH_TABLET_AVD`), the default
+  `~/build/aughhhh` remote path to `~/build/augh`, the `aughhhh-tablet` AVD name to
+  `augh-tablet`, the `/tmp/aughhhh-tablet-emulator.log` path, and the `-PaughhhhCommit=` Gradle
+  property flag to `-PaughCommit=` - matched on the `app/build.gradle.kts` side by renaming the
+  `aughhhhCommit`/`aughhhhBuildDate` Gradle properties it reads to `aughCommit`/`aughBuildDate`.
+- [x] Rewrote `README.md`: title, pronunciation guide (replaced the old scream-clip link with an
+  actual pronunciation note for "AUGH!" as its own word), intent action strings, screenshot alt
+  text, install/Obtainium badge URL (including the URL-encoded JSON payload's id/url/name/APK
+  filter regex), Google Play setup steps, privacy-policy link, and the debug applicationId
+  mention.
+- [x] Updated `PRIVACY.md`'s app name, package id, and GitHub issue-tracker URL; also dropped a
+  reference to the README's old pronunciation link since the rewritten pronunciation note no
+  longer links out.
+- [x] Updated `AGENTS.md`'s project description and package/applicationId mentions, and
+  `TODO.md`'s own header description.
+- [x] Updated `docs/screenshots.md`'s test class path, AVD name, and `gpc` package-id examples.
+- [x] Updated `.github/workflows/play-store.yaml` (keystore filename, artifact name, Play
+  `packageName`) and `release.yaml` (release APK artifact names).
+- [x] Updated `flake.nix`'s flake description string.
+- [x] Updated `fastlane/Appfile` and `fastlane/Screengrabfile` package/test-class references
+  (found via the repo-wide sweep, not in the original known-file list).
+- [x] Ran a repo-wide `grep -rIli aughhhh . --exclude-dir={.git,build,dist,.gradle}` sweep before
+  and after: confirmed clean except the two deliberate exceptions (the lowercase `"augh"`
+  `SharedPreferences` storage key in `MainActivity.kt`, and the `YELL` preset's `"AUGHHHH!"`
+  sample text) plus this file's own historical `AUG-N` entries, which are left untouched to
+  preserve the record of what happened when.
+- [x] Verified the remote build: `just build debug` synced to `rofl-13.brkn.lol:~/build/augh`
+  (the newly-renamed remote path) and `BUILD SUCCESSFUL in 37s` (38 actionable tasks).
+
+**Why:** user's explicit direction - the app icon and applicationId were already migrated to
+"AUGH!"/`dev.pschmitt.augh` in earlier work; this entry finishes the rename everywhere else so
+the repo is consistent (docs, build tooling, CI, fastlane).
+**How to apply:** N/A, self-contained rename sweep.
+
+State: **done**, 2026-08-04.
+
+## AUG-85: refresh README screenshots after the AUGH! rebrand
+
+AUG-84's rename sweep left `docs/images/editor.png` and `docs/images/present.png` stale - both
+were captured before the rebrand and still showed the old "aughhhh" name, the retired
+scream-character mark, and the old purple-tinted UI. The repo already has an automated capture
+path for exactly these two shots (`just screenshots`, see `docs/screenshots.md`), so no new
+tooling was needed, just a rerun against the rebuilt app.
+
+- [x] `just screenshots` (remote debug + androidTest build on `rofl-13.brkn.lol`, then fastlane
+  screengrab driving the wired Zenfone 10, `R6AIB700W850L7G`) - `reinstall_app(true)` wipes app
+  state on each run, so the capture landed on the fresh default `SignState()` ("AUGH!" on
+  red/cream), which doubles as a clean, representative example since it's the app's own name.
+- [x] Inspected both new captures before using them: `01_editor` shows the coral "AUGH!" badge,
+  updated header, and the red/cream live preview in Edit mode; `02_present` shows the same sign
+  full-screen in Present mode. Both correctly reflect the current branding with no dialogs or
+  error states.
+- [x] Copied the fresh captures over the existing files at `docs/images/editor.png` and
+  `docs/images/present.png` (same paths, so `README.md`'s existing `<img>` tags needed no edit).
+
+**Why:** stale pre-rebrand screenshots in the README would mislead anyone landing on the repo
+right after AUG-84's rename.
+**How to apply:** N/A, self-contained screenshot refresh; rerun `just screenshots` any time the
+UI changes meaningfully.
 
 State: **done**, 2026-08-04.

@@ -1,5 +1,5 @@
 <resources>
-    <style name="Theme.Aughhhh" parent="android:style/Theme.Material.Light.NoActionBar">
+    <style name="Theme.Augh" parent="android:style/Theme.Material.Light.NoActionBar">
         <item name="android:fontFamily">sans</item>
         <item name="android:windowLightStatusBar">false</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
@@ -8,9 +8,9 @@
         <item name="android:windowNoTitle">true</item>
     </style>
 
-    <style name="Theme.Aughhhh.Splash" parent="Theme.SplashScreen">
+    <style name="Theme.Augh.Splash" parent="Theme.SplashScreen">
         <item name="windowSplashScreenBackground">@color/icon_background</item>
         <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher</item>
-        <item name="postSplashScreenTheme">@style/Theme.Aughhhh</item>
+        <item name="postSplashScreenTheme">@style/Theme.Augh</item>
     </style>
 </resources>

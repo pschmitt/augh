@@ -1,4 +1,4 @@
-package dev.pschmitt.aughhhh
+package dev.pschmitt.augh
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.ext.junit.rules.ActivityScenarioRule

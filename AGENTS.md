@@ -1,10 +1,10 @@
-# aughhhh repository instructions
+# AUGH! repository instructions
 
 ## Project shape
 
-aughhhh is a small Kotlin/Jetpack Compose Android app for creating and presenting custom text.
-The main package is `dev.pschmitt.aughhhh`, the debug application id is
-`dev.pschmitt.aughhhh.debug`, and the app is licensed under GPL-3.0.
+AUGH! is a small Kotlin/Jetpack Compose Android app for creating and presenting custom text.
+The main package is `dev.pschmitt.augh`, the debug application id is
+`dev.pschmitt.augh.debug`, and the app is licensed under GPL-3.0.
 
 Keep the app focused: polished Material 3 interaction, fast composition, readable typography,
 and a reliable transition between Edit and Present modes matter more than adding a large

@@ -1,4 +1,4 @@
-package dev.pschmitt.aughhhh
+package dev.pschmitt.augh
 
 import android.content.Context
 import android.content.Intent
@@ -154,8 +154,8 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         incomingIntent = if (savedInstanceState == null) intent else null
         setContent {
-            AughhhhTheme {
-                AughhhhApp(
+            AughTheme {
+                AughApp(
                     activity = this,
                     window = window,
                     incomingIntent = incomingIntent,
@@ -172,24 +172,24 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-/** Public action and extra names for controlling aughhhh from another Android app. */
-object AughhhhIntents {
-    const val ACTION_PRESENT = "dev.pschmitt.aughhhh.action.PRESENT"
-    const val ACTION_NEXT_PAGE = "dev.pschmitt.aughhhh.action.NEXT_PAGE"
-    const val ACTION_PREVIOUS_PAGE = "dev.pschmitt.aughhhh.action.PREVIOUS_PAGE"
-    const val ACTION_TRIGGER_ACTION = "dev.pschmitt.aughhhh.action.TRIGGER_ACTION"
+/** Public action and extra names for controlling AUGH! from another Android app. */
+object AughIntents {
+    const val ACTION_PRESENT = "dev.pschmitt.augh.action.PRESENT"
+    const val ACTION_NEXT_PAGE = "dev.pschmitt.augh.action.NEXT_PAGE"
+    const val ACTION_PREVIOUS_PAGE = "dev.pschmitt.augh.action.PREVIOUS_PAGE"
+    const val ACTION_TRIGGER_ACTION = "dev.pschmitt.augh.action.TRIGGER_ACTION"
 
-    const val EXTRA_TEXT = "dev.pschmitt.aughhhh.extra.TEXT"
-    const val EXTRA_PAGES = "dev.pschmitt.aughhhh.extra.PAGES"
-    const val EXTRA_FONT = "dev.pschmitt.aughhhh.extra.FONT"
-    const val EXTRA_FOREGROUND = "dev.pschmitt.aughhhh.extra.FOREGROUND"
-    const val EXTRA_BACKGROUND = "dev.pschmitt.aughhhh.extra.BACKGROUND"
-    const val EXTRA_ANIMATION = "dev.pschmitt.aughhhh.extra.ANIMATION"
-    const val EXTRA_SPEED = "dev.pschmitt.aughhhh.extra.SPEED"
-    const val EXTRA_BLINK_INTENSITY = "dev.pschmitt.aughhhh.extra.BLINK_INTENSITY"
-    const val EXTRA_TRANSITION = "dev.pschmitt.aughhhh.extra.TRANSITION"
-    const val EXTRA_TAP_ACTION = "dev.pschmitt.aughhhh.extra.TAP_ACTION"
-    const val EXTRA_KEEP_SCREEN_AWAKE = "dev.pschmitt.aughhhh.extra.KEEP_SCREEN_AWAKE"
+    const val EXTRA_TEXT = "dev.pschmitt.augh.extra.TEXT"
+    const val EXTRA_PAGES = "dev.pschmitt.augh.extra.PAGES"
+    const val EXTRA_FONT = "dev.pschmitt.augh.extra.FONT"
+    const val EXTRA_FOREGROUND = "dev.pschmitt.augh.extra.FOREGROUND"
+    const val EXTRA_BACKGROUND = "dev.pschmitt.augh.extra.BACKGROUND"
+    const val EXTRA_ANIMATION = "dev.pschmitt.augh.extra.ANIMATION"
+    const val EXTRA_SPEED = "dev.pschmitt.augh.extra.SPEED"
+    const val EXTRA_BLINK_INTENSITY = "dev.pschmitt.augh.extra.BLINK_INTENSITY"
+    const val EXTRA_TRANSITION = "dev.pschmitt.augh.extra.TRANSITION"
+    const val EXTRA_TAP_ACTION = "dev.pschmitt.augh.extra.TAP_ACTION"
+    const val EXTRA_KEEP_SCREEN_AWAKE = "dev.pschmitt.augh.extra.KEEP_SCREEN_AWAKE"
 }
 
 private enum class AppMode { EDIT, PRESENT }
@@ -256,7 +256,7 @@ private enum class Preset(
 }
 
 private data class SignState(
-    val pages: List<String> = listOf("aughhhh"),
+    val pages: List<String> = listOf("AUGH!"),
     val selectedPage: Int = 0,
     val font: FontChoice = FontChoice.SANS,
     val foreground: Palette = Palette.CREAM,
@@ -282,7 +282,7 @@ private const val HIGH_INTENSITY_MAX_SPEED = 4f
 private const val MIN_SPEED = 0f
 
 private class SignStore(context: Context) {
-    private val preferences = context.getSharedPreferences("aughhhh", Context.MODE_PRIVATE)
+    private val preferences = context.getSharedPreferences("augh", Context.MODE_PRIVATE)
     var state by mutableStateOf(load())
         private set
 
@@ -350,7 +350,7 @@ private class SignStore(context: Context) {
         val maxSpeed = if (state.highIntensityMode) HIGH_INTENSITY_MAX_SPEED else NORMAL_MAX_SPEED
         val maxBlinkRate = if (state.highIntensityMode) 10f else 4f
         return state.copy(
-            pages = state.pages.ifEmpty { listOf("aughhhh") },
+            pages = state.pages.ifEmpty { listOf("AUGH!") },
             selectedPage = state.selectedPage.coerceIn(state.pages.ifEmpty { listOf("") }.indices),
             speed = state.speed.coerceIn(MIN_SPEED, maxSpeed),
             blinkRateHz = state.blinkRateHz.coerceIn(0.5f, maxBlinkRate),
@@ -363,14 +363,14 @@ private class SignStore(context: Context) {
     }
 
     private fun loadPages(): List<String> {
-        val savedPages = preferences.getString("pages", null) ?: return listOf("aughhhh")
+        val savedPages = preferences.getString("pages", null) ?: return listOf("AUGH!")
         return runCatching {
                 JSONArray(savedPages).let { pages ->
                     List(pages.length()) { index -> pages.optString(index) }
                 }
             }
-            .getOrDefault(listOf("aughhhh"))
-            .ifEmpty { listOf("aughhhh") }
+            .getOrDefault(listOf("AUGH!"))
+            .ifEmpty { listOf("AUGH!") }
     }
 
     private fun loadRecentTexts(): List<String> {
@@ -417,36 +417,36 @@ private fun motionDurationMillis(baseDuration: Int, speed: Float): Int =
 
 private fun applyPresentationIntent(intent: Intent, store: SignStore) {
     val suppliedPages =
-        intent.getStringArrayListExtra(AughhhhIntents.EXTRA_PAGES)?.toList()
-            ?: intent.getStringArrayExtra(AughhhhIntents.EXTRA_PAGES)?.toList()
-    val suppliedText = intent.getStringExtra(AughhhhIntents.EXTRA_TEXT) ?: intent.getStringExtra(Intent.EXTRA_TEXT)
+        intent.getStringArrayListExtra(AughIntents.EXTRA_PAGES)?.toList()
+            ?: intent.getStringArrayExtra(AughIntents.EXTRA_PAGES)?.toList()
+    val suppliedText = intent.getStringExtra(AughIntents.EXTRA_TEXT) ?: intent.getStringExtra(Intent.EXTRA_TEXT)
     store.update { current ->
         current.copy(
             pages = suppliedPages ?: suppliedText?.let(::listOf) ?: current.pages,
             selectedPage = 0,
-            font = intent.enumExtra(AughhhhIntents.EXTRA_FONT) ?: current.font,
-            foreground = intent.enumExtra(AughhhhIntents.EXTRA_FOREGROUND) ?: current.foreground,
-            background = intent.enumExtra(AughhhhIntents.EXTRA_BACKGROUND) ?: current.background,
-            animation = intent.enumExtra(AughhhhIntents.EXTRA_ANIMATION) ?: current.animation,
-            speed = if (intent.hasExtra(AughhhhIntents.EXTRA_SPEED)) {
+            font = intent.enumExtra(AughIntents.EXTRA_FONT) ?: current.font,
+            foreground = intent.enumExtra(AughIntents.EXTRA_FOREGROUND) ?: current.foreground,
+            background = intent.enumExtra(AughIntents.EXTRA_BACKGROUND) ?: current.background,
+            animation = intent.enumExtra(AughIntents.EXTRA_ANIMATION) ?: current.animation,
+            speed = if (intent.hasExtra(AughIntents.EXTRA_SPEED)) {
                 intent
-                    .getFloatExtra(AughhhhIntents.EXTRA_SPEED, current.speed)
+                    .getFloatExtra(AughIntents.EXTRA_SPEED, current.speed)
                     .coerceIn(MIN_SPEED, if (current.highIntensityMode) HIGH_INTENSITY_MAX_SPEED else NORMAL_MAX_SPEED)
             } else current.speed,
-            blinkIntensity = if (intent.hasExtra(AughhhhIntents.EXTRA_BLINK_INTENSITY)) {
-                intent.getFloatExtra(AughhhhIntents.EXTRA_BLINK_INTENSITY, current.blinkIntensity).coerceIn(0.2f, 1f)
+            blinkIntensity = if (intent.hasExtra(AughIntents.EXTRA_BLINK_INTENSITY)) {
+                intent.getFloatExtra(AughIntents.EXTRA_BLINK_INTENSITY, current.blinkIntensity).coerceIn(0.2f, 1f)
             } else current.blinkIntensity,
-            transition = intent.enumExtra(AughhhhIntents.EXTRA_TRANSITION) ?: current.transition,
-            tapAction = intent.enumExtra(AughhhhIntents.EXTRA_TAP_ACTION) ?: current.tapAction,
-            keepScreenAwake = if (intent.hasExtra(AughhhhIntents.EXTRA_KEEP_SCREEN_AWAKE)) {
-                intent.getBooleanExtra(AughhhhIntents.EXTRA_KEEP_SCREEN_AWAKE, current.keepScreenAwake)
+            transition = intent.enumExtra(AughIntents.EXTRA_TRANSITION) ?: current.transition,
+            tapAction = intent.enumExtra(AughIntents.EXTRA_TAP_ACTION) ?: current.tapAction,
+            keepScreenAwake = if (intent.hasExtra(AughIntents.EXTRA_KEEP_SCREEN_AWAKE)) {
+                intent.getBooleanExtra(AughIntents.EXTRA_KEEP_SCREEN_AWAKE, current.keepScreenAwake)
             } else current.keepScreenAwake,
         )
     }
 }
 
 @Composable
-private fun AughhhhApp(
+private fun AughApp(
     activity: MainActivity,
     window: android.view.Window,
     incomingIntent: Intent?,
@@ -466,22 +466,22 @@ private fun AughhhhApp(
     LaunchedEffect(incomingIntent) {
         val command = incomingIntent ?: return@LaunchedEffect
         when (command.action) {
-            AughhhhIntents.ACTION_PRESENT -> {
+            AughIntents.ACTION_PRESENT -> {
                 applyPresentationIntent(command, store)
                 presentPage = 0
                 presentationSession++
                 presentationExitRequest = 0
                 modeName = AppMode.PRESENT.name
             }
-            AughhhhIntents.ACTION_NEXT_PAGE, AughhhhIntents.ACTION_PREVIOUS_PAGE -> {
-                val direction = if (command.action == AughhhhIntents.ACTION_NEXT_PAGE) 1 else -1
+            AughIntents.ACTION_NEXT_PAGE, AughIntents.ACTION_PREVIOUS_PAGE -> {
+                val direction = if (command.action == AughIntents.ACTION_NEXT_PAGE) 1 else -1
                 val basePage = if (mode == AppMode.PRESENT) presentPage else store.state.selectedPage
                 presentPage = pageIndexAfterMove(basePage, direction, store.state.pages.size, store.state.loopPages)
                 if (mode != AppMode.PRESENT) presentationSession++
                 presentationExitRequest = 0
                 modeName = AppMode.PRESENT.name
             }
-            AughhhhIntents.ACTION_TRIGGER_ACTION -> {
+            AughIntents.ACTION_TRIGGER_ACTION -> {
                 if (mode != AppMode.PRESENT) {
                     presentPage = store.state.selectedPage
                     presentationSession++
@@ -596,13 +596,13 @@ private fun EditorScreen(
                 title = {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Image(
-                            painter = painterResource(R.drawable.aughhhh_icon),
-                            contentDescription = "aughhhh app logo",
+                            painter = painterResource(R.drawable.augh_icon),
+                            contentDescription = "AUGH! app logo",
                             modifier = Modifier.size(52.dp).clip(RoundedCornerShape(13.dp)),
                         )
                         Spacer(Modifier.width(10.dp))
                         Column {
-                            Text("aughhhh", fontWeight = FontWeight.Black)
+                            Text("AUGH!", fontWeight = FontWeight.Black)
                             Text(
                                 "make it bold!",
                                 style = MaterialTheme.typography.labelSmall,
@@ -881,12 +881,12 @@ private fun AboutScreen(onBack: () -> Unit) {
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Image(
-                painter = painterResource(R.drawable.aughhhh_icon),
-                contentDescription = "aughhhh app logo",
+                painter = painterResource(R.drawable.augh_icon),
+                contentDescription = "AUGH! app logo",
                 modifier = Modifier.size(112.dp).clip(RoundedCornerShape(28.dp)),
             )
             Spacer(Modifier.height(16.dp))
-            Text("aughhhh", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black)
+            Text("AUGH!", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black)
             Text("make it bold!", color = MaterialTheme.colorScheme.onSurfaceVariant)
             Spacer(Modifier.height(8.dp))
             Text(
@@ -906,7 +906,7 @@ private fun AboutScreen(onBack: () -> Unit) {
                 icon = R.drawable.ic_info,
                 title = "Build ${BuildConfig.BUILD_COMMIT.take(7)}",
                 subtitle = "Built ${BuildConfig.BUILD_DATE}",
-                url = "https://github.com/pschmitt/aughhhh/commit/${BuildConfig.BUILD_COMMIT}",
+                url = "https://github.com/pschmitt/augh/commit/${BuildConfig.BUILD_COMMIT}",
             )
             Spacer(Modifier.height(10.dp))
             ExternalLinkCard(
@@ -914,7 +914,7 @@ private fun AboutScreen(onBack: () -> Unit) {
                 icon = R.drawable.ic_pages,
                 title = "GitHub repository",
                 subtitle = "View the source code and report issues",
-                url = "https://github.com/pschmitt/aughhhh",
+                url = "https://github.com/pschmitt/augh",
             )
             Spacer(Modifier.height(10.dp))
             ExternalLinkCard(
@@ -929,8 +929,8 @@ private fun AboutScreen(onBack: () -> Unit) {
                 context = context,
                 icon = R.drawable.ic_static,
                 title = "Privacy policy",
-                subtitle = "How aughhhh handles your information",
-                url = "https://github.com/pschmitt/aughhhh/blob/main/PRIVACY.md",
+                subtitle = "How AUGH! handles your information",
+                url = "https://github.com/pschmitt/augh/blob/main/PRIVACY.md",
             )
         }
     }
@@ -1376,7 +1376,7 @@ private fun AnimatedSignText(
     CompositionLocalProvider(LocalContentColor provides animatedForeground) {
         Box(modifier = modifier.background(animatedBackground), contentAlignment = Alignment.Center) {
             FittedSignText(
-                text = state.text.ifBlank { "aughhhh" },
+                text = state.text.ifBlank { "AUGH!" },
                 state = state,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -2083,7 +2083,7 @@ private suspend fun playTapSound(context: Context) {
 }
 
 @Composable
-private fun AughhhhTheme(content: @Composable () -> Unit) {
+private fun AughTheme(content: @Composable () -> Unit) {
     val darkColors = androidx.compose.material3.darkColorScheme(
         primary = Color(0xFFFFB38A),
         secondary = Color(0xFFC9B6FF),

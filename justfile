@@ -1,9 +1,9 @@
 set shell := ["bash", "-euo", "pipefail", "-c"]
 
-application_id := "dev.pschmitt.aughhhh.debug"
-remote_host := env_var_or_default("AUGHHHH_REMOTE_HOST", "rofl-13.brkn.lol")
-remote_path := env_var_or_default("AUGHHHH_REMOTE_PATH", "~/build/aughhhh")
-local_dist := env_var_or_default("AUGHHHH_DIST_DIR", "./dist")
+application_id := "dev.pschmitt.augh.debug"
+remote_host := env_var_or_default("AUGH_REMOTE_HOST", "rofl-13.brkn.lol")
+remote_path := env_var_or_default("AUGH_REMOTE_PATH", "~/build/augh")
+local_dist := env_var_or_default("AUGH_DIST_DIR", "./dist")
 source_commit := `git rev-parse HEAD`
 zenfone_serial := env_var_or_default("ZENFONE_SERIAL", "R6AIB700W850L7G")
 
@@ -16,7 +16,7 @@ sync host=remote_host:
 
 # All Gradle work happens inside the remote Nix dev shell.
 gradle host=remote_host *tasks: (sync host)
-    ssh {{host}} "cd {{remote_path}} && nix develop --command ./gradlew {{tasks}} -PaughhhhCommit={{source_commit}}"
+    ssh {{host}} "cd {{remote_path}} && nix develop --command ./gradlew {{tasks}} -PaughCommit={{source_commit}}"
 
 build variant="debug" host=remote_host:
     #!/usr/bin/env bash
@@ -26,7 +26,7 @@ build variant="debug" host=remote_host:
       task=assembleRelease
     fi
     just sync "{{host}}"
-    ssh "{{host}}" "cd {{remote_path}} && nix develop --command ./gradlew :app:$task -PaughhhhCommit={{source_commit}}"
+    ssh "{{host}}" "cd {{remote_path}} && nix develop --command ./gradlew :app:$task -PaughCommit={{source_commit}}"
 
 fetch variant="debug" host=remote_host:
     #!/usr/bin/env bash
@@ -81,7 +81,7 @@ screenshots host=remote_host: (screenshots-build host)
 # needing the device physically present and powered on. An emulator is scripted and disposable
 # instead: same AVD every time, no dependency on real hardware state.
 
-screenshots_tablet_avd := env_var_or_default("AUGHHHH_TABLET_AVD", "aughhhh-tablet")
+screenshots_tablet_avd := env_var_or_default("AUGH_TABLET_AVD", "augh-tablet")
 
 # Create the tablet AVD once (Pixel Tablet profile, API 34 google_apis x86_64). Safe to re-run;
 # skips if it already exists.
@@ -111,7 +111,7 @@ screenshots-tablet-emulator-start:
     fi
     nix develop .#screenshots --command bash -c '
       nohup emulator -avd {{screenshots_tablet_avd}} -no-window -no-snapshot -no-audio -no-boot-anim \
-        -gpu swiftshader_indirect >/tmp/aughhhh-tablet-emulator.log 2>&1 &
+        -gpu swiftshader_indirect >/tmp/augh-tablet-emulator.log 2>&1 &
       disown
     '
     for _ in $(seq 1 60); do

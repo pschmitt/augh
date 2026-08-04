@@ -1,7 +1,7 @@
 # Screenshot automation (POC)
 
 Captures Play Store listing screenshots with [fastlane screengrab][screengrab], driven by the
-`ScreenshotTest` instrumented test (`app/src/androidTest/kotlin/dev/pschmitt/aughhhh/ScreenshotTest.kt`).
+`ScreenshotTest` instrumented test (`app/src/androidTest/kotlin/dev/pschmitt/augh/ScreenshotTest.kt`).
 Scope is intentionally narrow for now: **en-US only**, editor + full-screen present.
 
 Fastlane regenerates `fastlane/README.md` itself on every run, so this doc lives outside
@@ -50,7 +50,7 @@ this machine (boots in well under a minute), no dependency on real hardware stat
 just screenshots-tablet
 ```
 
-This creates the `aughhhh-tablet` AVD once (`just screenshots-tablet-avd-create`), boots it if
+This creates the `augh-tablet` AVD once (`just screenshots-tablet-avd-create`), boots it if
 nothing is already listed under `emulator-*` in `adb devices` (`just screenshots-tablet-emulator-start`),
 then runs the same `ScreenshotTest` journey with `SCREENGRAB_DEVICE_TYPE=tenInch`. Stop it when
 done with `just screenshots-tablet-emulator-stop`.
@@ -77,10 +77,10 @@ landscape lock is unchanged on all screen sizes.
 Screenshots and the app icon are uploaded with `gpc` (playconsole-cli), not a fastlane lane:
 
 ```console
-gpc images delete-all --package dev.pschmitt.aughhhh --locale en-US --type phoneScreenshots --confirm
-gpc images upload --package dev.pschmitt.aughhhh --locale en-US --type phoneScreenshots --file <path>
-gpc images upload --package dev.pschmitt.aughhhh --locale en-US --type tenInchScreenshots --file <path>
-gpc images upload --package dev.pschmitt.aughhhh --locale en-US --type icon --file <path>
+gpc images delete-all --package dev.pschmitt.augh --locale en-US --type phoneScreenshots --confirm
+gpc images upload --package dev.pschmitt.augh --locale en-US --type phoneScreenshots --file <path>
+gpc images upload --package dev.pschmitt.augh --locale en-US --type tenInchScreenshots --file <path>
+gpc images upload --package dev.pschmitt.augh --locale en-US --type icon --file <path>
 ```
 
 `gpc doctor` reports a false "credentials not found" - that check has its own bug (confirmed by

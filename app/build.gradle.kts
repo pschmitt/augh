@@ -10,13 +10,13 @@ fun buildConfigString(value: String): String =
 
 val buildCommit =
     providers
-        .gradleProperty("aughhhhCommit")
+        .gradleProperty("aughCommit")
         .orElse(providers.environmentVariable("GITHUB_SHA"))
         .orElse("unknown")
         .get()
 val buildDate =
     providers
-        .gradleProperty("aughhhhBuildDate")
+        .gradleProperty("aughBuildDate")
         .orElse(providers.environmentVariable("BUILD_DATE"))
         .orElse(Instant.now().toString())
         .get()
@@ -36,12 +36,12 @@ val configuredVersionName =
     }
 
 android {
-    namespace = "dev.pschmitt.aughhhh"
+    namespace = "dev.pschmitt.augh"
     compileSdk = 36
     buildToolsVersion = "36.1.0"
 
     defaultConfig {
-        applicationId = "dev.pschmitt.aughhhh"
+        applicationId = "dev.pschmitt.augh"
         minSdk = 26
         targetSdk = 36
         versionCode = configuredVersionCode
