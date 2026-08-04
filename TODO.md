@@ -698,6 +698,17 @@ the user changes pages.
 State: **done**, 2026-08-04. Present mode now starts with only the polished entry animation;
 the selected page transition is reserved for subsequent page changes.
 
+## AUG-77: Zoom presentation entry and exit
+
+Replace the opaque fade-to-black presentation exit with a centered zoom animation that grows
+into Present mode and reverses cleanly back to the editor.
+
+- [x] Zoom the sign in on entry and back out on exit
+- [x] Keep the presentation content opaque throughout the exit animation
+- [ ] Rebuild, deploy, and verify the exit animation on the ZF10
+
+State: **in progress**.
+
 ## AUG-69: Keep the sticky preview state current
 
 Ensure the live preview observes editor state changes while it remains mounted in the sticky

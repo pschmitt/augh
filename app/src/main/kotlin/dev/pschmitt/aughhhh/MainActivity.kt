@@ -1918,14 +1918,14 @@ private fun PresentScreen(
             return@LaunchedEffect
         }
         powerOffProgress.snapTo(0f)
-        powerOffProgress.animateTo(1f, tween(240, easing = FastOutSlowInEasing))
+        powerOffProgress.animateTo(1f, tween(280, easing = FastOutSlowInEasing))
         onExit()
     }
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.Black),
+            .background(animatedPresentationBackground),
     ) {
         val enterProgress = powerOnProgress.value.coerceIn(0f, 1f)
         val exitProgress = powerOffProgress.value.coerceIn(0f, 1f)
@@ -1933,11 +1933,11 @@ private fun PresentScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .graphicsLayer {
-                    val enterScale = 0.96f + enterProgress * 0.04f
-                    val exitScale = 1f - exitProgress * 0.04f
+                    val enterScale = 0.82f + enterProgress * 0.18f
+                    val exitScale = 1f - exitProgress * 0.18f
                     scaleX = enterScale * exitScale
                     scaleY = enterScale * exitScale
-                    alpha = enterProgress * (1f - exitProgress)
+                    alpha = 1f
                 }
                 .background(animatedPresentationBackground)
                 .pointerInput(state.pages.size, presentPage, exitRequest, pageTransitionReady) {
