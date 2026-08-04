@@ -705,9 +705,10 @@ into Present mode and reverses cleanly back to the editor.
 
 - [x] Zoom the sign in on entry and back out on exit
 - [x] Keep the presentation content opaque throughout the exit animation
-- [ ] Rebuild, deploy, and verify the exit animation on the ZF10
+- [x] Rebuild, deploy, and verify the exit animation on the ZF10
 
-State: **in progress**.
+State: **done**, 2026-08-04. Presentation now zooms in from a smaller centered sign and
+zooms back out while remaining opaque before returning to the editor.
 
 ## AUG-69: Keep the sticky preview state current
 
