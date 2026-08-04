@@ -1,0 +1,1 @@
+package_name("dev.pschmitt.aughhhh.debug") # debug build under test; see docs/images/play-store/README.md

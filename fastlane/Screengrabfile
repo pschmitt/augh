@@ -1,0 +1,18 @@
+# POC scope: en-US only. Add locales here if/when other languages are needed.
+locales(["en-US"])
+
+app_package_name("dev.pschmitt.aughhhh.debug")
+tests_package_name("dev.pschmitt.aughhhh.debug.test")
+use_tests_in_classes(["dev.pschmitt.aughhhh.ScreenshotTest"])
+
+# Built remotely by `just screenshots-build`; screengrab only installs/drives them over adb.
+app_apk_path("dist/app-debug.apk")
+tests_apk_path("dist/app-debug-androidTest.apk")
+
+output_directory("fastlane/metadata/android")
+
+# Screengrab's `adb root`-dependent tricks (status bar clearing, demo mode) need a rooted
+# device/emulator, which real (non-rooted) devices don't have. use_adb_root defaults to false,
+# which is correct for those; flip it to true when capturing on a rooted emulator.
+reinstall_app(true)
+skip_open_summary(true)

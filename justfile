@@ -58,4 +58,18 @@ deploy-all variant="debug" host=remote_host:
       adb -s "$target" install -r "$apk"
     done
 
+# Build the debug app and its instrumentation APK remotely, then fetch both locally for screengrab.
+screenshots-build host=remote_host: (gradle host "assembleDebug assembleDebugAndroidTest")
+    #!/usr/bin/env bash
+    set -euo pipefail
+    mkdir -p "{{local_dist}}"
+    scp "{{host}}:{{remote_path}}/app/build/outputs/apk/debug/app-debug.apk" "{{local_dist}}/"
+    scp "{{host}}:{{remote_path}}/app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk" "{{local_dist}}/"
+
+# Capture Play Store screenshots (en-US) via fastlane screengrab, installing onto whichever
+# device/emulator local adb currently targets. Set ANDROID_SERIAL to pick one of several attached
+# targets. See docs/screenshots.md for emulator vs real-device setup.
+screenshots host=remote_host: (screenshots-build host)
+    nix develop .#screenshots --command fastlane screenshots
+
 # vim: set ft=sh et ts=2 sw=2 :

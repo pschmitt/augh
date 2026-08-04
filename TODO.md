@@ -618,6 +618,26 @@ Use the current “make it bold!” tagline throughout the app’s identity surf
 
 State: **done**, 2026-08-04.
 
+## AUG-78: Automate Play Store screenshot capture (POC)
+
+Add a fastlane screengrab proof of concept so editor/present listing screenshots no longer require
+manually pulling images off attached devices, while keeping Gradle/SDK work on the remote build
+hosts per AGENTS.md.
+
+- [x] Add a `ScreenshotTest` instrumented test capturing editor and full-screen present
+- [x] Wire `tools.fastlane:screengrab` into the androidTest dependencies
+- [x] Add `fastlane/` config (Appfile, Screengrabfile, Fastfile) scoped to en-US only
+- [x] Add a `screenshots` Nix dev shell and `just screenshots` / `screenshots-build` recipes
+- [x] Run `just screenshots` end to end against a real device and verify output
+- [ ] Replace the manually captured images in `docs/images/play-store/` once we're happy with the
+      captured framing/content, and cover the 7"/10" tablet screenshot buckets too
+
+State: **POC verified**, 2026-08-04. Ran end to end against the wired Zenfone 10
+(`R6AIB700W850L7G`): `just screenshots-build` then `ANDROID_SERIAL=R6AIB700W850L7G nix develop
+.#screenshots --command fastlane screenshots` produced real 1080x2400 editor and 2400x1080 present
+screenshots in `fastlane/metadata/android/en-US/images/phoneScreenshots/`. See
+`docs/screenshots.md` for usage on an emulator or another attached device.
+
 ## AUG-70: Remove stale AnimatedContent preview captures
 
 Keep the nested animated preview content synchronized with the current editor settings and prevent
