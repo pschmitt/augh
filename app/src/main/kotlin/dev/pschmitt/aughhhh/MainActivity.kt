@@ -26,6 +26,7 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
@@ -1900,7 +1901,7 @@ private fun PresentScreen(
             powerOnProgress.snapTo(1f)
         } else {
             powerOnProgress.snapTo(0f)
-            powerOnProgress.animateTo(1f, tween(220))
+            powerOnProgress.animateTo(1f, tween(360, easing = FastOutSlowInEasing))
         }
     }
 
@@ -1911,7 +1912,7 @@ private fun PresentScreen(
             return@LaunchedEffect
         }
         powerOffProgress.snapTo(0f)
-        powerOffProgress.animateTo(1f, tween(220))
+        powerOffProgress.animateTo(1f, tween(240, easing = FastOutSlowInEasing))
         onExit()
     }
 
@@ -1920,16 +1921,17 @@ private fun PresentScreen(
             .fillMaxSize()
             .background(Color.Black),
     ) {
+        val enterProgress = powerOnProgress.value.coerceIn(0f, 1f)
+        val exitProgress = powerOffProgress.value.coerceIn(0f, 1f)
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .graphicsLayer {
-                    val powerOnScaleY = 0.03f + powerOnProgress.value.coerceIn(0f, 1f) * 0.97f
-                    val verticalCollapse = powerOffProgress.value.coerceIn(0f, 1f)
-                    val horizontalCollapse = ((powerOffProgress.value - 0.62f) / 0.38f).coerceIn(0f, 1f)
-                    scaleY = powerOnScaleY * (1f - verticalCollapse * 0.97f)
-                    scaleX = 1f - horizontalCollapse * 0.97f
-                    alpha = 1f - powerOffProgress.value * 0.16f
+                    val enterScale = 0.96f + enterProgress * 0.04f
+                    val exitScale = 1f - exitProgress * 0.04f
+                    scaleX = enterScale * exitScale
+                    scaleY = enterScale * exitScale
+                    alpha = enterProgress * (1f - exitProgress)
                 }
                 .background(animatedPresentationBackground)
                 .pointerInput(state.pages.size, presentPage, exitRequest) {
@@ -1991,16 +1993,6 @@ private fun PresentScreen(
                 Box(modifier = Modifier.fillMaxSize().background(foreground.copy(alpha = 0.82f)))
             }
         }
-        if (powerOffProgress.value > 0.54f) {
-            Canvas(modifier = Modifier.fillMaxSize()) {
-                val lineProgress = ((powerOffProgress.value - 0.54f) / 0.46f).coerceIn(0f, 1f)
-                drawRect(
-                    color = Color.White.copy(alpha = (1f - lineProgress * 0.82f).coerceIn(0f, 1f)),
-                    topLeft = androidx.compose.ui.geometry.Offset(0f, size.height / 2f - 2.dp.toPx()),
-                    size = androidx.compose.ui.geometry.Size(size.width * (1f - lineProgress * 0.96f), 4.dp.toPx()),
-                )
-            }
-        }
         TextButton(
             onClick = onExitRequested,
             enabled = exitRequest == 0 && powerOnProgress.value >= 1f,
@@ -2008,6 +2000,7 @@ private fun PresentScreen(
                 .align(Alignment.TopEnd)
                 .padding(10.dp)
                 .size(64.dp)
+                .graphicsLayer { alpha = enterProgress * (1f - exitProgress) }
                 .semantics { contentDescription = "Exit present" },
         ) {
             Text("×", color = foreground.copy(alpha = 0.62f), fontSize = 40.sp, fontWeight = FontWeight.Light)

@@ -663,6 +663,18 @@ transition.
 State: **done**, 2026-08-04. Transition timing is now shown directly below the selected page
 transition, while Still has no unrelated motion-speed control.
 
+## AUG-74: Simplify presentation entry and exit
+
+Replace the CRT shutdown gimmick with a restrained transition that feels polished in both
+directions.
+
+- [x] Fade and subtly scale the presentation in when it starts
+- [x] Fade and subtly scale it out when it exits
+- [x] Remove the CRT collapse and scanline overlay
+
+State: **done**, 2026-08-04. Presentation entry and exit now use a subtle fade-and-scale
+transition without the old CRT scanline effect.
+
 ## AUG-69: Keep the sticky preview state current
 
 Ensure the live preview observes editor state changes while it remains mounted in the sticky
