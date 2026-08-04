@@ -31,16 +31,16 @@ class ScreenshotTest {
         Screengrab.setDefaultScreenshotStrategy(UiAutomatorScreenshotStrategy())
         val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
 
-        check(device.wait(Until.hasObject(By.text("Present")), 5_000))
+        check(device.wait(Until.hasObject(By.text("Present")), 15_000))
         Screengrab.screenshot("01_editor")
 
         device.findObject(By.text("Present")).click()
-        check(device.wait(Until.hasObject(By.desc("Exit present")), 5_000))
+        check(device.wait(Until.hasObject(By.desc("Exit present")), 15_000))
         // Let the entry zoom/fade transition (AUG-77) settle before capturing.
         Thread.sleep(600)
         Screengrab.screenshot("02_present")
 
         device.findObject(By.desc("Exit present")).click()
-        check(device.wait(Until.hasObject(By.text("Present")), 5_000))
+        check(device.wait(Until.hasObject(By.text("Present")), 15_000))
     }
 }

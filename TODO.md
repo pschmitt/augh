@@ -631,15 +631,37 @@ hosts per AGENTS.md.
 - [x] Run `just screenshots` end to end against a real device and verify output
 - [x] Upload fresh phone screenshots to the live Play Console listing via `gpc` (playconsole-cli),
       replacing the previous two images
-- [ ] Cover the 7"/10" tablet screenshot buckets too
+- [x] Cover the 10-inch tablet screenshot bucket via a local emulator (not a physical device -
+      brittle over network adb)
+- [x] Upload the app icon (512x512, resized from the launcher source) via `gpc`
+- [ ] Cover the 7-inch bucket too (currently manually-captured Mi Pad 4 images; see
+      `docs/screenshots.md`)
 
-State: **POC verified, screenshots live**, 2026-08-04. Ran end to end against the wired Zenfone 10
-(`R6AIB700W850L7G`): `just screenshots-build` then `ANDROID_SERIAL=R6AIB700W850L7G nix develop
-.#screenshots --command fastlane screenshots` produced real 1080x2400 editor and 2400x1080 present
-screenshots in `fastlane/metadata/android/en-US/images/phoneScreenshots/`. Deleted the two prior
-`en-US`/`phoneScreenshots` images via `gpc images delete-all` and uploaded the fresh pair via `gpc
-images upload` (image ids `12613574554439085137`, `11505818489115745351`). See
-`docs/screenshots.md` for usage on an emulator or another attached device.
+State: **POC verified, screenshots + icon live**, 2026-08-04. Phone: ran end to end against the
+wired Zenfone 10 (`R6AIB700W850L7G`) via `SCREENGRAB_SPECIFIC_DEVICE` (plain `ANDROID_SERIAL`
+turned out not to reliably steer screengrab's own device selection - it silently picks whichever
+device it finds first). Tablet: added a `screenshots-tablet` recipe using a local Pixel Tablet
+emulator (API 34 google_apis x86_64, KVM-accelerated) instead of the Mi Pad 4 over network adb,
+which is exactly the kind of brittle setup this automation exists to avoid. Setting that up
+surfaced a real app bug (see AUG-79) that was letterboxing the whole app on tablets; after the
+fix both tablet screenshots fill the full 2560x1600 screen. Uploaded via `gpc`: phone screenshots
+(replacing the previous two), tablet screenshots (previously-empty `tenInchScreenshots` bucket),
+and the app icon (previously unset). See `docs/screenshots.md` for full details, including why
+`gpc doctor` falsely reports missing credentials (its own bug, not a real auth problem).
+
+## AUG-79: Make Editor adaptive on large screens
+
+Editor mode unconditionally forced portrait orientation, including on tablets, letterboxing the
+whole app into a portrait-shaped window with black bars either side on wide screens. Discovered
+while setting up tablet screenshot automation (AUG-78) via a Pixel Tablet emulator.
+
+- [x] Only force portrait in Editor mode when `smallestScreenWidthDp < 600`
+- [x] Leave Present mode's landscape lock unchanged on all screen sizes
+- [x] Verify on the Pixel Tablet emulator: Editor now fills the full screen with no letterboxing
+
+State: **done**, 2026-08-04. Verified visually on a 2560x1600 Pixel Tablet emulator - Editor and
+Present both now render full-screen with no letterboxing. Not yet re-verified on a phone (should
+be a no-op there since `smallestScreenWidthDp` stays below 600), nor on the Mi Pad 4 real tablet.
 
 ## AUG-70: Remove stale AnimatedContent preview captures
 

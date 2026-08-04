@@ -11,6 +11,11 @@ tests_apk_path("dist/app-debug-androidTest.apk")
 
 output_directory("fastlane/metadata/android")
 
+# "phone" by default; `just screenshots-tablet` overrides this to "sevenInch" for the Mi Pad 4
+# (8" - Play's 7-inch bucket) so its captures land in a separate sevenInchScreenshots/ folder
+# instead of overwriting the phone screenshots.
+device_type(ENV.fetch("SCREENGRAB_DEVICE_TYPE", "phone"))
+
 # Screengrab's `adb root`-dependent tricks (status bar clearing, demo mode) need a rooted
 # device/emulator, which real (non-rooted) devices don't have. use_adb_root defaults to false,
 # which is correct for those; flip it to true when capturing on a rooted emulator.

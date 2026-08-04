@@ -496,17 +496,25 @@ private fun AughhhhApp(
 
     DisposableEffect(mode) {
         val controller = WindowCompat.getInsetsController(window, window.decorView)
+        // Editor's portrait lock is a deliberate phone-sized-editing choice, not a leftover
+        // restriction (see AUG-9) - but forcing it on large screens (tablets, sw600dp+) instead
+        // letterboxes the whole app into a portrait window with black bars either side. Present
+        // mode stays landscape-locked everywhere; only Editor's lock is screen-size-conditional.
+        val isLargeScreen = activity.resources.configuration.smallestScreenWidthDp >= 600
+        val editOrientation =
+            if (isLargeScreen) ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+            else ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
         if (mode == AppMode.PRESENT) {
             activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
             controller.hide(WindowInsetsCompat.Type.systemBars())
             controller.systemBarsBehavior =
                 WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         } else {
-            activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+            activity.requestedOrientation = editOrientation
             controller.show(WindowInsetsCompat.Type.systemBars())
         }
         onDispose {
-            if (mode == AppMode.PRESENT) activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+            if (mode == AppMode.PRESENT) activity.requestedOrientation = editOrientation
             if (mode == AppMode.PRESENT) {
                 WindowCompat.getInsetsController(window, window.decorView)
                     .show(WindowInsetsCompat.Type.systemBars())
