@@ -184,10 +184,14 @@ jobs:
             cp "$match" "${readme_images[$prefix]}"
           done
 
+      # fastlane/metadata/ is deliberately .gitignore'd (see .gitignore) - those Play Store
+      # screenshots are reviewed from the build artifact above and uploaded to Play Console
+      # manually via `gpc` (see docs/screenshots.md), never committed. Only docs/images (the
+      # README gallery) is real, trackable output.
       - name: Check for changes
         id: diff
         run: |
-          git add fastlane/metadata/android/en-US/images docs/images
+          git add docs/images
           if git diff --cached --quiet; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
           else
@@ -205,13 +209,13 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git checkout -B "$branch"
-          git commit -m "chore: update Play Store and README screenshots (phone, 7in, 10in tablet)"
+          git commit -m "chore: update README screenshots (editor, present)"
           git push --force origin "$branch"
           existing_pr="$(gh pr list --head "$branch" --state open --json number --jq '.[0].number // empty')"
           if [ -n "$existing_pr" ]; then
             gh pr comment "$existing_pr" --body "Updated with fresh screenshots from run ${{ github.run_id }}."
           else
-            gh pr create --title "Update screenshots" --body "Automated screenshot refresh from the \`Screenshots\` workflow (run ${{ github.run_id }}), including README.md's gallery (phone bucket). Review the images before merging. Re-running this workflow with \`open_pr\` updates this same PR instead of opening a new one." --head "$branch" --base "${{ github.ref_name }}"
+            gh pr create --title "Update screenshots" --body "Automated screenshot refresh from the \`Screenshots\` workflow (run ${{ github.run_id }}): README.md's gallery only (phone bucket). Play Store screenshots (phone/7in/10in, including the new About capture) are on the run's build artifacts for manual review and upload via \`gpc\` (see docs/screenshots.md) - fastlane/metadata is .gitignore'd and never committed. Re-running this workflow with \`open_pr\` updates this same PR instead of opening a new one." --head "$branch" --base "${{ github.ref_name }}"
           fi
 
 # vim: set ft=yaml et ts=2 sw=2 :
