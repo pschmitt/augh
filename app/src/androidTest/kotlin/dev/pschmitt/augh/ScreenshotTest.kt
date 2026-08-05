@@ -31,7 +31,11 @@ class ScreenshotTest {
         Screengrab.setDefaultScreenshotStrategy(UiAutomatorScreenshotStrategy())
         val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
 
-        check(device.wait(Until.hasObject(By.text("Present")), 15_000))
+        // The first wait is the flaky one on cold CI emulators (tablet profiles especially):
+        // boot-completed/provisioned/package-service can all be ready (ci/android-emulator-wait.sh)
+        // while the app's own first Compose frame still isn't up yet. Give it more room than the
+        // later waits, which run against an already-warm process.
+        check(device.wait(Until.hasObject(By.text("Present")), 30_000))
         Screengrab.screenshot("01_editor")
 
         device.findObject(By.text("Present")).click()
