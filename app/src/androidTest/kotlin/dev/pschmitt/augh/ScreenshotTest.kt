@@ -16,7 +16,7 @@ import tools.fastlane.screengrab.locale.LocaleTestRule
 
 /**
  * Captures Play Store listing screenshots (en-US only, see fastlane/Screengrabfile) by driving
- * the same edit -> present journey as [MainActivitySmokeTest].
+ * the same edit -> present -> about journey as [MainActivitySmokeTest].
  */
 @RunWith(AndroidJUnit4::class)
 class ScreenshotTest {
@@ -41,6 +41,18 @@ class ScreenshotTest {
         Screengrab.screenshot("02_present")
 
         device.findObject(By.desc("Exit present")).click()
+        check(device.wait(Until.hasObject(By.text("Present")), 15_000))
+
+        // About sits behind Settings (MainActivity.kt onAbout), but its own back button drops
+        // straight to the editor - showSettings is cleared on the way in, not just showAbout.
+        device.findObject(By.desc("Settings")).click()
+        check(device.wait(Until.hasObject(By.text("About")), 15_000))
+
+        device.findObject(By.text("About")).click()
+        check(device.wait(Until.hasObject(By.desc("AUGH! app logo")), 15_000))
+        Screengrab.screenshot("03_about")
+
+        device.findObject(By.desc("Back")).click()
         check(device.wait(Until.hasObject(By.text("Present")), 15_000))
     }
 }

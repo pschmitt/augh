@@ -2,7 +2,7 @@
 
 Captures Play Store listing screenshots with [fastlane screengrab][screengrab], driven by the
 `ScreenshotTest` instrumented test (`app/src/androidTest/kotlin/dev/pschmitt/augh/ScreenshotTest.kt`).
-Scope is intentionally narrow for now: **en-US only**, editor + full-screen present.
+Scope is intentionally narrow for now: **en-US only**, editor + full-screen present + about.
 
 Fastlane regenerates `fastlane/README.md` itself on every run, so this doc lives outside
 `fastlane/` to avoid being overwritten.
