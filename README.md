@@ -6,10 +6,9 @@
 
 <p align="center"><strong>Make a sign. Make it loud. Make it extremely unnecessary.</strong></p>
 
-AUGH! (pronunciation: an exasperated yell, like you just stubbed your toe on the doorframe -
-picture the word in a comic-strip speech bubble and you've got it) is a colorful Android sign
-maker for custom full-screen text. Build a deck of pages, choose an absurd presentation style,
-and swipe through it when the moment arrives.
+AUGH! (pronunciation: [ɑːhhhh](https://youtu.be/99tzO1y3PGo)) is a colorful Android sign maker
+for custom full-screen text. Build a deck of pages, choose an absurd presentation style, and
+swipe through it when the moment arrives.
 
 ## Features
 
