@@ -100,9 +100,13 @@ jobs:
           # finding any hierarchy. force-avd-creation plus -no-snapshot above mean this emulator is
           # always fresh, so there's no prior app state to reset first (unlike the reused local AVD
           # in `just screenshots-tablet`, which also does a pm clear before granting).
+          # Retries the reinstall+capture (not the whole job) up to twice, confirmed necessary by a
+          # real run where the tablet profiles' first UI wait raced a still-cold app process even
+          # after ci/android-emulator-wait.sh's OS-level readiness checks passed - cheap (~30-60s)
+          # to redo versus the full rebuild+reboot, and each attempt starts from a clean reinstall.
           script: |
             bash ci/android-emulator-wait.sh
-            serial="$(adb devices | awk '$2 == "device" { print $1; exit }')" && test -n "$serial" && adb -s "$serial" install -r -g -t dist/app-debug.apk && SCREENGRAB_DEVICE_TYPE=${{ matrix.device_type }} SCREENGRAB_SPECIFIC_DEVICE="$serial" fastlane screenshots
+            attempt=0; until [ "$attempt" -ge 2 ]; do attempt=$((attempt + 1)); serial="$(adb devices | awk '$2 == "device" { print $1; exit }')"; if [ -n "$serial" ] && adb -s "$serial" install -r -g -t dist/app-debug.apk && SCREENGRAB_DEVICE_TYPE=${{ matrix.device_type }} SCREENGRAB_SPECIFIC_DEVICE="$serial" fastlane screenshots; then exit 0; fi; echo "Attempt $attempt/2 failed" >&2; sleep 5; done; exit 1
 
       - name: Upload screenshot artifact
         if: ${{ always() }}
