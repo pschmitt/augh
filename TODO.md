@@ -1015,3 +1015,27 @@ from a mis-tap.
 (`MainActivity.kt`); the 5s window is a `delay(5_000)` racing the snackbar's own dismissal.
 
 State: **done**, 2026-08-06.
+
+## AUG-88: auto-trigger screenshot capture on a real tagged release
+
+`screenshots.yaml` was entirely manual (`workflow_dispatch` only). Direct user request (part of
+the same ask made in the sibling jollyfin/nyetbox repos): fire it automatically off
+`release.yaml`'s real version-tag path, not the rolling "latest" prerelease that republishes on
+every `main` push - that would turn a long-running multi-device emulator job into something that
+runs on every commit instead of once per release.
+
+- [x] Added an `actions: write` permission and a final "Trigger screenshot capture" step to
+  `release.yaml`, gated on `steps.channel.outputs.tag != 'latest'`, calling
+  `gh workflow run screenshots.yaml --ref main -f open_pr=true`. Uses the default `github.token` -
+  no PAT needed, since `workflow_dispatch` (unlike push/PR events) is explicitly exempted from
+  GitHub's "events triggered by GITHUB_TOKEN don't start a new workflow run" restriction.
+- [x] `open_pr=true` so the auto-triggered run lands as a reviewable PR rather than only a build
+  artifact nobody looks at.
+
+**Why:** direct user request.
+**How to apply:** if this ever needs a different ref than `main`, update the `--ref` flag -
+currently pinned to `main` since that's guaranteed to have the workflow file's `workflow_dispatch`
+schema.
+
+State: **done**, 2026-08-06 - not yet verified by an actual tag push through the full pipeline;
+the next real release will be the first live test.

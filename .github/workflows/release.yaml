@@ -15,6 +15,7 @@ concurrency:
 
 permissions:
   contents: write
+  actions: write
 
 jobs:
   release:
@@ -84,3 +85,17 @@ jobs:
           make_latest: ${{ steps.channel.outputs.prerelease == 'false' }}
           generate_release_notes: true
           files: release-artifacts/*
+
+      - name: Trigger screenshot capture
+        # A real tagged release is the natural cue to refresh Play Store screenshots - the rolling
+        # "latest" prerelease republishes on every main push, far too often for a long-running
+        # multi-device emulator job, so this only fires for a real version tag. workflow_dispatch
+        # is one of the two events (alongside repository_dispatch) explicitly exempted from
+        # "GITHUB_TOKEN-caused events don't trigger new workflow runs", so the default token works
+        # here - it just needs the `actions: write` permission declared above. open_pr=true so the
+        # refreshed screenshots land as a reviewable PR (see screenshots.yaml) instead of only a
+        # build artifact.
+        if: steps.channel.outputs.tag != 'latest'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run screenshots.yaml --repo "$GITHUB_REPOSITORY" --ref main -f open_pr=true
