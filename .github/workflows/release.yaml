@@ -16,6 +16,10 @@ concurrency:
 permissions:
   contents: write
   actions: write
+  # For actions/attest-build-provenance: id-token to mint the OIDC token needed for a Sigstore
+  # signing certificate, attestations to persist the resulting attestation against the repo.
+  id-token: write
+  attestations: write
 
 jobs:
   release:
@@ -69,6 +73,16 @@ jobs:
           cp app/build/outputs/apk/debug/app-debug.apk "release-artifacts/augh-${{ steps.channel.outputs.tag }}-debug.apk"
           cp app/build/outputs/apk/release/app-release.apk "release-artifacts/augh-${{ steps.channel.outputs.tag }}-release.apk"
           sha256sum release-artifacts/*.apk > release-artifacts/SHA256SUMS
+
+      - name: Attest build provenance
+        # Signed SLSA build provenance for every APK, keyed off the checksums file just generated
+        # rather than re-hashing each APK separately - one attestation covering every subject.
+        # Runs for both the rolling "latest" prerelease and real tags: provenance is worth having
+        # for whatever gets published, not only tagged releases. Verify with:
+        #   gh attestation verify <apk> --repo pschmitt/augh
+        uses: actions/attest-build-provenance@v4
+        with:
+          subject-checksums: release-artifacts/SHA256SUMS
 
       - name: Move rolling latest tag
         if: steps.channel.outputs.move_tag == 'true'
