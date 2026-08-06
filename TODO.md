@@ -982,3 +982,36 @@ right after AUG-84's rename.
 UI changes meaningfully.
 
 State: **done**, 2026-08-04.
+
+## AUG-86: use a cross icon for deleting a recent message
+
+The "Recent messages" chip trailing action used a trash-can icon, which read as "clear/empty"
+rather than "remove this one item" - a plain cross (×) makes the per-chip delete action clearer.
+
+- [x] Add a native `ic_close` vector drawable (Material "close" glyph)
+- [x] Use it on the recent-message chip trailing `IconButton` in place of `ic_delete`
+- [x] Remove the now-unused `ic_delete` drawable
+- [x] Rebuild and deploy to all attached devices
+
+**Why:** user's direct feedback that the trash icon didn't clearly communicate the action.
+**How to apply:** N/A, self-contained icon swap in `RecentMessages` (`MainActivity.kt`).
+
+State: **done**, 2026-08-06.
+
+## AUG-87: allow undoing a recent-message deletion within 5 seconds
+
+Deleting a recent message from the chip row was immediate and permanent, with no way to recover
+from a mis-tap.
+
+- [x] Remove the recent message immediately on delete (optimistic)
+- [x] Show an "Undo" snackbar for exactly 5 seconds via a manual dismiss timer (Compose's built-in
+  `SnackbarDuration.Short`/`Long` durations aren't a fixed 5s and can stretch further under
+  accessibility settings)
+- [x] Restore the message (deduped, prepended, capped at 5) if Undo is tapped in time
+- [x] Rebuild and deploy to all attached devices
+
+**Why:** user's direct request as a follow-up to AUG-86's delete-action clarity work.
+**How to apply:** N/A, self-contained addition in `EditorScreen`/`RecentMessages`
+(`MainActivity.kt`); the 5s window is a `delay(5_000)` racing the snackbar's own dismissal.
+
+State: **done**, 2026-08-06.

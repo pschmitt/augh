@@ -85,6 +85,10 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Tab
@@ -588,9 +592,33 @@ private fun EditorScreen(
     val latestReplayKey = rememberUpdatedState(transitionReplayKey)
     val latestTapActionPreview = rememberUpdatedState(tapActionPreview)
     val latestTapActionPreviewKey = rememberUpdatedState(tapActionPreviewKey)
+    val snackbarHostState = remember { SnackbarHostState() }
+    val onDeleteRecent: (String) -> Unit = { recent ->
+        onStateChange { current -> current.copy(recentTexts = current.recentTexts.filterNot { it == recent }) }
+        coroutineScope.launch {
+            val autoDismiss = launch {
+                delay(5_000)
+                snackbarHostState.currentSnackbarData?.dismiss()
+            }
+            val result =
+                snackbarHostState.showSnackbar(
+                    message = "Message deleted",
+                    actionLabel = "Undo",
+                    duration = SnackbarDuration.Indefinite,
+                )
+            autoDismiss.cancel()
+            if (result == SnackbarResult.ActionPerformed) {
+                onStateChange { current ->
+                    val restored = (listOf(recent) + current.recentTexts.filterNot { it == recent }).take(5)
+                    current.copy(recentTexts = restored)
+                }
+            }
+        }
+    }
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = {
@@ -716,6 +744,7 @@ private fun EditorScreen(
                         onStateChange = onStateChange,
                         messageFocusRequester = messageFocusRequester,
                         onRememberRecent = onRememberRecent,
+                        onDeleteRecent = onDeleteRecent,
                     )
                     Spacer(Modifier.height(12.dp))
                     LooksCard(state = state, onStateChange = onStateChange)
@@ -1255,6 +1284,7 @@ private fun MessageCard(
     onStateChange: (((SignState) -> SignState)) -> Unit,
     messageFocusRequester: FocusRequester,
     onRememberRecent: (String) -> Unit,
+    onDeleteRecent: (String) -> Unit,
 ) {
     SettingCard(title = "Message", subtitle = "Text and recent history", icon = R.drawable.ic_looks) {
         OutlinedTextField(
@@ -1281,12 +1311,16 @@ private fun MessageCard(
             supportingText = { Text("${state.text.length} characters") },
             shape = RoundedCornerShape(20.dp),
         )
-        RecentMessages(state = state, onStateChange = onStateChange)
+        RecentMessages(state = state, onStateChange = onStateChange, onDelete = onDeleteRecent)
     }
 }
 
 @Composable
-private fun RecentMessages(state: SignState, onStateChange: (((SignState) -> SignState)) -> Unit) {
+private fun RecentMessages(
+    state: SignState,
+    onStateChange: (((SignState) -> SignState)) -> Unit,
+    onDelete: (String) -> Unit,
+) {
     if (state.recentTexts.isEmpty()) return
     Spacer(Modifier.height(14.dp))
     Text("Recent messages", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
@@ -1314,15 +1348,11 @@ private fun RecentMessages(state: SignState, onStateChange: (((SignState) -> Sig
                 },
                 trailingIcon = {
                     IconButton(
-                        onClick = {
-                            onStateChange { current ->
-                                current.copy(recentTexts = current.recentTexts.filterNot { it == recent })
-                            }
-                        },
+                        onClick = { onDelete(recent) },
                         modifier = Modifier.size(32.dp),
                     ) {
                         Icon(
-                            painter = painterResource(R.drawable.ic_delete),
+                            painter = painterResource(R.drawable.ic_close),
                             contentDescription = "Delete $recent",
                             modifier = Modifier.size(18.dp),
                         )
