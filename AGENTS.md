@@ -20,6 +20,11 @@ framework or network service.
   every ADB target currently reporting `device`.
 - Use `nix develop --command nixfmt flake.nix` for Nix formatting when needed. Keep Kotlin in
   the repository's ktfmt style and use `./gradlew ktfmtCheck` only through the remote recipes.
+- If `ktfmtCheck` fails in CI, don't guess at the fix by hand: `.github/workflows/lint.yaml`'s
+  `ktfmt` job auto-uploads a `ktfmt-diff-patch` artifact (also dispatchable on demand via
+  `gh workflow run lint.yaml`) containing exactly what `./gradlew ktfmtFormat` would change,
+  computed with CI's actual Gradle-resolved ktfmt version. Download it
+  (`gh run download <run-id> -n ktfmt-diff-patch`) and `git apply` it.
 - Prefer focused checks before a full validation pass. Record device/build evidence in `TODO.md`.
 
 ## Editing and design
