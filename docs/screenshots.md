@@ -74,13 +74,23 @@ landscape lock is unchanged on all screen sizes.
 
 ## Uploading to Play Console
 
-Screenshots and the app icon are uploaded with `gpc` (playconsole-cli), not a fastlane lane:
+`fastlane/metadata/` is tracked in git (screenshots, icon, feature graphic, listing text). When
+`screenshots.yaml` runs with `open_pr=true` (a tagged release triggers this automatically, same as
+the sibling nyetbox/jollyfin projects), the refreshed images land as a PR with every image embedded
+inline in the PR body/comment for review - merging that PR is what publishes them:
+`play-store-images.yaml` triggers on any push to `main` touching
+`fastlane/metadata/android/en-US/images/**` and runs `just screenshots-upload` in CI,
+authenticating `gpc` from the `PLAY_SERVICE_ACCOUNT_JSON` repository secret (the same one
+`play-store.yaml` uses for bundle publishing). Nothing is uploaded until that PR is merged.
+
+To upload manually instead, authenticate `gpc` yourself and use the `just` recipes:
 
 ```console
-gpc images delete-all --package dev.pschmitt.augh --locale en-US --type phoneScreenshots --confirm
-gpc images upload --package dev.pschmitt.augh --locale en-US --type phoneScreenshots --file <path>
-gpc images upload --package dev.pschmitt.augh --locale en-US --type tenInchScreenshots --file <path>
-gpc images upload --package dev.pschmitt.augh --locale en-US --type icon --file <path>
+gpc auth login
+gpc apps list
+just screenshots-upload
+just play-icon-upload
+just play-feature-graphic-upload
 ```
 
 `gpc doctor` reports a false "credentials not found" - that check has its own bug (confirmed by
@@ -88,12 +98,10 @@ reproducing the identical false negative against a scratch config written by `gp
 itself). Real commands (`images list`, `images upload`, `listings list`, ...) authenticate and
 work fine regardless; don't trust `doctor` here.
 
-The app icon needs a 512×512 RGBA PNG; the repo's launcher source
-(`app/src/main/res/mipmap/ic_launcher.png`) is 1254×1254 and needs resizing first, e.g.:
-
-```console
-magick app/src/main/res/mipmap/ic_launcher.png -resize 512x512 -alpha set icon-512.png
-```
+`play-icon-upload` flattens the repo's 1254×1254 launcher source
+(`app/src/main/res/mipmap/ic_launcher.png`) down to the required 512×512 RGBA PNG itself - no
+manual resize needed. `play-feature-graphic-upload` uploads the already-committed
+`fastlane/metadata/android/en-US/images/featureGraphic.png` (1024x500) directly.
 
 ## Verified runs, 2026-08-04
 

@@ -1,4 +1,4 @@
-name: Play Store
+name: Play Store Release
 
 # Stable semantic-version tags publish a signed bundle to internal testing. The first run
 # requires the one-time Play Console and GitHub secret setup documented in the README.
