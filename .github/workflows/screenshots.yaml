@@ -87,7 +87,7 @@ jobs:
           # after the OS-level readiness checks below passed - cheap (~30-60s) to redo versus the
           # full rebuild+reboot, and each attempt starts from a clean reinstall.
           script: |
-            bash <(curl -fsSL https://raw.githubusercontent.com/pschmitt/android-app-ci/main/scripts/wait-for-android-emulator.sh)
+            curl -fsSL https://raw.githubusercontent.com/pschmitt/android-app-ci/main/scripts/wait-for-android-emulator.sh | bash
             attempt=0; until [ "$attempt" -ge 2 ]; do attempt=$((attempt + 1)); serial="$(adb devices | awk '$2 == "device" { print $1; exit }')"; if [ -n "$serial" ] && adb -s "$serial" install -r -g -t dist/app-debug.apk && SCREENGRAB_DEVICE_TYPE=${{ matrix.device_type }} SCREENGRAB_SPECIFIC_DEVICE="$serial" fastlane screenshots; then exit 0; fi; echo "Attempt $attempt/2 failed" >&2; sleep 5; done; exit 1
 
       - name: Upload screenshot artifact
