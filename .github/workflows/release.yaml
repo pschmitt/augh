@@ -9,107 +9,24 @@ on:
       - '*.*.*'
   workflow_dispatch:
 
-concurrency:
-  group: release-${{ github.ref }}
-  cancel-in-progress: true
-
-permissions:
-  contents: write
-  actions: write
-  # For actions/attest-build-provenance: id-token to mint the OIDC token needed for a Sigstore
-  # signing certificate, attestations to persist the resulting attestation against the repo.
-  id-token: write
-  attestations: write
-
 jobs:
   release:
-    runs-on: ubuntu-24.04
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
-
-      - name: Set up JDK 21
-        uses: actions/setup-java@v5
-        with:
-          distribution: temurin
-          java-version: '21.0.11'
-
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v6
-
-      - name: Determine release channel
-        id: channel
-        run: |
-          if [[ "${{ github.ref_type }}" == "tag" ]]; then
-            {
-              echo "tag=${{ github.ref_name }}"
-              echo "name=${{ github.ref_name }}"
-              echo "prerelease=false"
-              echo "move_tag=false"
-            } >> "$GITHUB_OUTPUT"
-          else
-            {
-              echo "tag=latest"
-              echo "name=Latest build"
-              echo "prerelease=true"
-              echo "move_tag=true"
-            } >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Compute revision
-        id: revision
-        run: echo "value=$(git describe --always --abbrev=12 --dirty)" >> "$GITHUB_OUTPUT"
-
-      - name: Run tests and build APKs
-        run: ./gradlew testDebugUnitTest assembleDebug assembleRelease --stacktrace --build-cache
-        env:
-          GIT_REVISION: ${{ steps.revision.outputs.value }}
-
-      - name: Collect APKs and checksums
-        run: |
-          mkdir -p release-artifacts
-          cp app/build/outputs/apk/debug/app-debug.apk "release-artifacts/augh-${{ steps.channel.outputs.tag }}-debug.apk"
-          cp app/build/outputs/apk/release/app-release.apk "release-artifacts/augh-${{ steps.channel.outputs.tag }}-release.apk"
-          sha256sum release-artifacts/*.apk > release-artifacts/SHA256SUMS
-
-      - name: Attest build provenance
-        # Signed SLSA build provenance for every APK, keyed off the checksums file just generated
-        # rather than re-hashing each APK separately - one attestation covering every subject.
-        # Runs for both the rolling "latest" prerelease and real tags: provenance is worth having
-        # for whatever gets published, not only tagged releases. Verify with:
-        #   gh attestation verify <apk> --repo pschmitt/augh
-        uses: actions/attest-build-provenance@v4
-        with:
-          subject-checksums: release-artifacts/SHA256SUMS
-
-      - name: Move rolling latest tag
-        if: steps.channel.outputs.move_tag == 'true'
-        run: |
-          git tag -f latest
-          git push origin latest --force
-
-      - name: Publish GitHub release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ steps.channel.outputs.tag }}
-          name: ${{ steps.channel.outputs.name }}
-          prerelease: ${{ steps.channel.outputs.prerelease }}
-          make_latest: ${{ steps.channel.outputs.prerelease == 'false' }}
-          generate_release_notes: true
-          files: release-artifacts/*
-
-      - name: Trigger screenshot capture
-        # A real tagged release is the natural cue to refresh Play Store screenshots - the rolling
-        # "latest" prerelease republishes on every main push, far too often for a long-running
-        # multi-device emulator job, so this only fires for a real version tag. workflow_dispatch
-        # is one of the two events (alongside repository_dispatch) explicitly exempted from
-        # "GITHUB_TOKEN-caused events don't trigger new workflow runs", so the default token works
-        # here - it just needs the `actions: write` permission declared above. open_pr=true so the
-        # refreshed screenshots land as a reviewable PR (see screenshots.yaml) instead of only a
-        # build artifact.
-        if: steps.channel.outputs.tag != 'latest'
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: gh workflow run screenshots.yaml --repo "$GITHUB_REPOSITORY" --ref main -f open_pr=true
+    uses: pschmitt/android-app-ci/.github/workflows/release.yaml@main
+    with:
+      app-display-name: "AUGH!"
+      application-id: dev.pschmitt.augh
+      artifact-label: augh
+      # AUGH! has no CI signing keystore configured (no CI_KEYSTORE_* secrets) - falls back to
+      # build.gradle.kts's own (debug-key) release signing config, same as before migration.
+      enable-release-signing: false
+      # No per-ABI splits - a single universal app-debug.apk/app-release.apk.
+      release-apk-paths: app/build/outputs/apk/release/app-release.apk
+      debug-apk-paths: app/build/outputs/apk/debug/app-debug.apk
+      # build.gradle.kts doesn't read GIT_REVISION into BuildConfig.
+      verify-git-revision: false
+    secrets: inherit
+    permissions:
+      contents: write
+      actions: write
+      id-token: write
+      attestations: write
