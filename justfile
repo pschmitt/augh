@@ -44,8 +44,9 @@ default:
 # 4 apps) and the remote sync/build/deploy pipeline - sync/gradle/build/fetch/build-fetch/clean/
 # lint/test plus the zenfone-*/mipad-*/px5-*/deploy-all device recipes (single-module.just, the 3
 # single-Gradle-module apps). See pschmitt/android-app-ci's just/ for the source of truth.
-# Vendored (not a submodule - see that repo's README) as .just/*.just; `just update-common`
-# (defined at the bottom of this file) refreshes both. AUGH! didn't have format/nix-fmt/nix-lint,
+# Vendored via vendir (not a git submodule - see that repo's README and this repo's vendir.yml)
+# as .just/*.just; `just update-common` (defined at the bottom of this file) refreshes both.
+# AUGH! didn't have format/nix-fmt/nix-lint,
 # zenfone/mipad/px5 device recipes, or the standard `lint`/`test`/`build-fetch` before this - it
 # now does, for free. `deploy-all` changes meaning: it used to install on every attached ADB
 # device, now it installs on the same 3 named devices (Zenfone 10, Mi Pad 4, Pixel 5) the sibling
@@ -209,9 +210,10 @@ play-feature-graphic-upload:
 # --- Shared recipes (pschmitt/android-app-ci) -------------------------------
 
 # Refresh the vendored copies of pschmitt/android-app-ci's shared recipes (see the `import`s near
-# the top of this file).
+# the top of this file, and vendir.yml for what's vendored from where). Re-resolves `ref: main` to
+# whatever's current and updates vendir.lock.yml's pinned commit accordingly - review the diff
+# like any other dependency bump before committing it.
 update-common:
-    curl -fsSL https://raw.githubusercontent.com/pschmitt/android-app-ci/main/just/common.just -o .just/common.just
-    curl -fsSL https://raw.githubusercontent.com/pschmitt/android-app-ci/main/just/single-module.just -o .just/single-module.just
+    vendir sync
 
 # vim: set ft=sh et ts=2 sw=2 :
