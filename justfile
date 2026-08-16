@@ -2,10 +2,37 @@ set shell := ["bash", "-euo", "pipefail", "-c"]
 
 application_id := "dev.pschmitt.augh.debug"
 remote_host := env_var_or_default("AUGH_REMOTE_HOST", "rofl-13.brkn.lol")
-remote_path := env_var_or_default("AUGH_REMOTE_PATH", "~/build/augh")
+
+# Empty for the main checkout; "-<worktree-dirname>" when run from a linked git worktree (e.g. one
+# of Claude's isolated agent worktrees under .claude/worktrees/). Keeps parallel worktree agents
+# from clobbering each other's remote sync directory mid-build.
+worktree_suffix := `gd=$(git rev-parse --git-dir); gcd=$(git rev-parse --git-common-dir); if [ "$gd" != "$gcd" ]; then basename "$(git rev-parse --show-toplevel)" | sed 's/^/-/'; fi`
+
+remote_path := env_var_or_default("AUGH_REMOTE_PATH", "~/build/augh" + worktree_suffix)
 local_dist := env_var_or_default("AUGH_DIST_DIR", "./dist")
+
+# No per-ABI split - a single universal APK (app-debug.apk / app-release.apk, no ABI in the name).
+default_abi := ""
+
 source_commit := `git rev-parse HEAD`
+gradle_extra_props := "-PaughCommit=" + source_commit
+
 zenfone_serial := env_var_or_default("ZENFONE_SERIAL", "R6AIB700W850L7G")
+
+mipad_host := env_var_or_default("MIPAD_HOST", "mi-pad-4.lan")
+mipad_ssh_port := env_var_or_default("MIPAD_SSH_PORT", "8022")
+mipad_adb_port := env_var_or_default("MIPAD_ADB_PORT", "5555")
+
+px5_host := env_var_or_default("PX5_HOST", "px5.lan")
+
+# No CI signing keystore configured - `build variant=release` falls back to build.gradle.kts's own
+# (debug-key) release signing config. rbw_keystore_entry/keystore_*_attachment/ci_tmp_dir_name are
+# unused with this off, but single-module.just's `build` recipe still needs them defined.
+enable_release_signing := "false"
+rbw_keystore_entry := ""
+keystore_jks_attachment := ""
+keystore_env_attachment := ""
+ci_tmp_dir_name := ".augh-ci-tmp"
 
 # List all available recipes. Must stay the first recipe in this file (not just the first line
 # overall) - `just` only considers recipes written directly here, not ones pulled in via the
@@ -13,61 +40,21 @@ zenfone_serial := env_var_or_default("ZENFONE_SERIAL", "R6AIB700W850L7G")
 default:
     @just --list
 
-# Recipes shared across the app fleet (format, nix-fmt, nix-lint, screenshots-upload) - see
-# pschmitt/android-app-ci's just/common.just for the source of truth. Vendored (not a submodule -
-# see that repo's README) as .just/common.just; `just update-common` (defined at the bottom of
-# this file) refreshes it. AUGH! didn't have format/nix-fmt/nix-lint recipes before this - it now
-# does, for free.
+# Recipes shared across the app fleet: format/nix-fmt/nix-lint/screenshots-upload (common.just, all
+# 4 apps) and the remote sync/build/deploy pipeline - sync/gradle/build/fetch/build-fetch/clean/
+# lint/test plus the zenfone-*/mipad-*/px5-*/deploy-all device recipes (single-module.just, the 3
+# single-Gradle-module apps). See pschmitt/android-app-ci's just/ for the source of truth.
+# Vendored (not a submodule - see that repo's README) as .just/*.just; `just update-common`
+# (defined at the bottom of this file) refreshes both. AUGH! didn't have format/nix-fmt/nix-lint,
+# zenfone/mipad/px5 device recipes, or the standard `lint`/`test`/`build-fetch` before this - it
+# now does, for free. `deploy-all` changes meaning: it used to install on every attached ADB
+# device, now it installs on the same 3 named devices (Zenfone 10, Mi Pad 4, Pixel 5) the sibling
+# apps target - it already hardcoded the Zenfone for `screenshots` below, so this converges rather
+# than invents.
 import '.just/common.just'
-
-# Sync only source/configuration to the remote build host; never copy local build output.
-sync host=remote_host:
-    rsync -az --delete --exclude='.git' --exclude='**/build/' --exclude='.gradle/' --exclude='**/.gradle/' ./ {{host}}:{{remote_path}}/
-
-# All Gradle work happens inside the remote Nix dev shell.
-gradle host=remote_host *tasks: (sync host)
-    ssh {{host}} "cd {{remote_path}} && nix develop --command ./gradlew {{tasks}} -PaughCommit={{source_commit}}"
-
-build variant="debug" host=remote_host:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    task=assembleDebug
-    if [[ "{{variant}}" == "release" ]]; then
-      task=assembleRelease
-    fi
-    just sync "{{host}}"
-    ssh "{{host}}" "cd {{remote_path}} && nix develop --command ./gradlew :app:$task -PaughCommit={{source_commit}}"
-
-fetch variant="debug" host=remote_host:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    mkdir -p "{{local_dist}}"
-    scp "{{host}}:{{remote_path}}/app/build/outputs/apk/{{variant}}/app-{{variant}}.apk" "{{local_dist}}/"
-
-build-fetch variant="debug" host=remote_host:
-    just build {{variant}} {{host}}
-    just fetch {{variant}} {{host}}
+import '.just/single-module.just'
 
 check host=remote_host: (gradle host "ktfmtCheck testDebugUnitTest lintDebug")
-
-clean host=remote_host: (gradle host "clean")
-
-# Install a fetched APK on every currently attached ADB device. This is the only local Android
-# operation here; the artifact itself was built remotely above.
-deploy-all variant="debug" host=remote_host:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    just build-fetch "{{variant}}" "{{host}}"
-    apk="{{local_dist}}/app-{{variant}}.apk"
-    mapfile -t targets < <(adb devices | awk '$2 == "device" { print $1 }')
-    if [[ "${#targets[@]}" -eq 0 ]]; then
-      printf 'No attached ADB devices are ready for installation\n' >&2
-      exit 1
-    fi
-    for target in "${targets[@]}"; do
-      printf 'Installing %s on %s\n' "$apk" "$target"
-      adb -s "$target" install -r "$apk"
-    done
 
 # Build the debug app and its instrumentation APK remotely, then fetch both locally for screengrab.
 screenshots-build host=remote_host: (gradle host "assembleDebug assembleDebugAndroidTest")
@@ -158,9 +145,6 @@ screenshots-tablet host=remote_host: (screenshots-build host) (screenshots-table
 
 play_package := "dev.pschmitt.augh"
 
-# screenshots-upload is now provided by the shared import above (was byte-for-byte identical to
-# nyetbox's, minus the >8-screenshots-per-language cap - now gets that fix here too).
-
 # Flatten and upload the app icon used by the launcher and README (not locale-scoped, so kept
 # separate from the screenshot upload above).
 play-icon-upload:
@@ -224,9 +208,10 @@ play-feature-graphic-upload:
 
 # --- Shared recipes (pschmitt/android-app-ci) -------------------------------
 
-# Refresh the vendored copy of pschmitt/android-app-ci's shared recipes (format, nix-fmt,
-# nix-lint, screenshots-upload - see the `import` near the top of this file).
+# Refresh the vendored copies of pschmitt/android-app-ci's shared recipes (see the `import`s near
+# the top of this file).
 update-common:
     curl -fsSL https://raw.githubusercontent.com/pschmitt/android-app-ci/main/just/common.just -o .just/common.just
+    curl -fsSL https://raw.githubusercontent.com/pschmitt/android-app-ci/main/just/single-module.just -o .just/single-module.just
 
 # vim: set ft=sh et ts=2 sw=2 :
