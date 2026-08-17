@@ -1,5 +1,10 @@
 # AUGH! repository instructions
 
+See `.just/android-app-ci/AGENTS-shared.md` for the fleet-wide task-tracking convention, dev
+environment (`nix develop`/`git-hooks.nix`), CI-is-the-sole-lint-authority rule, and physical test
+device docs (this app has all three: Zenfone 10, Mi Pad 4, Pixel 5) - read it alongside this file,
+not instead of it.
+
 ## Project shape
 
 AUGH! is a small Kotlin/Jetpack Compose Android app for creating and presenting custom text.
@@ -12,19 +17,18 @@ framework or network service.
 
 ## Build and validation
 
-- Read `TODO.md` before starting work and add or update an `AUG-N` entry for user-visible work.
+- This project's `TODO.md` prefix is `AUG-N`. Read `TODO.md` before starting work and add or
+  update an entry for user-visible work.
 - Do not run Gradle builds, tests, lint, or Android SDK evaluations on this workstation.
 - Use `just build`, `just check`, or the narrower remote recipes; they sync the checkout and run
   inside the Nix dev shell on `rofl-13.brkn.lol` by default. `rofl-14.brkn.lol` is the fallback.
-- Use `just deploy-all` after a successful remote debug build to fetch the APK and install it on
-  every ADB target currently reporting `device`.
+- Use `just deploy-all` after a successful remote debug build to install it on all three fleet
+  test devices (Zenfone 10, Mi Pad 4, Pixel 5) at once - see the shared doc's "Physical test
+  devices" section. Only target a single named device (`deploy-zenfone`/`deploy-mipad`/
+  `deploy-px5`) when there's a specific reason to.
 - Use `nix develop --command nixfmt flake.nix` for Nix formatting when needed. Keep Kotlin in
-  the repository's ktfmt style and use `./gradlew ktfmtCheck` only through the remote recipes.
-- If `ktfmtCheck` fails in CI, don't guess at the fix by hand: `.github/workflows/lint.yaml`'s
-  `ktfmt` job auto-uploads a `ktfmt-diff-patch` artifact (also dispatchable on demand via
-  `gh workflow run lint.yaml`) containing exactly what `./gradlew ktfmtFormat` would change,
-  computed with CI's actual Gradle-resolved ktfmt version. Download it
-  (`gh run download <run-id> -n ktfmt-diff-patch`) and `git apply` it.
+  the repository's ktfmt style and use `./gradlew ktfmtCheck` only through the remote recipes -
+  see the shared doc for the `ktfmt-diff-patch` retrieval procedure if CI's `Lint` job fails.
 - Prefer focused checks before a full validation pass. Record device/build evidence in `TODO.md`.
 
 ## Editing and design
