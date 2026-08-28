@@ -1,10 +1,13 @@
 name: Play Store Release
 
-# Stable semantic-version tags publish a signed bundle to internal testing. Delegates the actual
-# build/publish to pschmitt/android-app-ci's reusable play-store.yaml, which additionally requires
-# the repository variable PLAY_PUBLISH_ENABLED=true (set that only after Play Console and
-# service-account setup - see the README) - a tag push safely fails loudly instead of silently
-# publishing on a fresh checkout, unlike this workflow's previous unconditional-on-any-tag design.
+# Stable semantic-version tags publish a signed bundle to both the internal and closed (alpha)
+# testing tracks in one upload - closed testing is the highest track this app is currently
+# eligible for, so every tagged release goes out to both simultaneously rather than needing a
+# separate promotion step. Delegates the actual build/publish to pschmitt/android-app-ci's
+# reusable play-store.yaml, which additionally requires the repository variable
+# PLAY_PUBLISH_ENABLED=true (set that only after Play Console and service-account setup - see the
+# README) - a tag push safely fails loudly instead of silently publishing on a fresh checkout,
+# unlike this workflow's previous unconditional-on-any-tag design.
 #
 # Version resolution stays local: AUGH!'s build.gradle.kts has no baked-in incrementing default
 # (versionCode/versionName always fall back to "1"/"1.0.0" unless overridden), unlike nyetbox's or
@@ -27,7 +30,7 @@ on:
         required: false
         type: string
       publish:
-        description: "Upload the bundle to the Play internal-testing track"
+        description: "Upload the bundle to the Play internal + closed (alpha) testing tracks"
         required: true
         default: false
         type: boolean
@@ -93,4 +96,7 @@ jobs:
       # only ever short-circuits on the *event type*, never re-evaluates a boolean input through
       # a truthy/falsy lens.
       publish: ${{ github.event_name != 'workflow_dispatch' || inputs.publish }}
+      # Publish to both tracks in one upload - closed (alpha) is the highest track this app is
+      # currently eligible for, and there's no reason internal testers should lag behind it.
+      track: internal,alpha
     secrets: inherit

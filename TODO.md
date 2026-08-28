@@ -1039,3 +1039,26 @@ schema.
 
 State: **done**, 2026-08-06 - not yet verified by an actual tag push through the full pipeline;
 the next real release will be the first live test.
+
+## AUG-89: publish tagged releases to closed (alpha) testing too, not just internal
+
+Same fleet-wide request applied across syncwich/jollyfin/nyetbox/stricknani: `play-store.yaml`
+delegated to `pschmitt/android-app-ci`'s reusable `play-store.yaml@main` without setting its
+`track` input, so every tagged release silently fell back to that workflow's default (`internal`)
+only - closed testing (the highest track this app is currently eligible for) never got a build.
+
+- [x] Confirmed the reusable workflow already supports this: its `track` input is forwarded
+  verbatim to `r0adkll/upload-google-play@v1`'s `tracks:` parameter, which accepts a
+  comma-separated list and assigns one uploaded bundle to multiple tracks in a single edit - no
+  separate upload/promotion step needed.
+- [x] Set `track: internal,alpha` in the `with:` block so every tagged release publishes to both
+  Internal and Closed testing in one CI run.
+- [x] Updated the `workflow_dispatch` `publish` input's description to mention both tracks.
+
+**Why:** direct user request, mirroring the same fix landed first in syncwich.
+**How to apply:** if this app is ever cleared for production, add `production` to the comma list
+here (and confirm the reusable workflow's publish-gate/production semantics still apply).
+
+State: **done**, 2026-08-28 - CI-only change, no app code or version change; not exercised with a
+real tag push in this task (would have meant cutting an otherwise-empty version bump just to test
+CI wiring) - confirm both tracks receive the bundle on the next real tagged release.
