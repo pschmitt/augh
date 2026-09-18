@@ -14,9 +14,15 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.ContentTransform
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
@@ -24,13 +30,6 @@ import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
@@ -39,7 +38,6 @@ import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.focusable
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.horizontalScroll
@@ -64,23 +62,17 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.selection.toggleable
-import androidx.compose.foundation.selection.selectable
-import androidx.compose.foundation.selection.selectableGroup
-import androidx.compose.foundation.shape.CutCornerShape
-import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
-import androidx.compose.material3.InputChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.InputChip
 import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
@@ -91,12 +83,11 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
-import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -105,19 +96,20 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
@@ -125,19 +117,18 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.selected
-import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextMeasurer
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
@@ -196,7 +187,10 @@ object AughIntents {
     const val EXTRA_KEEP_SCREEN_AWAKE = "dev.pschmitt.augh.extra.KEEP_SCREEN_AWAKE"
 }
 
-private enum class AppMode { EDIT, PRESENT }
+private enum class AppMode {
+    EDIT,
+    PRESENT,
+}
 
 private enum class AnimationStyle(val label: String, val description: String, val icon: Int) {
     STATIC("Still", "Clean and calm", R.drawable.ic_static),
@@ -253,10 +247,42 @@ private enum class Preset(
     val animation: AnimationStyle,
     val icon: Int,
 ) {
-    YELL("Yell", "AUGHHHH!", Palette.CREAM, Palette.PEACH, FontChoice.DISPLAY, AnimationStyle.BLINK, R.drawable.ic_flash),
-    APPLAUSE("Applause", "👏👏👏", Palette.INK, Palette.LEMON, FontChoice.DISPLAY, AnimationStyle.STATIC, R.drawable.ic_vibes),
-    EMERGENCY("Emergency", "PLEASE WAIT", Palette.WHITE, Palette.PEACH, FontChoice.MONO, AnimationStyle.BLINK, R.drawable.ic_strobe),
-    CHILL("Chill", "one sec…", Palette.INK, Palette.MINT, FontChoice.SERIF, AnimationStyle.STATIC, R.drawable.ic_none),
+    YELL(
+        "Yell",
+        "AUGHHHH!",
+        Palette.CREAM,
+        Palette.PEACH,
+        FontChoice.DISPLAY,
+        AnimationStyle.BLINK,
+        R.drawable.ic_flash,
+    ),
+    APPLAUSE(
+        "Applause",
+        "👏👏👏",
+        Palette.INK,
+        Palette.LEMON,
+        FontChoice.DISPLAY,
+        AnimationStyle.STATIC,
+        R.drawable.ic_vibes,
+    ),
+    EMERGENCY(
+        "Emergency",
+        "PLEASE WAIT",
+        Palette.WHITE,
+        Palette.PEACH,
+        FontChoice.MONO,
+        AnimationStyle.BLINK,
+        R.drawable.ic_strobe,
+    ),
+    CHILL(
+        "Chill",
+        "one sec…",
+        Palette.INK,
+        Palette.MINT,
+        FontChoice.SERIF,
+        AnimationStyle.STATIC,
+        R.drawable.ic_none,
+    ),
 }
 
 private data class SignState(
@@ -307,7 +333,8 @@ private class SignStore(context: Context) {
     }
 
     private fun persist() {
-        preferences.edit()
+        preferences
+            .edit()
             .putString("pages", JSONArray(state.pages).toString())
             .putInt("selectedPage", state.selectedPage)
             .putString("font", state.font.name)
@@ -329,26 +356,34 @@ private class SignStore(context: Context) {
 
     private fun load(): SignState =
         SignState(
-            pages = loadPages(),
-            selectedPage = preferences.getInt("selectedPage", 0),
-            font = enumOrDefault("font", FontChoice.SANS),
-            foreground = enumOrDefault("foreground", Palette.CREAM),
-            background = enumOrDefault("background", Palette.RED),
-            animation = enumOrDefault("animation", AnimationStyle.STATIC),
-            speed = preferences.getFloat("speed", SignState().speed),
-            blinkRateHz = preferences.getFloat("blinkRateHz", SignState().blinkRateHz),
-            blinkIntensity = preferences.getFloat("blinkIntensity", SignState().blinkIntensity),
-            transition = enumOrDefault("transition", TransitionStyle.NONE),
-            tapAction = enumOrDefault("tapAction", TapAction.OFF),
-            keepScreenAwake = preferences.getBoolean("keepScreenAwake", SignState().keepScreenAwake),
-            maxBrightnessWhenPresenting = preferences.getBoolean(
-                "maxBrightnessWhenPresenting",
-                SignState().maxBrightnessWhenPresenting,
-            ),
-            loopPages = preferences.getBoolean("loopPages", SignState().loopPages),
-            highIntensityMode = preferences.getBoolean("highIntensityMode", SignState().highIntensityMode),
-            recentTexts = loadRecentTexts(),
-        ).let { state -> normalize(state.copy(selectedPage = state.selectedPage.coerceIn(state.pages.indices))) }
+                pages = loadPages(),
+                selectedPage = preferences.getInt("selectedPage", 0),
+                font = enumOrDefault("font", FontChoice.SANS),
+                foreground = enumOrDefault("foreground", Palette.CREAM),
+                background = enumOrDefault("background", Palette.RED),
+                animation = enumOrDefault("animation", AnimationStyle.STATIC),
+                speed = preferences.getFloat("speed", SignState().speed),
+                blinkRateHz = preferences.getFloat("blinkRateHz", SignState().blinkRateHz),
+                blinkIntensity = preferences.getFloat("blinkIntensity", SignState().blinkIntensity),
+                transition = enumOrDefault("transition", TransitionStyle.NONE),
+                tapAction = enumOrDefault("tapAction", TapAction.OFF),
+                keepScreenAwake =
+                    preferences.getBoolean("keepScreenAwake", SignState().keepScreenAwake),
+                maxBrightnessWhenPresenting =
+                    preferences.getBoolean(
+                        "maxBrightnessWhenPresenting",
+                        SignState().maxBrightnessWhenPresenting,
+                    ),
+                loopPages = preferences.getBoolean("loopPages", SignState().loopPages),
+                highIntensityMode =
+                    preferences.getBoolean("highIntensityMode", SignState().highIntensityMode),
+                recentTexts = loadRecentTexts(),
+            )
+            .let { state ->
+                normalize(
+                    state.copy(selectedPage = state.selectedPage.coerceIn(state.pages.indices))
+                )
+            }
 
     private fun normalize(state: SignState): SignState {
         val maxSpeed = if (state.highIntensityMode) HIGH_INTENSITY_MAX_SPEED else NORMAL_MAX_SPEED
@@ -358,11 +393,12 @@ private class SignStore(context: Context) {
             selectedPage = state.selectedPage.coerceIn(state.pages.ifEmpty { listOf("") }.indices),
             speed = state.speed.coerceIn(MIN_SPEED, maxSpeed),
             blinkRateHz = state.blinkRateHz.coerceIn(0.5f, maxBlinkRate),
-            animation = if (!state.highIntensityMode && state.animation == AnimationStyle.STROBE) {
-                AnimationStyle.BLINK
-            } else {
-                state.animation
-            },
+            animation =
+                if (!state.highIntensityMode && state.animation == AnimationStyle.STROBE) {
+                    AnimationStyle.BLINK
+                } else {
+                    state.animation
+                },
         )
     }
 
@@ -396,7 +432,9 @@ private class SignStore(context: Context) {
 }
 
 private inline fun <reified T : Enum<T>> Intent.enumExtra(key: String): T? =
-    getStringExtra(key)?.let { value -> enumValues<T>().firstOrNull { it.name.equals(value, ignoreCase = true) } }
+    getStringExtra(key)?.let { value ->
+        enumValues<T>().firstOrNull { it.name.equals(value, ignoreCase = true) }
+    }
 
 private fun pageIndexAfterMove(index: Int, delta: Int, pageCount: Int, loop: Boolean): Int {
     if (pageCount <= 0) return 0
@@ -404,10 +442,17 @@ private fun pageIndexAfterMove(index: Int, delta: Int, pageCount: Int, loop: Boo
     return if (loop) Math.floorMod(target, pageCount) else target.coerceIn(0, pageCount - 1)
 }
 
-private fun pulseDurationMillis(animation: AnimationStyle, speed: Float, blinkRateHz: Float, refreshRateHz: Float): Int {
+private fun pulseDurationMillis(
+    animation: AnimationStyle,
+    speed: Float,
+    blinkRateHz: Float,
+    refreshRateHz: Float,
+): Int {
     val durationMillis =
         when (animation) {
-            AnimationStyle.BLINK, AnimationStyle.BLINK_BACKGROUND, AnimationStyle.STROBE -> {
+            AnimationStyle.BLINK,
+            AnimationStyle.BLINK_BACKGROUND,
+            AnimationStyle.STROBE -> {
                 val effectiveRate = blinkRateHz.coerceAtMost(refreshRateHz / 2f).coerceAtLeast(0.5f)
                 500f / effectiveRate
             }
@@ -423,7 +468,8 @@ private fun applyPresentationIntent(intent: Intent, store: SignStore) {
     val suppliedPages =
         intent.getStringArrayListExtra(AughIntents.EXTRA_PAGES)?.toList()
             ?: intent.getStringArrayExtra(AughIntents.EXTRA_PAGES)?.toList()
-    val suppliedText = intent.getStringExtra(AughIntents.EXTRA_TEXT) ?: intent.getStringExtra(Intent.EXTRA_TEXT)
+    val suppliedText =
+        intent.getStringExtra(AughIntents.EXTRA_TEXT) ?: intent.getStringExtra(Intent.EXTRA_TEXT)
     store.update { current ->
         current.copy(
             pages = suppliedPages ?: suppliedText?.let(::listOf) ?: current.pages,
@@ -432,19 +478,31 @@ private fun applyPresentationIntent(intent: Intent, store: SignStore) {
             foreground = intent.enumExtra(AughIntents.EXTRA_FOREGROUND) ?: current.foreground,
             background = intent.enumExtra(AughIntents.EXTRA_BACKGROUND) ?: current.background,
             animation = intent.enumExtra(AughIntents.EXTRA_ANIMATION) ?: current.animation,
-            speed = if (intent.hasExtra(AughIntents.EXTRA_SPEED)) {
-                intent
-                    .getFloatExtra(AughIntents.EXTRA_SPEED, current.speed)
-                    .coerceIn(MIN_SPEED, if (current.highIntensityMode) HIGH_INTENSITY_MAX_SPEED else NORMAL_MAX_SPEED)
-            } else current.speed,
-            blinkIntensity = if (intent.hasExtra(AughIntents.EXTRA_BLINK_INTENSITY)) {
-                intent.getFloatExtra(AughIntents.EXTRA_BLINK_INTENSITY, current.blinkIntensity).coerceIn(0.2f, 1f)
-            } else current.blinkIntensity,
+            speed =
+                if (intent.hasExtra(AughIntents.EXTRA_SPEED)) {
+                    intent
+                        .getFloatExtra(AughIntents.EXTRA_SPEED, current.speed)
+                        .coerceIn(
+                            MIN_SPEED,
+                            if (current.highIntensityMode) HIGH_INTENSITY_MAX_SPEED
+                            else NORMAL_MAX_SPEED,
+                        )
+                } else current.speed,
+            blinkIntensity =
+                if (intent.hasExtra(AughIntents.EXTRA_BLINK_INTENSITY)) {
+                    intent
+                        .getFloatExtra(AughIntents.EXTRA_BLINK_INTENSITY, current.blinkIntensity)
+                        .coerceIn(0.2f, 1f)
+                } else current.blinkIntensity,
             transition = intent.enumExtra(AughIntents.EXTRA_TRANSITION) ?: current.transition,
             tapAction = intent.enumExtra(AughIntents.EXTRA_TAP_ACTION) ?: current.tapAction,
-            keepScreenAwake = if (intent.hasExtra(AughIntents.EXTRA_KEEP_SCREEN_AWAKE)) {
-                intent.getBooleanExtra(AughIntents.EXTRA_KEEP_SCREEN_AWAKE, current.keepScreenAwake)
-            } else current.keepScreenAwake,
+            keepScreenAwake =
+                if (intent.hasExtra(AughIntents.EXTRA_KEEP_SCREEN_AWAKE)) {
+                    intent.getBooleanExtra(
+                        AughIntents.EXTRA_KEEP_SCREEN_AWAKE,
+                        current.keepScreenAwake,
+                    )
+                } else current.keepScreenAwake,
         )
     }
 }
@@ -477,10 +535,18 @@ private fun AughApp(
                 presentationExitRequest = 0
                 modeName = AppMode.PRESENT.name
             }
-            AughIntents.ACTION_NEXT_PAGE, AughIntents.ACTION_PREVIOUS_PAGE -> {
+            AughIntents.ACTION_NEXT_PAGE,
+            AughIntents.ACTION_PREVIOUS_PAGE -> {
                 val direction = if (command.action == AughIntents.ACTION_NEXT_PAGE) 1 else -1
-                val basePage = if (mode == AppMode.PRESENT) presentPage else store.state.selectedPage
-                presentPage = pageIndexAfterMove(basePage, direction, store.state.pages.size, store.state.loopPages)
+                val basePage =
+                    if (mode == AppMode.PRESENT) presentPage else store.state.selectedPage
+                presentPage =
+                    pageIndexAfterMove(
+                        basePage,
+                        direction,
+                        store.state.pages.size,
+                        store.state.loopPages,
+                    )
                 if (mode != AppMode.PRESENT) presentationSession++
                 presentationExitRequest = 0
                 modeName = AppMode.PRESENT.name
@@ -594,7 +660,9 @@ private fun EditorScreen(
     val latestTapActionPreviewKey = rememberUpdatedState(tapActionPreviewKey)
     val snackbarHostState = remember { SnackbarHostState() }
     val onDeleteRecent: (String) -> Unit = { recent ->
-        onStateChange { current -> current.copy(recentTexts = current.recentTexts.filterNot { it == recent }) }
+        onStateChange { current ->
+            current.copy(recentTexts = current.recentTexts.filterNot { it == recent })
+        }
         coroutineScope.launch {
             val autoDismiss = launch {
                 delay(5_000)
@@ -609,7 +677,8 @@ private fun EditorScreen(
             autoDismiss.cancel()
             if (result == SnackbarResult.ActionPerformed) {
                 onStateChange { current ->
-                    val restored = (listOf(recent) + current.recentTexts.filterNot { it == recent }).take(5)
+                    val restored =
+                        (listOf(recent) + current.recentTexts.filterNot { it == recent }).take(5)
                     current.copy(recentTexts = restored)
                 }
             }
@@ -653,7 +722,10 @@ private fun EditorScreen(
             Surface(shadowElevation = 8.dp, color = MaterialTheme.colorScheme.surface) {
                 Button(
                     onClick = onPresent,
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 14.dp).navigationBarsPadding(),
+                    modifier =
+                        Modifier.fillMaxWidth()
+                            .padding(horizontal = 20.dp, vertical = 14.dp)
+                            .navigationBarsPadding(),
                     shape = RoundedCornerShape(18.dp),
                 ) {
                     Icon(
@@ -682,7 +754,12 @@ private fun EditorScreen(
                         tapActionPreviewKey = latestTapActionPreviewKey.value,
                         onPageChange = { delta ->
                             onStateChange { current ->
-                                current.copy(selectedPage = (current.selectedPage + delta).coerceIn(current.pages.indices))
+                                current.copy(
+                                    selectedPage =
+                                        (current.selectedPage + delta).coerceIn(
+                                            current.pages.indices
+                                        )
+                                )
                             }
                         },
                         onLongPress = {
@@ -698,45 +775,55 @@ private fun EditorScreen(
                 Column {
                     Spacer(Modifier.height(6.dp))
                     PageStrip(
-                    pageCount = state.pages.size,
-                    selectedPage = state.selectedPage,
-                    onSelect = { index -> onStateChange { it.copy(selectedPage = index) } },
-                    onAdd = {
-                        onStateChange { current ->
-                            current.copy(pages = current.pages + "new page", selectedPage = current.pages.size)
-                        }
-                    },
-                    onMove = { from, to ->
-                        onStateChange { current ->
-                            if (to !in current.pages.indices) current
-                            else {
-                                val pages = current.pages.toMutableList().apply { add(to, removeAt(from)) }
-                                val selected =
-                                    when (current.selectedPage) {
-                                        from -> to
-                                        to -> from
-                                        else -> current.selectedPage
-                                    }
-                                current.copy(pages = pages, selectedPage = selected)
+                        pageCount = state.pages.size,
+                        selectedPage = state.selectedPage,
+                        onSelect = { index -> onStateChange { it.copy(selectedPage = index) } },
+                        onAdd = {
+                            onStateChange { current ->
+                                current.copy(
+                                    pages = current.pages + "new page",
+                                    selectedPage = current.pages.size,
+                                )
                             }
-                        }
-                    },
-                    onDelete = { index ->
-                        onStateChange { current ->
-                            if (current.pages.size == 1) {
-                                current
-                            } else {
-                                val pages = current.pages.filterIndexed { pageIndex, _ -> pageIndex != index }
-                                val selected =
-                                    when {
-                                        current.selectedPage > index -> current.selectedPage - 1
-                                        current.selectedPage == index -> index.coerceAtMost(pages.lastIndex)
-                                        else -> current.selectedPage
-                                    }
-                                current.copy(pages = pages, selectedPage = selected)
+                        },
+                        onMove = { from, to ->
+                            onStateChange { current ->
+                                if (to !in current.pages.indices) current
+                                else {
+                                    val pages =
+                                        current.pages.toMutableList().apply {
+                                            add(to, removeAt(from))
+                                        }
+                                    val selected =
+                                        when (current.selectedPage) {
+                                            from -> to
+                                            to -> from
+                                            else -> current.selectedPage
+                                        }
+                                    current.copy(pages = pages, selectedPage = selected)
+                                }
                             }
-                        }
-                    },
+                        },
+                        onDelete = { index ->
+                            onStateChange { current ->
+                                if (current.pages.size == 1) {
+                                    current
+                                } else {
+                                    val pages =
+                                        current.pages.filterIndexed { pageIndex, _ ->
+                                            pageIndex != index
+                                        }
+                                    val selected =
+                                        when {
+                                            current.selectedPage > index -> current.selectedPage - 1
+                                            current.selectedPage == index ->
+                                                index.coerceAtMost(pages.lastIndex)
+                                            else -> current.selectedPage
+                                        }
+                                    current.copy(pages = pages, selectedPage = selected)
+                                }
+                            }
+                        },
                     )
                     Spacer(Modifier.height(14.dp))
                     MessageCard(
@@ -789,7 +876,11 @@ private fun PageStrip(
             Spacer(Modifier.width(8.dp))
             Text("Pages", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
             Spacer(Modifier.width(8.dp))
-            Text("$pageCount total", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(
+                "$pageCount total",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         }
         Spacer(Modifier.height(8.dp))
         if (pageCount > 1) {
@@ -808,45 +899,50 @@ private fun PageStrip(
             repeat(pageCount) { index ->
                 val currentIndex by rememberUpdatedState(index)
                 Surface(
-                    modifier = Modifier
-                        .graphicsLayer {
-                            translationX = if (draggedPageIndex == index) draggedPageDistance else 0f
-                        }
-                        .pointerInput(Unit) {
-                            detectDragGesturesAfterLongPress(
-                                onDragStart = {
-                                    draggedPageIndex = currentIndex
-                                    draggedPageDistance = 0f
-                                },
-                                onDragCancel = {
-                                    draggedPageIndex = -1
-                                    draggedPageDistance = 0f
-                                },
-                                onDragEnd = {
-                                    draggedPageIndex = -1
-                                    draggedPageDistance = 0f
-                                },
-                                onDrag = { change, dragAmount ->
-                                    change.consume()
-                                    if (draggedPageIndex == currentIndex) {
-                                        draggedPageDistance += dragAmount.x
-                                        when {
-                                            draggedPageDistance > dragThreshold && currentIndex < pageCount - 1 -> {
-                                                onMove(currentIndex, currentIndex + 1)
-                                                draggedPageIndex = currentIndex + 1
-                                                draggedPageDistance -= dragThreshold
-                                            }
-                                            draggedPageDistance < -dragThreshold && currentIndex > 0 -> {
-                                                onMove(currentIndex, currentIndex - 1)
-                                                draggedPageIndex = currentIndex - 1
-                                                draggedPageDistance += dragThreshold
+                    modifier =
+                        Modifier.graphicsLayer {
+                                translationX =
+                                    if (draggedPageIndex == index) draggedPageDistance else 0f
+                            }
+                            .pointerInput(Unit) {
+                                detectDragGesturesAfterLongPress(
+                                    onDragStart = {
+                                        draggedPageIndex = currentIndex
+                                        draggedPageDistance = 0f
+                                    },
+                                    onDragCancel = {
+                                        draggedPageIndex = -1
+                                        draggedPageDistance = 0f
+                                    },
+                                    onDragEnd = {
+                                        draggedPageIndex = -1
+                                        draggedPageDistance = 0f
+                                    },
+                                    onDrag = { change, dragAmount ->
+                                        change.consume()
+                                        if (draggedPageIndex == currentIndex) {
+                                            draggedPageDistance += dragAmount.x
+                                            when {
+                                                draggedPageDistance > dragThreshold &&
+                                                    currentIndex < pageCount - 1 -> {
+                                                    onMove(currentIndex, currentIndex + 1)
+                                                    draggedPageIndex = currentIndex + 1
+                                                    draggedPageDistance -= dragThreshold
+                                                }
+                                                draggedPageDistance < -dragThreshold &&
+                                                    currentIndex > 0 -> {
+                                                    onMove(currentIndex, currentIndex - 1)
+                                                    draggedPageIndex = currentIndex - 1
+                                                    draggedPageDistance += dragThreshold
+                                                }
                                             }
                                         }
-                                    }
-                                },
-                            )
-                        },
-                    color = if (index == selectedPage) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerHigh,
+                                    },
+                                )
+                            },
+                    color =
+                        if (index == selectedPage) MaterialTheme.colorScheme.primaryContainer
+                        else MaterialTheme.colorScheme.surfaceContainerHigh,
                     shape = RoundedCornerShape(14.dp),
                     onClick = { onSelect(index) },
                 ) {
@@ -854,7 +950,10 @@ private fun PageStrip(
                         Text(
                             "Page ${index + 1}",
                             modifier = Modifier.padding(start = 14.dp, top = 10.dp, bottom = 10.dp),
-                            color = if (index == selectedPage) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface,
+                            color =
+                                if (index == selectedPage)
+                                    MaterialTheme.colorScheme.onPrimaryContainer
+                                else MaterialTheme.colorScheme.onSurface,
                             style = MaterialTheme.typography.labelLarge,
                             fontWeight = FontWeight.Bold,
                         )
@@ -906,7 +1005,11 @@ private fun AboutScreen(onBack: () -> Unit) {
         containerColor = MaterialTheme.colorScheme.background,
     ) { padding ->
         Column(
-            modifier = Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(20.dp),
+            modifier =
+                Modifier.fillMaxSize()
+                    .padding(padding)
+                    .verticalScroll(rememberScrollState())
+                    .padding(20.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Image(
@@ -915,7 +1018,11 @@ private fun AboutScreen(onBack: () -> Unit) {
                 modifier = Modifier.size(112.dp).clip(RoundedCornerShape(28.dp)),
             )
             Spacer(Modifier.height(16.dp))
-            Text("AUGH!", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black)
+            Text(
+                "AUGH!",
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Black,
+            )
             Text("make it bold!", color = MaterialTheme.colorScheme.onSurfaceVariant)
             Spacer(Modifier.height(8.dp))
             Text(
@@ -992,20 +1099,32 @@ private fun SettingsScreen(
         containerColor = MaterialTheme.colorScheme.background,
     ) { padding ->
         Column(
-            modifier = Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(20.dp),
+            modifier =
+                Modifier.fillMaxSize()
+                    .padding(padding)
+                    .verticalScroll(rememberScrollState())
+                    .padding(20.dp)
         ) {
-            SettingCard(title = "Display & presentation", subtitle = "Screen and page behavior", icon = R.drawable.ic_display) {
+            SettingCard(
+                title = "Display & presentation",
+                subtitle = "Screen and page behavior",
+                icon = R.drawable.ic_display,
+            ) {
                 SettingSwitchRow(
                     title = "Keep screen awake",
                     subtitle = "While presenting",
                     checked = state.keepScreenAwake,
-                    onCheckedChange = { enabled -> onStateChange { it.copy(keepScreenAwake = enabled) } },
+                    onCheckedChange = { enabled ->
+                        onStateChange { it.copy(keepScreenAwake = enabled) }
+                    },
                 )
                 SettingSwitchRow(
                     title = "Max brightness",
                     subtitle = "Use full brightness while presenting",
                     checked = state.maxBrightnessWhenPresenting,
-                    onCheckedChange = { enabled -> onStateChange { it.copy(maxBrightnessWhenPresenting = enabled) } },
+                    onCheckedChange = { enabled ->
+                        onStateChange { it.copy(maxBrightnessWhenPresenting = enabled) }
+                    },
                 )
                 SettingSwitchRow(
                     title = "Loop pages",
@@ -1039,7 +1158,10 @@ private fun SettingsScreen(
             Card(
                 modifier = Modifier.fillMaxWidth().clickable(onClick = onAbout),
                 shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
+                colors =
+                    CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainer
+                    ),
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth().padding(16.dp),
@@ -1060,7 +1182,11 @@ private fun SettingsScreen(
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
-                    Text("›", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.primary)
+                    Text(
+                        "›",
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
                 }
             }
         }
@@ -1073,7 +1199,7 @@ private fun SettingsScreen(
                 Text(
                     "This unlocks animation speeds up to 400% and the Strobe effect. Rapid flashing " +
                         "or high-contrast imagery can cause discomfort or trigger seizures, especially " +
-                        "for people with photosensitive epilepsy. Use only if you understand the risk.",
+                        "for people with photosensitive epilepsy. Use only if you understand the risk."
                 )
             },
             confirmButton = {
@@ -1087,20 +1213,28 @@ private fun SettingsScreen(
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showHighIntensityWarning = false }) {
-                    Text("Cancel")
-                }
+                TextButton(onClick = { showHighIntensityWarning = false }) { Text("Cancel") }
             },
         )
     }
 }
 
 @Composable
-private fun ExternalLinkCard(context: Context, icon: Int, title: String, subtitle: String, url: String) {
+private fun ExternalLinkCard(
+    context: Context,
+    icon: Int,
+    title: String,
+    subtitle: String,
+    url: String,
+) {
     Card(
-        modifier = Modifier.fillMaxWidth().clickable { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url))) },
+        modifier =
+            Modifier.fillMaxWidth().clickable {
+                context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+            },
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
+        colors =
+            CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
     ) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(16.dp),
@@ -1115,9 +1249,17 @@ private fun ExternalLinkCard(context: Context, icon: Int, title: String, subtitl
             Spacer(Modifier.width(14.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(title, fontWeight = FontWeight.Bold)
-                Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(
+                    subtitle,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
-            Text("↗", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.primary)
+            Text(
+                "↗",
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.primary,
+            )
         }
     }
 }
@@ -1171,37 +1313,38 @@ private fun SignPreview(
         }
     }
 
-    LaunchedEffect(tapActionPreviewKey) {
-        tapActionPreview?.let(::performTapAction)
-    }
+    LaunchedEffect(tapActionPreviewKey) { tapActionPreview?.let(::performTapAction) }
 
     Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .combinedClickable(
-                enabled = state.tapAction != TapAction.OFF || onLongPress != null,
-                onClick = if (state.tapAction != TapAction.OFF) {
-                    { performTapAction(state.tapAction) }
-                } else {
-                    {}
-                },
-                onLongClick = onLongPress,
-            )
-            .then(
-                if (onPageChange == null) {
-                    Modifier
-                } else {
-                    Modifier.pointerInput(state.selectedPage, state.pages.size) {
-                        var dragDistance = 0f
-                        detectHorizontalDragGestures(
-                            onHorizontalDrag = { _, dragAmount -> dragDistance += dragAmount },
-                            onDragEnd = {
-                                if (abs(dragDistance) > 64f) onPageChange(if (dragDistance < 0) 1 else -1)
-                            },
-                        )
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .combinedClickable(
+                    enabled = state.tapAction != TapAction.OFF || onLongPress != null,
+                    onClick =
+                        if (state.tapAction != TapAction.OFF) {
+                            { performTapAction(state.tapAction) }
+                        } else {
+                            {}
+                        },
+                    onLongClick = onLongPress,
+                )
+                .then(
+                    if (onPageChange == null) {
+                        Modifier
+                    } else {
+                        Modifier.pointerInput(state.selectedPage, state.pages.size) {
+                            var dragDistance = 0f
+                            detectHorizontalDragGestures(
+                                onHorizontalDrag = { _, dragAmount -> dragDistance += dragAmount },
+                                onDragEnd = {
+                                    if (abs(dragDistance) > 64f)
+                                        onPageChange(if (dragDistance < 0) 1 else -1)
+                                },
+                            )
+                        }
                     }
-                }
-            ),
+                ),
         shape = RoundedCornerShape(28.dp),
         colors = CardDefaults.cardColors(containerColor = Color.Transparent),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
@@ -1221,10 +1364,18 @@ private fun SignPreview(
                             when (currentState.transition) {
                                 TransitionStyle.NONE -> fadeIn(tween(0))
                                 TransitionStyle.FADE -> fadeIn(tween(duration(260)))
-                                TransitionStyle.WIPE -> slideInHorizontally(tween(duration(300))) { it } + fadeIn(tween(duration(300)))
-                                TransitionStyle.BLINDS -> scaleIn(tween(duration(320)), initialScale = 0.82f) + fadeIn(tween(duration(320)))
-                                TransitionStyle.CHECKERBOARD -> scaleIn(tween(duration(360)), initialScale = 1.18f) + fadeIn(tween(duration(360)))
-                                TransitionStyle.SPIN -> scaleIn(tween(duration(360)), initialScale = 0.45f) + fadeIn(tween(duration(360)))
+                                TransitionStyle.WIPE ->
+                                    slideInHorizontally(tween(duration(300))) { it } +
+                                        fadeIn(tween(duration(300)))
+                                TransitionStyle.BLINDS ->
+                                    scaleIn(tween(duration(320)), initialScale = 0.82f) +
+                                        fadeIn(tween(duration(320)))
+                                TransitionStyle.CHECKERBOARD ->
+                                    scaleIn(tween(duration(360)), initialScale = 1.18f) +
+                                        fadeIn(tween(duration(360)))
+                                TransitionStyle.SPIN ->
+                                    scaleIn(tween(duration(360)), initialScale = 0.45f) +
+                                        fadeIn(tween(duration(360)))
                             }
                         }
                     val exit =
@@ -1234,10 +1385,16 @@ private fun SignPreview(
                             when (currentState.transition) {
                                 TransitionStyle.NONE -> fadeOut(tween(0))
                                 TransitionStyle.FADE -> fadeOut(tween(duration(260)))
-                                TransitionStyle.WIPE -> slideOutHorizontally(tween(duration(300))) { -it } + fadeOut(tween(duration(300)))
+                                TransitionStyle.WIPE ->
+                                    slideOutHorizontally(tween(duration(300))) { -it } +
+                                        fadeOut(tween(duration(300)))
                                 TransitionStyle.BLINDS -> fadeOut(tween(duration(320)))
-                                TransitionStyle.CHECKERBOARD -> scaleOut(tween(duration(360)), targetScale = 1.18f) + fadeOut(tween(duration(360)))
-                                TransitionStyle.SPIN -> scaleOut(tween(duration(360)), targetScale = 0.45f) + fadeOut(tween(duration(360)))
+                                TransitionStyle.CHECKERBOARD ->
+                                    scaleOut(tween(duration(360)), targetScale = 1.18f) +
+                                        fadeOut(tween(duration(360)))
+                                TransitionStyle.SPIN ->
+                                    scaleOut(tween(duration(360)), targetScale = 0.45f) +
+                                        fadeOut(tween(duration(360)))
                             }
                         }
                     (enter togetherWith exit).using(SizeTransform(clip = false))
@@ -1246,11 +1403,16 @@ private fun SignPreview(
             ) { previewTarget ->
                 key(previewTarget.second) {
                     val currentState = previewTarget.first
-                    val currentForeground = if (inverted) currentState.background.color else currentState.foreground.color
-                    val currentBackground = if (inverted) currentState.foreground.color else currentState.background.color
+                    val currentForeground =
+                        if (inverted) currentState.background.color
+                        else currentState.foreground.color
+                    val currentBackground =
+                        if (inverted) currentState.foreground.color
+                        else currentState.background.color
                     AnimatedSignText(
                         state = currentState,
-                        modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(28.dp)).padding(22.dp),
+                        modifier =
+                            Modifier.fillMaxSize().clip(RoundedCornerShape(28.dp)).padding(22.dp),
                         maxLines = 3,
                         preview = true,
                         foreground = currentForeground,
@@ -1269,7 +1431,13 @@ private fun SignPreview(
                 color = state.foreground.color.copy(alpha = 0.16f),
                 shape = RoundedCornerShape(50),
             ) {
-                Text("LIVE PREVIEW", modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp), color = state.foreground.color, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+                Text(
+                    "LIVE PREVIEW",
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                    color = state.foreground.color,
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.Bold,
+                )
             }
             if (flashActive) {
                 Box(modifier = Modifier.fillMaxSize().background(foreground.copy(alpha = 0.82f)))
@@ -1286,22 +1454,26 @@ private fun MessageCard(
     onRememberRecent: (String) -> Unit,
     onDeleteRecent: (String) -> Unit,
 ) {
-    SettingCard(title = "Message", subtitle = "Text and recent history", icon = R.drawable.ic_looks) {
+    SettingCard(
+        title = "Message",
+        subtitle = "Text and recent history",
+        icon = R.drawable.ic_looks,
+    ) {
         OutlinedTextField(
             value = state.text,
             onValueChange = { text ->
                 onStateChange { current ->
                     current.copy(
-                        pages = current.pages.mapIndexed { index, page ->
-                            if (index == current.selectedPage) text else page
-                        }
+                        pages =
+                            current.pages.mapIndexed { index, page ->
+                                if (index == current.selectedPage) text else page
+                            }
                     )
                 }
             },
-            modifier = Modifier
-                .fillMaxWidth()
-                .focusRequester(messageFocusRequester)
-                .onFocusChanged { focusState ->
+            modifier =
+                Modifier.fillMaxWidth().focusRequester(messageFocusRequester).onFocusChanged {
+                    focusState ->
                     if (!focusState.isFocused) onRememberRecent(state.text)
                 },
             label = { Text("Message") },
@@ -1323,7 +1495,11 @@ private fun RecentMessages(
 ) {
     if (state.recentTexts.isEmpty()) return
     Spacer(Modifier.height(14.dp))
-    Text("Recent messages", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+    Text(
+        "Recent messages",
+        style = MaterialTheme.typography.labelLarge,
+        fontWeight = FontWeight.Bold,
+    )
     Spacer(Modifier.height(8.dp))
     ChipRow {
         state.recentTexts.forEach { recent ->
@@ -1332,9 +1508,10 @@ private fun RecentMessages(
                 onClick = {
                     onStateChange { current ->
                         current.copy(
-                            pages = current.pages.mapIndexed { index, page ->
-                                if (index == current.selectedPage) recent else page
-                            }
+                            pages =
+                                current.pages.mapIndexed { index, page ->
+                                    if (index == current.selectedPage) recent else page
+                                }
                         )
                     }
                 },
@@ -1395,8 +1572,11 @@ private fun AnimatedSignText(
         } else 1f
     val animatedBackground =
         when (animation) {
-            AnimationStyle.BLINK_BACKGROUND, AnimationStyle.STROBE -> androidx.compose.ui.graphics.lerp(background, foreground, pulse)
-            AnimationStyle.INVERT -> androidx.compose.ui.graphics.lerp(background, foreground, pulse)
+            AnimationStyle.BLINK_BACKGROUND,
+            AnimationStyle.STROBE ->
+                androidx.compose.ui.graphics.lerp(background, foreground, pulse)
+            AnimationStyle.INVERT ->
+                androidx.compose.ui.graphics.lerp(background, foreground, pulse)
             else -> background
         }
     val animatedForeground =
@@ -1404,23 +1584,26 @@ private fun AnimatedSignText(
             androidx.compose.ui.graphics.lerp(foreground, background, pulse)
         } else foreground
     CompositionLocalProvider(LocalContentColor provides animatedForeground) {
-        Box(modifier = modifier.background(animatedBackground), contentAlignment = Alignment.Center) {
+        Box(
+            modifier = modifier.background(animatedBackground),
+            contentAlignment = Alignment.Center,
+        ) {
             FittedSignText(
                 text = state.text.ifBlank { "AUGH!" },
                 state = state,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .alpha(blinkAlpha)
-                    .then(
-                        if (animation == AnimationStyle.SCROLL && state.speed > MIN_SPEED) {
-                            Modifier.basicMarquee(
-                                iterations = Int.MAX_VALUE,
-                                repeatDelayMillis = 0,
-                                initialDelayMillis = 0,
-                                velocity = (110f * state.speed).dp,
-                            )
-                        } else Modifier
-                    ),
+                modifier =
+                    Modifier.fillMaxWidth()
+                        .alpha(blinkAlpha)
+                        .then(
+                            if (animation == AnimationStyle.SCROLL && state.speed > MIN_SPEED) {
+                                Modifier.basicMarquee(
+                                    iterations = Int.MAX_VALUE,
+                                    repeatDelayMillis = 0,
+                                    initialDelayMillis = 0,
+                                    velocity = (110f * state.speed).dp,
+                                )
+                            } else Modifier
+                        ),
                 maxLines = if (animation == AnimationStyle.SCROLL) 1 else maxLines,
             )
         }
@@ -1435,25 +1618,33 @@ private fun rememberMotionPulse(
     refreshRateHz: Float,
     label: String,
 ): Float {
-    if (speed <= MIN_SPEED &&
-        animation != AnimationStyle.BLINK &&
-        animation != AnimationStyle.BLINK_BACKGROUND &&
-        animation != AnimationStyle.STROBE
+    if (
+        speed <= MIN_SPEED &&
+            animation != AnimationStyle.BLINK &&
+            animation != AnimationStyle.BLINK_BACKGROUND &&
+            animation != AnimationStyle.STROBE
     ) {
         return 0f
     }
-    val transition = key(animation, speed, blinkRateHz, refreshRateHz) {
-        rememberInfiniteTransition(label = label)
-    }
-    val pulse by transition.animateFloat(
-        initialValue = 0f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = pulseDurationMillis(animation, speed, blinkRateHz, refreshRateHz)),
-            repeatMode = RepeatMode.Reverse,
-        ),
-        label = "sign-pulse",
-    )
+    val transition =
+        key(animation, speed, blinkRateHz, refreshRateHz) {
+            rememberInfiniteTransition(label = label)
+        }
+    val pulse by
+        transition.animateFloat(
+            initialValue = 0f,
+            targetValue = 1f,
+            animationSpec =
+                infiniteRepeatable(
+                    animation =
+                        tween(
+                            durationMillis =
+                                pulseDurationMillis(animation, speed, blinkRateHz, refreshRateHz)
+                        ),
+                    repeatMode = RepeatMode.Reverse,
+                ),
+            label = "sign-pulse",
+        )
     return pulse
 }
 
@@ -1469,14 +1660,15 @@ private fun FittedSignText(
         val textMeasurer = rememberTextMeasurer()
         val maxWidth = with(density) { maxWidth.toPx().roundToInt().coerceAtLeast(1) }
         val maxHeight = with(density) { maxHeight.toPx().roundToInt().coerceAtLeast(1) }
-        val fontSize = fitFontSize(
-            textMeasurer = textMeasurer,
-            text = text,
-            state = state,
-            maxWidth = if (maxLines == 1) maxWidth.coerceAtLeast(4096) else maxWidth,
-            maxHeight = maxHeight,
-            maxLines = maxLines,
-        )
+        val fontSize =
+            fitFontSize(
+                textMeasurer = textMeasurer,
+                text = text,
+                state = state,
+                maxWidth = if (maxLines == 1) maxWidth.coerceAtLeast(4096) else maxWidth,
+                maxHeight = maxHeight,
+                maxLines = maxLines,
+            )
         Text(
             text = text,
             modifier = Modifier.fillMaxWidth(),
@@ -1507,11 +1699,12 @@ private fun fitFontSize(
         val result =
             textMeasurer.measure(
                 text = text,
-                style = TextStyle(
-                    fontFamily = state.font.family,
-                    fontSize = candidate.sp,
-                    fontWeight = FontWeight.Bold,
-                ),
+                style =
+                    TextStyle(
+                        fontFamily = state.font.family,
+                        fontSize = candidate.sp,
+                        fontWeight = FontWeight.Bold,
+                    ),
                 constraints = Constraints(maxWidth = maxWidth, maxHeight = maxHeight),
                 maxLines = maxLines,
                 softWrap = false,
@@ -1525,8 +1718,10 @@ private fun fitFontSize(
 @Composable
 private fun rememberReducedMotion(context: Context): Boolean {
     val resolver = context.contentResolver
-    val animatorScale = Settings.Global.getFloat(resolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1f)
-    val transitionScale = Settings.Global.getFloat(resolver, Settings.Global.TRANSITION_ANIMATION_SCALE, 1f)
+    val animatorScale =
+        Settings.Global.getFloat(resolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1f)
+    val transitionScale =
+        Settings.Global.getFloat(resolver, Settings.Global.TRANSITION_ANIMATION_SCALE, 1f)
     return animatorScale == 0f || transitionScale == 0f
 }
 
@@ -1577,8 +1772,11 @@ private fun contrastRatio(first: Color, second: Color): Float {
 
 private fun relativeLuminance(color: Color): Float {
     fun channel(value: Float): Float =
-        if (value <= 0.03928f) value / 12.92f else ((value + 0.055f) / 1.055f).toDouble().pow(2.4).toFloat()
-    return 0.2126f * channel(color.red) + 0.7152f * channel(color.green) + 0.0722f * channel(color.blue)
+        if (value <= 0.03928f) value / 12.92f
+        else ((value + 0.055f) / 1.055f).toDouble().pow(2.4).toFloat()
+    return 0.2126f * channel(color.red) +
+        0.7152f * channel(color.green) +
+        0.0722f * channel(color.blue)
 }
 
 @Composable
@@ -1588,7 +1786,8 @@ private fun SpeedControl(
     onStateChange: (((SignState) -> SignState)) -> Unit,
 ) {
     val speedIsDangerous = state.speed > NORMAL_MAX_SPEED
-    val speedColor = if (speedIsDangerous) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
+    val speedColor =
+        if (speedIsDangerous) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
     Text(
         "$label · ${(state.speed * 100).toInt()}%",
         style = MaterialTheme.typography.labelLarge,
@@ -1598,14 +1797,16 @@ private fun SpeedControl(
     Slider(
         value = state.speed,
         onValueChange = { onStateChange { current -> current.copy(speed = it) } },
-        valueRange = MIN_SPEED..if (state.highIntensityMode) HIGH_INTENSITY_MAX_SPEED else NORMAL_MAX_SPEED,
-        colors = SliderDefaults.colors(
-            thumbColor = speedColor,
-            activeTrackColor = speedColor,
-            inactiveTrackColor = speedColor.copy(alpha = 0.24f),
-            activeTickColor = speedColor,
-            inactiveTickColor = speedColor.copy(alpha = 0.54f),
-        ),
+        valueRange =
+            MIN_SPEED..if (state.highIntensityMode) HIGH_INTENSITY_MAX_SPEED else NORMAL_MAX_SPEED,
+        colors =
+            SliderDefaults.colors(
+                thumbColor = speedColor,
+                activeTrackColor = speedColor,
+                inactiveTrackColor = speedColor.copy(alpha = 0.24f),
+                activeTickColor = speedColor,
+                inactiveTickColor = speedColor.copy(alpha = 0.54f),
+            ),
     )
 }
 
@@ -1653,17 +1854,21 @@ private fun MotionCard(
             )
         }
         val usesAnimationSpeed =
-            state.animation == AnimationStyle.SCROLL ||
-                state.animation == AnimationStyle.INVERT
+            state.animation == AnimationStyle.SCROLL || state.animation == AnimationStyle.INVERT
         if (usesAnimationSpeed) {
             Spacer(Modifier.height(12.dp))
             SpeedControl(label = "Animation speed", state = state, onStateChange = onStateChange)
         }
-        if (state.animation == AnimationStyle.BLINK ||
-            state.animation == AnimationStyle.BLINK_BACKGROUND ||
-            state.animation == AnimationStyle.STROBE
+        if (
+            state.animation == AnimationStyle.BLINK ||
+                state.animation == AnimationStyle.BLINK_BACKGROUND ||
+                state.animation == AnimationStyle.STROBE
         ) {
-            Text("Flash frequency · ${"%.1f".format(state.blinkRateHz)} Hz", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+            Text(
+                "Flash frequency · ${"%.1f".format(state.blinkRateHz)} Hz",
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.Bold,
+            )
             Slider(
                 value = state.blinkRateHz,
                 onValueChange = { onStateChange { current -> current.copy(blinkRateHz = it) } },
@@ -1671,7 +1876,11 @@ private fun MotionCard(
             )
         }
         if (state.animation == AnimationStyle.BLINK || state.animation == AnimationStyle.STROBE) {
-            Text("Blink intensity · ${(state.blinkIntensity * 100).toInt()}%", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+            Text(
+                "Blink intensity · ${(state.blinkIntensity * 100).toInt()}%",
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.Bold,
+            )
             Slider(
                 value = state.blinkIntensity,
                 onValueChange = { onStateChange { current -> current.copy(blinkIntensity = it) } },
@@ -1679,7 +1888,11 @@ private fun MotionCard(
             )
         }
         Spacer(Modifier.height(10.dp))
-        Text("Page transition", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+        Text(
+            "Page transition",
+            style = MaterialTheme.typography.labelLarge,
+            fontWeight = FontWeight.Bold,
+        )
         ChipRow {
             TransitionStyle.entries.forEach { transition ->
                 FilterChip(
@@ -1703,7 +1916,11 @@ private fun MotionCard(
             SpeedControl(label = "Transition speed", state = state, onStateChange = onStateChange)
         }
         Spacer(Modifier.height(10.dp))
-        Text("Tap action", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+        Text(
+            "Tap action",
+            style = MaterialTheme.typography.labelLarge,
+            fontWeight = FontWeight.Bold,
+        )
         ChipRow {
             TapAction.entries.forEach { action ->
                 FilterChip(
@@ -1745,7 +1962,11 @@ private fun SettingSwitchRow(
     ) {
         Column(modifier = Modifier.weight(1f)) {
             Text(title, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
-            Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(
+                subtitle,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         }
         Switch(checked = checked, onCheckedChange = onCheckedChange)
     }
@@ -1776,9 +1997,17 @@ private fun SettingCard(
                     modifier = Modifier.size(22.dp),
                 )
                 Spacer(Modifier.width(8.dp))
-                Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                Text(
+                    title,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                )
             }
-            Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(
+                subtitle,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
             Spacer(Modifier.height(16.dp))
             content()
         }
@@ -1787,7 +2016,10 @@ private fun SettingCard(
 
 @Composable
 private fun ChipRow(content: @Composable () -> Unit) {
-    Row(modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+    Row(
+        modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
         content()
     }
 }
@@ -1812,21 +2044,23 @@ private fun ColorPicker(title: String, selected: Palette, onSelect: (Palette) ->
     ) {
         Palette.entries.forEach { palette ->
             Box(
-                modifier = Modifier
-                    .size(48.dp)
-                    .clip(CircleShape)
-                    .background(palette.color)
-                    .border(
-                        width = if (selected == palette) 3.dp else 1.dp,
-                        color = if (selected == palette) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant,
-                        shape = CircleShape,
-                    )
-                    .clickable(onClick = { onSelect(palette) })
-                    .semantics {
-                        contentDescription = "${title}: ${palette.label}"
-                        role = Role.RadioButton
-                        this.selected = selected == palette
-                    },
+                modifier =
+                    Modifier.size(48.dp)
+                        .clip(CircleShape)
+                        .background(palette.color)
+                        .border(
+                            width = if (selected == palette) 3.dp else 1.dp,
+                            color =
+                                if (selected == palette) MaterialTheme.colorScheme.primary
+                                else MaterialTheme.colorScheme.outlineVariant,
+                            shape = CircleShape,
+                        )
+                        .clickable(onClick = { onSelect(palette) })
+                        .semantics {
+                            contentDescription = "${title}: ${palette.label}"
+                            role = Role.RadioButton
+                            this.selected = selected == palette
+                        },
                 contentAlignment = Alignment.Center,
             ) {
                 if (selected == palette) {
@@ -1871,22 +2105,26 @@ private fun PresentScreen(
     val presentPage = initialPage.coerceIn(state.pages.indices)
     val animation = if (reducedMotion) AnimationStyle.STATIC else state.animation
     val refreshRateHz = LocalView.current.display?.refreshRate?.takeIf { it > 0f } ?: 60f
-    val pulse = rememberMotionPulse(
-        animation = animation,
-        speed = state.speed,
-        blinkRateHz = state.blinkRateHz,
-        refreshRateHz = refreshRateHz,
-        label = "present-background-motion",
-    )
+    val pulse =
+        rememberMotionPulse(
+            animation = animation,
+            speed = state.speed,
+            blinkRateHz = state.blinkRateHz,
+            refreshRateHz = refreshRateHz,
+            label = "present-background-motion",
+        )
     val animatedPresentationBackground =
         when (animation) {
-            AnimationStyle.BLINK_BACKGROUND, AnimationStyle.STROBE, AnimationStyle.INVERT ->
+            AnimationStyle.BLINK_BACKGROUND,
+            AnimationStyle.STROBE,
+            AnimationStyle.INVERT ->
                 androidx.compose.ui.graphics.lerp(background, foreground, pulse)
             else -> background
         }
 
     DisposableEffect(state.keepScreenAwake) {
-        if (state.keepScreenAwake) window.addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        if (state.keepScreenAwake)
+            window.addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         onDispose { window.clearFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON) }
     }
     DisposableEffect(window) {
@@ -1914,9 +2152,7 @@ private fun PresentScreen(
         }
     }
 
-    LaunchedEffect(presentPage) {
-        if (pageTransitionReady) pageTransitionKey++
-    }
+    LaunchedEffect(presentPage) { if (pageTransitionReady) pageTransitionKey++ }
 
     fun movePage(delta: Int) {
         val next = pageIndexAfterMove(presentPage, delta, state.pages.size, state.loopPages)
@@ -1933,9 +2169,7 @@ private fun PresentScreen(
         }
     }
 
-    LaunchedEffect(externalActionTick) {
-        if (externalActionTick > 0) performTapAction()
-    }
+    LaunchedEffect(externalActionTick) { if (externalActionTick > 0) performTapAction() }
 
     LaunchedEffect(presentationSession, reducedMotion) {
         pageTransitionReady = false
@@ -1960,70 +2194,89 @@ private fun PresentScreen(
         onExit()
     }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(animatedPresentationBackground),
-    ) {
+    Box(modifier = Modifier.fillMaxSize().background(animatedPresentationBackground)) {
         val enterProgress = powerOnProgress.value.coerceIn(0f, 1f)
         val exitProgress = powerOffProgress.value.coerceIn(0f, 1f)
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .graphicsLayer {
-                    val enterScale = 0.82f + enterProgress * 0.18f
-                    val exitScale = 1f - exitProgress * 0.18f
-                    scaleX = enterScale * exitScale
-                    scaleY = enterScale * exitScale
-                    alpha = 1f
-                }
-                .background(animatedPresentationBackground)
-                .pointerInput(state.pages.size, presentPage, exitRequest, pageTransitionReady) {
-                    var dragDistance = 0f
-                    detectHorizontalDragGestures(
-                        onHorizontalDrag = { _, dragAmount -> dragDistance += dragAmount },
-                        onDragEnd = {
-                            if (pageTransitionReady && exitRequest == 0 && abs(dragDistance) > 64f) {
-                                if (dragDistance < 0) movePage(1) else movePage(-1)
-                            }
-                        },
+            modifier =
+                Modifier.fillMaxSize()
+                    .graphicsLayer {
+                        val enterScale = 0.82f + enterProgress * 0.18f
+                        val exitScale = 1f - exitProgress * 0.18f
+                        scaleX = enterScale * exitScale
+                        scaleY = enterScale * exitScale
+                        alpha = 1f
+                    }
+                    .background(animatedPresentationBackground)
+                    .pointerInput(state.pages.size, presentPage, exitRequest, pageTransitionReady) {
+                        var dragDistance = 0f
+                        detectHorizontalDragGestures(
+                            onHorizontalDrag = { _, dragAmount -> dragDistance += dragAmount },
+                            onDragEnd = {
+                                if (
+                                    pageTransitionReady &&
+                                        exitRequest == 0 &&
+                                        abs(dragDistance) > 64f
+                                ) {
+                                    if (dragDistance < 0) movePage(1) else movePage(-1)
+                                }
+                            },
+                        )
+                    }
+                    .clickable(
+                        enabled = exitRequest == 0 && powerOnProgress.value >= 1f,
+                        onClick = ::performTapAction,
                     )
-                }
-                .clickable(
-                    enabled = exitRequest == 0 && powerOnProgress.value >= 1f,
-                    onClick = ::performTapAction,
-                ),
         ) {
             AnimatedContent(
                 targetState = presentPage,
-                modifier = Modifier.fillMaxSize().padding(horizontal = 24.dp).graphicsLayer(rotationZ = spinRotation.value),
+                modifier =
+                    Modifier.fillMaxSize()
+                        .padding(horizontal = 24.dp)
+                        .graphicsLayer(rotationZ = spinRotation.value),
                 transitionSpec = {
                     val direction = if (targetState >= initialState) 1 else -1
                     fun duration(base: Int) = motionDurationMillis(base, state.speed)
-                    val enter = if (!pageTransitionReady) {
-                        fadeIn(tween(0))
-                    } else {
-                        when (transitionStyle) {
-                            TransitionStyle.NONE -> fadeIn(tween(0))
-                            TransitionStyle.FADE -> fadeIn(tween(duration(260)))
-                            TransitionStyle.WIPE -> slideInHorizontally(tween(duration(300))) { it * direction } + fadeIn(tween(duration(300)))
-                            TransitionStyle.BLINDS -> scaleIn(tween(duration(320)), initialScale = 0.82f) + fadeIn(tween(duration(320)))
-                            TransitionStyle.CHECKERBOARD -> scaleIn(tween(duration(360)), initialScale = 1.18f) + fadeIn(tween(duration(360)))
-                            TransitionStyle.SPIN -> scaleIn(tween(duration(360)), initialScale = 0.45f) + fadeIn(tween(duration(360)))
+                    val enter =
+                        if (!pageTransitionReady) {
+                            fadeIn(tween(0))
+                        } else {
+                            when (transitionStyle) {
+                                TransitionStyle.NONE -> fadeIn(tween(0))
+                                TransitionStyle.FADE -> fadeIn(tween(duration(260)))
+                                TransitionStyle.WIPE ->
+                                    slideInHorizontally(tween(duration(300))) { it * direction } +
+                                        fadeIn(tween(duration(300)))
+                                TransitionStyle.BLINDS ->
+                                    scaleIn(tween(duration(320)), initialScale = 0.82f) +
+                                        fadeIn(tween(duration(320)))
+                                TransitionStyle.CHECKERBOARD ->
+                                    scaleIn(tween(duration(360)), initialScale = 1.18f) +
+                                        fadeIn(tween(duration(360)))
+                                TransitionStyle.SPIN ->
+                                    scaleIn(tween(duration(360)), initialScale = 0.45f) +
+                                        fadeIn(tween(duration(360)))
+                            }
                         }
-                    }
-                    val exit = if (!pageTransitionReady) {
-                        fadeOut(tween(0))
-                    } else {
-                        when (transitionStyle) {
-                            TransitionStyle.NONE -> fadeOut(tween(0))
-                            TransitionStyle.FADE -> fadeOut(tween(duration(260)))
-                            TransitionStyle.WIPE -> slideOutHorizontally(tween(duration(300))) { -it * direction } + fadeOut(tween(duration(300)))
-                            TransitionStyle.BLINDS -> fadeOut(tween(duration(320)))
-                            TransitionStyle.CHECKERBOARD -> scaleOut(tween(duration(360)), targetScale = 1.18f) + fadeOut(tween(duration(360)))
-                            TransitionStyle.SPIN -> scaleOut(tween(duration(360)), targetScale = 0.45f) + fadeOut(tween(duration(360)))
+                    val exit =
+                        if (!pageTransitionReady) {
+                            fadeOut(tween(0))
+                        } else {
+                            when (transitionStyle) {
+                                TransitionStyle.NONE -> fadeOut(tween(0))
+                                TransitionStyle.FADE -> fadeOut(tween(duration(260)))
+                                TransitionStyle.WIPE ->
+                                    slideOutHorizontally(tween(duration(300))) { -it * direction } +
+                                        fadeOut(tween(duration(300)))
+                                TransitionStyle.BLINDS -> fadeOut(tween(duration(320)))
+                                TransitionStyle.CHECKERBOARD ->
+                                    scaleOut(tween(duration(360)), targetScale = 1.18f) +
+                                        fadeOut(tween(duration(360)))
+                                TransitionStyle.SPIN ->
+                                    scaleOut(tween(duration(360)), targetScale = 0.45f) +
+                                        fadeOut(tween(duration(360)))
+                            }
                         }
-                    }
                     (enter togetherWith exit).using(SizeTransform(clip = false))
                 },
                 label = "page-transition",
@@ -2039,7 +2292,12 @@ private fun PresentScreen(
                 )
             }
             if (pageTransitionKey > 0) {
-                PageTransitionOverlay(style = transitionStyle, page = pageTransitionKey, color = foreground, speed = state.speed)
+                PageTransitionOverlay(
+                    style = transitionStyle,
+                    page = pageTransitionKey,
+                    color = foreground,
+                    speed = state.speed,
+                )
             }
             if (flashActive) {
                 Box(modifier = Modifier.fillMaxSize().background(foreground.copy(alpha = 0.82f)))
@@ -2048,14 +2306,19 @@ private fun PresentScreen(
         TextButton(
             onClick = onExitRequested,
             enabled = exitRequest == 0 && powerOnProgress.value >= 1f,
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .padding(10.dp)
-                .size(64.dp)
-                .graphicsLayer { alpha = enterProgress * (1f - exitProgress) }
-                .semantics { contentDescription = "Exit present" },
+            modifier =
+                Modifier.align(Alignment.TopEnd)
+                    .padding(10.dp)
+                    .size(64.dp)
+                    .graphicsLayer { alpha = enterProgress * (1f - exitProgress) }
+                    .semantics { contentDescription = "Exit present" },
         ) {
-            Text("×", color = foreground.copy(alpha = 0.62f), fontSize = 40.sp, fontWeight = FontWeight.Light)
+            Text(
+                "×",
+                color = foreground.copy(alpha = 0.62f),
+                fontSize = 40.sp,
+                fontWeight = FontWeight.Light,
+            )
         }
     }
 }
@@ -2078,7 +2341,11 @@ private fun PageTransitionOverlay(style: TransitionStyle, page: Int, color: Colo
                         drawRect(
                             color = color.copy(alpha = progress.value * 0.94f),
                             topLeft = androidx.compose.ui.geometry.Offset(0f, index * blindHeight),
-                            size = androidx.compose.ui.geometry.Size(size.width, blindHeight * progress.value),
+                            size =
+                                androidx.compose.ui.geometry.Size(
+                                    size.width,
+                                    blindHeight * progress.value,
+                                ),
                         )
                     }
                 }
@@ -2092,7 +2359,8 @@ private fun PageTransitionOverlay(style: TransitionStyle, page: Int, color: Colo
                         if ((row + column) % 2 == 0) {
                             drawRect(
                                 color = color.copy(alpha = progress.value * 0.9f),
-                                topLeft = androidx.compose.ui.geometry.Offset(column * cell, row * cell),
+                                topLeft =
+                                    androidx.compose.ui.geometry.Offset(column * cell, row * cell),
                                 size = androidx.compose.ui.geometry.Size(cell, cell),
                             )
                         }
@@ -2114,16 +2382,18 @@ private suspend fun playTapSound(context: Context) {
 
 @Composable
 private fun AughTheme(content: @Composable () -> Unit) {
-    val darkColors = androidx.compose.material3.darkColorScheme(
-        primary = Color(0xFFFFB38A),
-        secondary = Color(0xFFC9B6FF),
-        tertiary = Color(0xFFA8E6CF),
-    )
-    val lightColors = androidx.compose.material3.lightColorScheme(
-        primary = Color(0xFF8F3C00),
-        secondary = Color(0xFF675080),
-        tertiary = Color(0xFF236B54),
-    )
+    val darkColors =
+        androidx.compose.material3.darkColorScheme(
+            primary = Color(0xFFFFB38A),
+            secondary = Color(0xFFC9B6FF),
+            tertiary = Color(0xFFA8E6CF),
+        )
+    val lightColors =
+        androidx.compose.material3.lightColorScheme(
+            primary = Color(0xFF8F3C00),
+            secondary = Color(0xFF675080),
+            tertiary = Color(0xFF236B54),
+        )
     val context = LocalContext.current
     val isDark = androidx.compose.foundation.isSystemInDarkTheme()
     val colorScheme =
