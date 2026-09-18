@@ -1,7 +1,7 @@
 package dev.pschmitt.augh
 
-import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.ext.junit.rules.ActivityScenarioRule
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiDevice
@@ -15,8 +15,8 @@ import tools.fastlane.screengrab.UiAutomatorScreenshotStrategy
 import tools.fastlane.screengrab.locale.LocaleTestRule
 
 /**
- * Captures Play Store listing screenshots (en-US only, see fastlane/Screengrabfile) by driving
- * the same edit -> present -> about journey as [MainActivitySmokeTest].
+ * Captures Play Store listing screenshots (en-US only, see fastlane/Screengrabfile) by driving the
+ * same edit -> present -> about journey as [MainActivitySmokeTest].
  */
 @RunWith(AndroidJUnit4::class)
 class ScreenshotTest {
