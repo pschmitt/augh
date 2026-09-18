@@ -1,5 +1,5 @@
 [versions]
-android-plugin = "9.4.0"
+android-plugin = "9.4.1"
 androidx-activity = "1.13.0"
 androidx-compose = "1.12.1"
 androidx-compose-material3 = "1.4.0"
