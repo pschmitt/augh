@@ -43,7 +43,7 @@ on:
 jobs:
   version:
     name: Resolve release version
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     outputs:
       code: ${{ steps.resolve.outputs.code }}
       name: ${{ steps.resolve.outputs.name }}
