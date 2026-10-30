@@ -21,7 +21,7 @@ framework or network service.
   update an entry for user-visible work.
 - Do not run Gradle builds, tests, lint, or Android SDK evaluations on this workstation.
 - Use `just build`, `just check`, or the narrower remote recipes; they sync the checkout and run
-  inside the Nix dev shell on `rofl-13.brkn.lol` by default. `rofl-14.brkn.lol` is the fallback.
+  inside the Nix dev shell on the default build host (see the `brkn-infra` skill).
 - Use `just deploy-all` after a successful remote debug build to install it on all three fleet
   test devices (Zenfone 10, Mi Pad 4, Pixel 5) at once - see the shared doc's "Physical test
   devices" section. Only target a single named device (`deploy-zenfone`/`deploy-mipad`/
