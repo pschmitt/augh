@@ -17,4 +17,5 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "augh"
+
 include(":app")

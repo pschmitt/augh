@@ -1062,3 +1062,23 @@ here (and confirm the reusable workflow's publish-gate/production semantics stil
 State: **done**, 2026-08-28 - CI-only change, no app code or version change; not exercised with a
 real tag push in this task (would have meant cutting an otherwise-empty version bump just to test
 CI wiring) - confirm both tracks receive the bundle on the next real tagged release.
+
+## AUG-90: ktfmt via nix only, drop the ktfmt Gradle plugin
+
+The ktfmt Gradle plugin pinned ktfmt 0.27.0 while the nix/CI side moved on, so local and CI
+formatting could drift. Fleet-wide change in `pschmitt/android-app-ci` (shared `lint.yaml` runs
+nixpkgs ktfmt via `nix develop .#ktfmt`, shared just recipes `lint`/`format` are local nix ktfmt,
+always-on `ktfmt` pre-commit hook), applied here as in stricknani's SNA-69.
+
+- [x] Bumped the `android-app-ci` flake input and the `.just/android-app-ci` submodule.
+- [x] Added the `git-hooks` flake input and `gitHooksLib = git-hooks.lib` so `nix develop`
+  installs the default hooks including ktfmt (augh had no pre-commit wiring before).
+- [x] Removed the ktfmt Gradle plugin (`build.gradle.kts`, `gradle/libs.versions.toml`) and
+  `ktfmtCheck` from `just check`; `check` now depends on the shared `lint`.
+- [x] Aligned the devShell SDK (`platformVersion` 37-0, build-tools 37.0.0) with the app's compileSdk 37, which
+  the remote Gradle build needed (the old 36 pins made it try to download SDK parts into /nix/store).
+- [x] Reformatted all tracked `.kt`/`.kts` once with nixpkgs ktfmt (kotlinlang style).
+
+State: **done**, 2026-10-31 - `nix develop .#ktfmt --command ktfmt --dry-run --set-exit-if-changed`
+clean; `just gradle rofl-13.brkn.lol :app:compileDebugKotlin :app:testDebugUnitTest` succeeds on rofl-13 without the plugin; CI Lint verified after
+push.

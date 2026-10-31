@@ -56,7 +56,7 @@ default:
 import '.just/android-app-ci/just/common.just'
 import '.just/android-app-ci/just/single-module.just'
 
-check host=remote_host: (gradle host "ktfmtCheck testDebugUnitTest lintDebug")
+check host=remote_host: lint (gradle host "testDebugUnitTest lintDebug")
 
 # Build the debug app and its instrumentation APK remotely, then fetch both locally for screengrab.
 screenshots-build host=remote_host: (gradle host "assembleDebug assembleDebugAndroidTest")

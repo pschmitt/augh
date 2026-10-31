@@ -3,11 +3,11 @@
     "android-app-ci": {
       "flake": false,
       "locked": {
-        "lastModified": 1786906227,
-        "narHash": "sha256-dD6faY4YtFkG7TA2t2CvzMe13hyrVQMbUXKMqFtvu/I=",
+        "lastModified": 1793470044,
+        "narHash": "sha256-ao7+VV+td0DFCycAV7NtOQFl8egAEyi3mRza107cim8=",
         "owner": "pschmitt",
         "repo": "android-app-ci",
-        "rev": "3b7e0708af7156eec45b6329e51f6743fdbb48a4",
+        "rev": "5f6ff4a477d6c221d7f37c38a47c0f7f65ff817d",
         "type": "github"
       },
       "original": {
@@ -59,6 +59,22 @@
         "type": "github"
       }
     },
+    "flake-compat": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1767039857,
+        "narHash": "sha256-vNpUSpF5Nuw8xvDLj2KCwwksIbjua2LZCqhV1LNRDns=",
+        "owner": "NixOS",
+        "repo": "flake-compat",
+        "rev": "5edf11c44bc78a0d334f6334cdaf7d60d732daab",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "repo": "flake-compat",
+        "type": "github"
+      }
+    },
     "flake-utils": {
       "inputs": {
         "systems": "systems"
@@ -74,6 +90,27 @@
       "original": {
         "owner": "numtide",
         "repo": "flake-utils",
+        "type": "github"
+      }
+    },
+    "git-hooks": {
+      "inputs": {
+        "flake-compat": "flake-compat",
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1791909798,
+        "narHash": "sha256-VAhpCOmrun/KXimYfR8NM88bciKCui7CqHHhThSzgag=",
+        "owner": "cachix",
+        "repo": "git-hooks.nix",
+        "rev": "1ba1dbfe28738c9a71c266be6efa5b89e75491a9",
+        "type": "github"
+      },
+      "original": {
+        "owner": "cachix",
+        "repo": "git-hooks.nix",
         "type": "github"
       }
     },
@@ -97,6 +134,7 @@
       "inputs": {
         "android-app-ci": "android-app-ci",
         "android-nixpkgs": "android-nixpkgs",
+        "git-hooks": "git-hooks",
         "nixpkgs": "nixpkgs"
       }
     },

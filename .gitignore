@@ -6,3 +6,4 @@
 # publish it like the sibling nyetbox/jollyfin projects do.
 /fastlane/report.xml
 /fastlane/README.md
+.pre-commit-config.yaml

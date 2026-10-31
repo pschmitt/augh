@@ -27,8 +27,9 @@ framework or network service.
   devices" section. Only target a single named device (`deploy-zenfone`/`deploy-mipad`/
   `deploy-px5`) when there's a specific reason to.
 - Use `nix develop --command nixfmt flake.nix` for Nix formatting when needed. Keep Kotlin in
-  the repository's ktfmt style and use `./gradlew ktfmtCheck` only through the remote recipes -
-  see the shared doc for the `ktfmt-diff-patch` retrieval procedure if CI's `Lint` job fails.
+  the repository's ktfmt style: ktfmt is nix-only (no Gradle plugin) - `just format` rewrites and
+  `just lint` checks with the flake's nixpkgs ktfmt (kotlinlang style), locally, the same binary
+  as the pre-commit hook and CI's `Lint` job. See the shared doc if CI's `Lint` job fails.
 - Prefer focused checks before a full validation pass. Record device/build evidence in `TODO.md`.
 
 ## Editing and design

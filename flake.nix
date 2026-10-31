@@ -7,6 +7,10 @@
       url = "github:tadfisher/android-nixpkgs";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    git-hooks = {
+      url = "github:cachix/git-hooks.nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     android-app-ci = {
       url = "github:pschmitt/android-app-ci";
       flake = false;
@@ -18,6 +22,7 @@
       self,
       nixpkgs,
       android-nixpkgs,
+      git-hooks,
       android-app-ci,
     }:
     let
@@ -30,8 +35,9 @@
       androidEnv = import "${android-app-ci}/nix/devshells.nix" {
         inherit pkgs android-nixpkgs system;
         appName = "AUGH!";
-        buildToolsVersion = "36.1.0";
-        platformVersion = "36";
+        buildToolsVersion = "37.0.0";
+        platformVersion = "37-0";
+        gitHooksLib = git-hooks.lib;
         screenshotsSystemImage = "system-images-android-34-google-apis-x86-64";
       };
     in
