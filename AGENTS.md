@@ -1,8 +1,13 @@
 # AUGH! repository instructions
 
+## Private infrastructure details
+
+Do not include private hostnames, device identifiers, network addresses or topology here. Use placeholders and consult the private `brkn-infra` skill for specific host or device details.
+
+
 See `.just/android-app-ci/AGENTS-shared.md` for the fleet-wide task-tracking convention, dev
 environment (`nix develop`/`git-hooks.nix`), CI-is-the-sole-lint-authority rule, and physical test
-device docs (this app has all three: Zenfone 10, Mi Pad 4, Pixel 5) - read it alongside this file,
+device docs (this app has all three: <phone>, <tablet>, <phone>) - read it alongside this file,
 not instead of it.
 
 ## Project shape
@@ -23,7 +28,7 @@ framework or network service.
 - Use `just build`, `just check`, or the narrower remote recipes; they sync the checkout and run
   inside the Nix dev shell on the default build host (see the `brkn-infra` skill).
 - Use `just deploy-all` after a successful remote debug build to install it on all three fleet
-  test devices (Zenfone 10, Mi Pad 4, Pixel 5) at once - see the shared doc's "Physical test
+  test devices (<phone>, <tablet>, <phone>) at once - see the shared doc's "Physical test
   devices" section. Only target a single named device (`deploy-zenfone`/`deploy-mipad`/
   `deploy-px5`) when there's a specific reason to.
 - Use `nix develop --command nixfmt flake.nix` for Nix formatting when needed. Keep Kotlin in
