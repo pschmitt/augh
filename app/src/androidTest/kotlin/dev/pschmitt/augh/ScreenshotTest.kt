@@ -1,6 +1,7 @@
 package dev.pschmitt.augh
 
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
@@ -40,18 +41,18 @@ class ScreenshotTest {
         check(device.wait(Until.hasObject(By.text("Present")), 60_000))
         Screengrab.screenshot("01_editor")
 
-        device.findObject(By.text("Present")).click()
+        composeRule.onNodeWithText("Present").performClick()
         check(device.wait(Until.hasObject(By.desc("Exit present")), 15_000))
         // Let the entry zoom/fade transition (AUG-77) settle before capturing.
         Thread.sleep(600)
         Screengrab.screenshot("02_present")
 
-        device.findObject(By.desc("Exit present")).click()
+        composeRule.onNodeWithContentDescription("Exit present").performClick()
         check(device.wait(Until.hasObject(By.text("Present")), 15_000))
 
         // About sits behind Settings (MainActivity.kt onAbout), but its own back button drops
         // straight to the editor - showSettings is cleared on the way in, not just showAbout.
-        device.findObject(By.desc("Settings")).click()
+        composeRule.onNodeWithContentDescription("Settings").performClick()
         check(device.wait(Until.hasObject(By.text("About")), 15_000))
 
         // Compose exposes off-screen text to UiAutomator without scrolling it into view. Use the
@@ -60,7 +61,7 @@ class ScreenshotTest {
         check(device.wait(Until.hasObject(By.desc("AUGH! app logo")), 15_000))
         Screengrab.screenshot("03_about")
 
-        device.findObject(By.desc("Back")).click()
+        composeRule.onNodeWithContentDescription("Back").performClick()
         check(device.wait(Until.hasObject(By.text("Present")), 15_000))
     }
 }
