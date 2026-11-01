@@ -31,11 +31,10 @@ class ScreenshotTest {
         Screengrab.setDefaultScreenshotStrategy(UiAutomatorScreenshotStrategy())
         val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
 
-        // The first wait is the flaky one on cold CI emulators (tablet profiles especially):
-        // boot-completed/provisioned/package-service can all be ready (ci/android-emulator-wait.sh)
-        // while the app's own first Compose frame still isn't up yet. Give it more room than the
+        // The first wait is flaky on cold CI emulators (tablet profiles especially):
+        // OS readiness can precede the app's first Compose frame. Give startup more time than the
         // later waits, which run against an already-warm process.
-        check(device.wait(Until.hasObject(By.text("Present")), 30_000))
+        check(device.wait(Until.hasObject(By.text("Present")), 60_000))
         Screengrab.screenshot("01_editor")
 
         device.findObject(By.text("Present")).click()
@@ -52,6 +51,16 @@ class ScreenshotTest {
         device.findObject(By.desc("Settings")).click()
         check(device.wait(Until.hasObject(By.text("About")), 15_000))
 
+        // Compose's scrollable settings column exposes off-screen text to UiAutomator, but clicking
+        // that node does not scroll it into view. Swipe the column so the About card is tappable on
+        // the compact seven-inch emulator too.
+        device.swipe(
+            device.displayWidth / 2,
+            device.displayHeight * 3 / 4,
+            device.displayWidth / 2,
+            device.displayHeight / 4,
+            20,
+        )
         device.findObject(By.text("About")).click()
         check(device.wait(Until.hasObject(By.desc("AUGH! app logo")), 15_000))
         Screengrab.screenshot("03_about")
