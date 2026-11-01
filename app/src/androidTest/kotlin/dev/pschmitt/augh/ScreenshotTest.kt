@@ -55,10 +55,10 @@ class ScreenshotTest {
         device.findObject(By.desc("Settings")).click()
         check(device.wait(Until.hasObject(By.text("About")), 15_000))
 
-        val aboutRow =
+        check(
             UiScrollable(UiSelector().scrollable(true)).scrollIntoView(UiSelector().text("About"))
-        check(aboutRow.exists())
-        aboutRow.click()
+        )
+        device.findObject(By.text("About")).click()
         check(device.wait(Until.hasObject(By.desc("AUGH! app logo")), 15_000))
         Screengrab.screenshot("03_about")
 
