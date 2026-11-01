@@ -1,6 +1,9 @@
 package dev.pschmitt.augh
 
-import androidx.test.ext.junit.rules.ActivityScenarioRule
+import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
@@ -24,7 +27,7 @@ class ScreenshotTest {
         @get:ClassRule @JvmStatic val localeTestRule = LocaleTestRule()
     }
 
-    @get:Rule val activityRule = ActivityScenarioRule(MainActivity::class.java)
+    @get:Rule val composeRule = createAndroidComposeRule<MainActivity>()
 
     @Test
     fun captureStoreScreenshots() {
@@ -51,25 +54,9 @@ class ScreenshotTest {
         device.findObject(By.desc("Settings")).click()
         check(device.wait(Until.hasObject(By.text("About")), 15_000))
 
-        // Compose exposes off-screen text to UiAutomator without scrolling it into view. Scroll
-        // until the About row has visible bounds, then tap those bounds instead of the off-screen
-        // node coordinates.
-        val about = device.findObject(By.text("About"))
-        var aboutBounds = about.visibleBounds
-        var scrollAttempts = 0
-        while (aboutBounds.isEmpty && scrollAttempts < 4) {
-            device.swipe(
-                device.displayWidth / 2,
-                device.displayHeight * 3 / 4,
-                device.displayWidth / 2,
-                device.displayHeight / 4,
-                20,
-            )
-            aboutBounds = about.visibleBounds
-            scrollAttempts++
-        }
-        check(!aboutBounds.isEmpty)
-        device.click(aboutBounds.centerX(), aboutBounds.centerY())
+        // Compose exposes off-screen text to UiAutomator without scrolling it into view. Use the
+        // Compose semantics tree to scroll the settings column and click its About row.
+        composeRule.onNodeWithText("About").performScrollTo().performClick()
         check(device.wait(Until.hasObject(By.desc("AUGH! app logo")), 15_000))
         Screengrab.screenshot("03_about")
 
