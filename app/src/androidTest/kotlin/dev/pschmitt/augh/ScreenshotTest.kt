@@ -51,17 +51,25 @@ class ScreenshotTest {
         device.findObject(By.desc("Settings")).click()
         check(device.wait(Until.hasObject(By.text("About")), 15_000))
 
-        // Compose's scrollable settings column exposes off-screen text to UiAutomator, but clicking
-        // that node does not scroll it into view. Swipe the column so the About card is tappable on
-        // the compact seven-inch emulator too.
-        device.swipe(
-            device.displayWidth / 2,
-            device.displayHeight * 3 / 4,
-            device.displayWidth / 2,
-            device.displayHeight / 4,
-            20,
-        )
-        device.findObject(By.text("About")).click()
+        // Compose exposes off-screen text to UiAutomator without scrolling it into view. Scroll
+        // until the About row has visible bounds, then tap those bounds instead of the off-screen
+        // node coordinates.
+        val about = device.findObject(By.text("About"))
+        var aboutBounds = about.visibleBounds
+        var scrollAttempts = 0
+        while (aboutBounds.isEmpty && scrollAttempts < 4) {
+            device.swipe(
+                device.displayWidth / 2,
+                device.displayHeight * 3 / 4,
+                device.displayWidth / 2,
+                device.displayHeight / 4,
+                20,
+            )
+            aboutBounds = about.visibleBounds
+            scrollAttempts++
+        }
+        check(!aboutBounds.isEmpty)
+        device.click(aboutBounds.centerX(), aboutBounds.centerY())
         check(device.wait(Until.hasObject(By.desc("AUGH! app logo")), 15_000))
         Screengrab.screenshot("03_about")
 
