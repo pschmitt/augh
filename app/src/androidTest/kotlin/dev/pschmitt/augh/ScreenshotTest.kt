@@ -5,6 +5,8 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiDevice
+import androidx.test.uiautomator.UiScrollable
+import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
 import org.junit.ClassRule
 import org.junit.Rule
@@ -53,7 +55,10 @@ class ScreenshotTest {
         device.findObject(By.desc("Settings")).click()
         check(device.wait(Until.hasObject(By.text("About")), 15_000))
 
-        device.findObject(By.text("About")).click()
+        val aboutRow =
+            UiScrollable(UiSelector().scrollable(true)).scrollIntoView(UiSelector().text("About"))
+        check(aboutRow.exists())
+        aboutRow.click()
         check(device.wait(Until.hasObject(By.desc("AUGH! app logo")), 15_000))
         Screengrab.screenshot("03_about")
 

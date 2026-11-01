@@ -1083,16 +1083,17 @@ State: **done**, 2026-10-31 - `nix develop .#ktfmt --command ktfmt --dry-run --s
 clean; `just gradle rofl-13.brkn.lol :app:compileDebugKotlin :app:testDebugUnitTest` succeeds on rofl-13 without the plugin; CI Lint verified after
 push.
 
-## AUG-91: allow slower cold startup in 7-inch screenshot capture
+## AUG-91: make the 7-inch screenshot journey reliable
 
-The seven-inch screenshot job still failed its first editor-content wait after it had already been
-increased to 30 seconds. The failure is before screenshot capture or navigation, while the phone
-and 10-inch jobs pass.
+The seven-inch screenshot job first failed before the editor's first Compose frame appeared, then
+failed later when the test tapped the Settings screen's About row without scrolling the vertically
+scrollable settings content into view. Phone and 10-inch captures passed.
 
-- [ ] Increase the first UI readiness wait from 30 to 60 seconds.
+- [x] Increase the first UI readiness wait from 30 to 60 seconds.
+- [ ] Scroll the Settings About row into view before tapping it.
 - [ ] Validate the seven-inch capture through the manual screenshot workflow with `open_pr=false`.
 
-**Why:** on a fresh CI emulator, Android's boot-ready state does not guarantee that AUGH!'s first
-Compose frame is visible; the seven-inch profile exceeded the current 30-second allowance.
+**Why:** Android's boot-ready state does not guarantee that AUGH!'s first Compose frame is visible,
+and the smaller emulator may not have the Settings About row in the viewport.
 
 State: in progress.
