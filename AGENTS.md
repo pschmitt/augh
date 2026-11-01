@@ -48,6 +48,8 @@ framework or network service.
   Compose or Android resources.
 
 ## Git and GitHub
+Before changing GitHub Actions, check whether [pschmitt/ci-workflows](https://github.com/pschmitt/ci-workflows) provides a reusable workflow or action. Preserve the existing workflow behavior and check coverage; use `@main` for shared workflow or action references.
+
 
 - This repository is public and uses GPL-3.0.
 - Do not commit secrets, signing keys, generated build output, or local SDK configuration.
