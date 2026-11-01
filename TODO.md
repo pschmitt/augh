@@ -1082,3 +1082,17 @@ always-on `ktfmt` pre-commit hook), applied here as in stricknani's SNA-69.
 State: **done**, 2026-10-31 - `nix develop .#ktfmt --command ktfmt --dry-run --set-exit-if-changed`
 clean; `just gradle rofl-13.brkn.lol :app:compileDebugKotlin :app:testDebugUnitTest` succeeds on rofl-13 without the plugin; CI Lint verified after
 push.
+
+## AUG-91: allow slower cold startup in 7-inch screenshot capture
+
+The seven-inch screenshot job still failed its first editor-content wait after it had already been
+increased to 30 seconds. The failure is before screenshot capture or navigation, while the phone
+and 10-inch jobs pass.
+
+- [ ] Increase the first UI readiness wait from 30 to 60 seconds.
+- [ ] Validate the seven-inch capture through the manual screenshot workflow with `open_pr=false`.
+
+**Why:** on a fresh CI emulator, Android's boot-ready state does not guarantee that AUGH!'s first
+Compose frame is visible; the seven-inch profile exceeded the current 30-second allowance.
+
+State: in progress.
