@@ -6,7 +6,7 @@ on:
 
 jobs:
   build:
-    uses: pschmitt/android-app-ci/.github/workflows/build.yaml@main
+    uses: pschmitt/ci-workflows/.github/workflows/build.yaml@main
     with:
       # AUGH! doesn't produce per-ABI split debug APKs (no splits.abi config), just a single
       # universal app-debug.apk - the shared workflow's per-ABI upload steps don't fit, and this

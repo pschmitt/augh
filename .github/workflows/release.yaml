@@ -11,7 +11,7 @@ on:
 
 jobs:
   release:
-    uses: pschmitt/android-app-ci/.github/workflows/release.yaml@main
+    uses: pschmitt/ci-workflows/.github/workflows/release.yaml@main
     with:
       app-display-name: "AUGH!"
       application-id: dev.pschmitt.augh
