@@ -16,9 +16,7 @@ jobs:
       app-display-name: "AUGH!"
       application-id: dev.pschmitt.augh
       artifact-label: augh
-      # AUGH! has no CI signing keystore configured (no CI_KEYSTORE_* secrets) - falls back to
-      # build.gradle.kts's own (debug-key) release signing config, same as before migration.
-      enable-release-signing: false
+      enable-release-signing: true
       # No per-ABI splits - a single universal app-debug.apk/app-release.apk.
       release-apk-paths: app/build/outputs/apk/release/app-release.apk
       debug-apk-paths: app/build/outputs/apk/debug/app-debug.apk
