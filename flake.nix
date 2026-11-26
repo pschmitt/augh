@@ -36,7 +36,7 @@
         inherit pkgs android-nixpkgs system;
         appName = "AUGH!";
         buildToolsVersion = "37.0.0";
-        platformVersion = "37-0";
+        platformVersion = "37-1";
         gitHooksLib = git-hooks.lib;
         screenshotsSystemImage = "system-images-android-34-google-apis-x86-64";
       };
