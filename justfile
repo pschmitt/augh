@@ -1,7 +1,7 @@
 set shell := ["bash", "-euo", "pipefail", "-c"]
 
 application_id := "dev.pschmitt.augh.debug"
-remote_host := env_var_or_default("AUGH_REMOTE_HOST", "rofl-13.brkn.lol")
+remote_host := env_var_or_default("AUGH_REMOTE_HOST", env_var_or_default("ANDROID_REMOTE_HOST", ""))
 
 # Empty for the main checkout; "-<worktree-dirname>" when run from a linked git worktree (e.g. one
 # of Claude's isolated agent worktrees under .claude/worktrees/). Keeps parallel worktree agents
@@ -17,13 +17,13 @@ default_abi := ""
 source_commit := `git rev-parse HEAD`
 gradle_extra_props := "-PaughCommit=" + source_commit
 
-zenfone_serial := env_var_or_default("ZENFONE_SERIAL", "R6AIB700W850L7G")
+zenfone_serial := env_var_or_default("ZENFONE_SERIAL", "")
 
-mipad_host := env_var_or_default("MIPAD_HOST", "mi-pad-4.lan")
+mipad_host := env_var_or_default("MIPAD_HOST", "")
 mipad_ssh_port := env_var_or_default("MIPAD_SSH_PORT", "8022")
 mipad_adb_port := env_var_or_default("MIPAD_ADB_PORT", "5555")
 
-px5_host := env_var_or_default("PX5_HOST", "px5.lan")
+px5_host := env_var_or_default("PX5_HOST", "")
 
 # No CI signing keystore configured - `build variant=release` falls back to build.gradle.kts's own
 # (debug-key) release signing config. rbw_keystore_entry/keystore_*_attachment/ci_tmp_dir_name are

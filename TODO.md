@@ -26,11 +26,11 @@ and used by the adaptive launcher resource.
 
 - [x] Nix dev shell with JDK 21, Android SDK 36, platform tools, just, and ktfmt
 - [x] CI build, lint, and rolling `latest` release workflows
-- [x] Remote `just build` / `just check` recipes targeting rofl-13 / rofl-14
+- [x] Remote `just build` / `just check` recipes targeting the remote build host
 - [x] `just deploy-all` installs the universal debug APK on all attached ADB devices
 
-State: **done**, 2026-08-03. Builds/checks ran on rofl-13 and the debug APK was installed on
-R6AIB700W850L7G, mi-pad-4.lan:44972, and px5.lan:39073. The wired Zenfone's secondary-profile
+State: **done**, 2026-08-03. Builds/checks ran on $ANDROID_REMOTE_HOST and the debug APK was installed on
+$ZENFONE_SERIAL, $MIPAD_HOST:44972, and $PX5_HOST:39073. The wired Zenfone's secondary-profile
 runner does not emit an owner-profile instrumentation result, but installation succeeds.
 
 ## AUG-4: Presentation polish
@@ -638,7 +638,7 @@ hosts per AGENTS.md.
       `docs/screenshots.md`)
 
 State: **POC verified, screenshots + icon live**, 2026-08-04. Phone: ran end to end against the
-wired Zenfone 10 (`R6AIB700W850L7G`) via `SCREENGRAB_SPECIFIC_DEVICE` (plain `ANDROID_SERIAL`
+wired Zenfone 10 (`$ZENFONE_SERIAL`) via `SCREENGRAB_SPECIFIC_DEVICE` (plain `ANDROID_SERIAL`
 turned out not to reliably steer screengrab's own device selection - it silently picks whichever
 device it finds first). Tablet: added a `screenshots-tablet` recipe using a local Pixel Tablet
 emulator (API 34 google_apis x86_64, KVM-accelerated) instead of the Mi Pad 4 over network adb,
@@ -947,7 +947,7 @@ before this entry; this entry covers the remaining sweep.
   `SharedPreferences` storage key in `MainActivity.kt`, and the `YELL` preset's `"AUGHHHH!"`
   sample text) plus this file's own historical `AUG-N` entries, which are left untouched to
   preserve the record of what happened when.
-- [x] Verified the remote build: `just build debug` synced to `rofl-13.brkn.lol:~/build/augh`
+- [x] Verified the remote build: `just build debug` synced to `$ANDROID_REMOTE_HOST:~/build/augh`
   (the newly-renamed remote path) and `BUILD SUCCESSFUL in 37s` (38 actionable tasks).
 
 **Why:** user's explicit direction - the app icon and applicationId were already migrated to
@@ -965,8 +965,8 @@ scream-character mark, and the old purple-tinted UI. The repo already has an aut
 path for exactly these two shots (`just screenshots`, see `docs/screenshots.md`), so no new
 tooling was needed, just a rerun against the rebuilt app.
 
-- [x] `just screenshots` (remote debug + androidTest build on `rofl-13.brkn.lol`, then fastlane
-  screengrab driving the wired Zenfone 10, `R6AIB700W850L7G`) - `reinstall_app(true)` wipes app
+- [x] `just screenshots` (remote debug + androidTest build on `$ANDROID_REMOTE_HOST`, then fastlane
+  screengrab driving the wired Zenfone 10, `$ZENFONE_SERIAL`) - `reinstall_app(true)` wipes app
   state on each run, so the capture landed on the fresh default `SignState()` ("AUGH!" on
   red/cream), which doubles as a clean, representative example since it's the app's own name.
 - [x] Inspected both new captures before using them: `01_editor` shows the coral "AUGH!" badge,
@@ -1080,5 +1080,5 @@ always-on `ktfmt` pre-commit hook), applied here as in stricknani's SNA-69.
 - [x] Reformatted all tracked `.kt`/`.kts` once with nixpkgs ktfmt (kotlinlang style).
 
 State: **done**, 2026-10-31 - `nix develop .#ktfmt --command ktfmt --dry-run --set-exit-if-changed`
-clean; `just gradle rofl-13.brkn.lol :app:compileDebugKotlin :app:testDebugUnitTest` succeeds on rofl-13 without the plugin; CI Lint verified after
+clean; `just gradle $ANDROID_REMOTE_HOST :app:compileDebugKotlin :app:testDebugUnitTest` succeeds on $ANDROID_REMOTE_HOST without the plugin; CI Lint verified after
 push.

@@ -31,7 +31,7 @@ layout; the device bucket subfolder name depends on the target's screen size).
 
 ## Phone screenshots: the wired Zenfone 10
 
-`just screenshots` targets the Zenfone 10 (`R6AIB700W850L7G`) explicitly via
+`just screenshots` targets the Zenfone 10 (`$ZENFONE_SERIAL`) explicitly via
 `SCREENGRAB_SPECIFIC_DEVICE`. Setting `ANDROID_SERIAL` alone does **not** reliably steer
 screengrab: it has its own device-selection logic that silently ignores `ANDROID_SERIAL` and
 just picks whichever device it finds first via its own `adb devices` call. This bit the tablet
@@ -106,7 +106,7 @@ manual resize needed. `play-feature-graphic-upload` uploads the already-committe
 ## Verified runs, 2026-08-04
 
 - Phone (`phoneScreenshots/`): wired Zenfone 10, `just screenshots-build` then
-  `SCREENGRAB_SPECIFIC_DEVICE=R6AIB700W850L7G nix develop .#screenshots --command fastlane
+  `SCREENGRAB_SPECIFIC_DEVICE=$ZENFONE_SERIAL nix develop .#screenshots --command fastlane
   screenshots`. Both screenshots (`01_editor`, `02_present`) captured and uploaded to the live
   Play Console listing, replacing the previous two images.
 - Tablet (`tenInchScreenshots/`): local Pixel Tablet emulator via `just screenshots-tablet`.
